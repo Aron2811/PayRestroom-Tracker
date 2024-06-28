@@ -1,0 +1,46 @@
+import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/material.dart';
+import 'package:flutter_button/firebase_options.dart';
+import 'package:flutter_button/pages/loading_page.dart';
+import 'package:flutter_button/pages/intro_page.dart';
+import 'package:flutter_button/pages/user/map_page.dart';
+import 'package:flutter_button/pages/user/userlogin_page.dart';
+import 'package:flutter_button/pages/admin/adminlogin_page.dart';
+import 'package:flutter_button/pages/user/user_loggedin_page.dart';
+import 'package:flutter_button/pages/user/add_review_page.dart';
+import 'package:flutter_button/pages/user/reviews_page.dart';
+import 'package:flutter_button/pages/user/report_page.dart';
+import 'package:flutter_button/pages/user/others_report_page.dart';
+import 'package:flutter_button/pages/dialog/privacy_dialog.dart';
+import 'package:flutter_button/pages/dialog/user_profile_dialog.dart';
+
+Future<void> main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
+  runApp(const Main());
+}
+
+class Main extends StatelessWidget {
+  const Main({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+        debugShowCheckedModeBanner: false,
+        home: const LoadingPage(),
+        routes: {
+          '/Loadingpage': (context) => const LoadingPage(),
+          '/intropage': (context) => const IntroPage(),
+          '/userloginpage': (context) => const UserLoginPage(),
+          '/userloggedinpage': (context) => const UserLoggedInPage(),
+          '/adminloginpage': (context) => const AdminLoginPage(),
+          '/mappage': (context) => const MapPage(),
+          '/addreviewpage': (context) => const AddReviewPage(),
+          '/reviewspage': (context) => ReviewsPage(),
+          '/reportpage': (context) => ReportPage(),
+          '/othersreportpage': (context) => OthersReportPage(),
+          '/privacydialog': (context) => const PrivacyDialog(),
+          '/userprofiledialog': (context) => const UserProfileDialog(),
+        });
+  }
+}
