@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "529800337851",
+    "project_id": "payrestroomtracker",
+    "storage_bucket": "payrestroomtracker.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:529800337851:android:b4178b96087692d1c58c9e",
+        "android_client_info": {
+          "package_name": "com.example.payrestroomtracker"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "529800337851-tuc24i9sei000mjb2fsn9d9721qr5lc5.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.payrestroomtracker",
+            "certificate_hash": "fb78d0062b3e31e9865c19b7657c61f2e6b3a288"
+          }
+        },
+        {
+          "client_id": "529800337851-dkatv05lkm0fd57hvaqvhfercjlj5s5o.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCidpaZx1Xs_jQh1HgL2B1eWNdjVRZuHkk"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "529800337851-dkatv05lkm0fd57hvaqvhfercjlj5s5o.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
