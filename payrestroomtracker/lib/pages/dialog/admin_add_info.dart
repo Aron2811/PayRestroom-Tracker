@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
-class ChangeInfoDialog extends StatelessWidget {
-  const ChangeInfoDialog({super.key});
+class AddInfoDialog extends StatelessWidget {
+  const AddInfoDialog({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -12,7 +12,7 @@ class ChangeInfoDialog extends StatelessWidget {
       const Padding(
         padding: EdgeInsets.symmetric(horizontal: 10.0),
         child: Text(
-          "Update Paid Restroom Information",
+          "Paid Restroom Information",
           textAlign: TextAlign.center,
           style: TextStyle(
             fontSize: 19,

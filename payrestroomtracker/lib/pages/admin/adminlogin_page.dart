@@ -154,7 +154,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                       _usernameError,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Colors.red,
+                        color: Color.fromARGB(255, 236, 154, 148),
                       ),
                     ),
                   ],
@@ -219,7 +219,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                       _passwordError,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Colors.red,
+                        color: Color.fromARGB(255, 236, 154, 148),
                       ),
                     ),
                   ],

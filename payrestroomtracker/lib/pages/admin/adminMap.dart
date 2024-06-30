@@ -163,42 +163,50 @@ class _AdminMapState extends State<AdminMap> {
                   markers: _markers,
                   polylines: _polylines,
                   onTap: (LatLng latLng) {
-                    Marker newMarker = Marker(
-                        markerId: MarkerId("value"),
-                        position: LatLng(latLng.latitude, latLng.longitude),
-                        icon: _customMarkerIcon ??
-                            BitmapDescriptor.defaultMarker);
-                    _markers.add(newMarker);
-                    // showDialog(
-                    //     context: context,
-                    //     builder: (context) => AlertDialog(
-                    //           title: const Text(
-                    //             "Are you sure you want to add a tag",
-                    //             textAlign: TextAlign.center,
-                    //             style: TextStyle(
-                    //                 color: Color.fromARGB(255, 115, 99, 183),
-                    //                 fontSize: 17,
-                    //                 fontWeight: FontWeight.bold),
-                    //           ),
-                    //           actions: <Widget>[
-                    //             TextButton(
-                    //               onPressed: () {
-                    //                 Navigator.of(context).pop(false);
-                    //               },
-                    //               child: const Text("No"),
-                    //             ),
-                    //             TextButton(
-                    //               onPressed: () {
-                    //                 Navigator.of(context).pop(true);
-                    //                 showDialog(
-                    //                     context: context,
-                    //                     builder: (context) =>
-                    //                         AdminTagInformation());
-                    //               },
-                    //               child: const Text("Yes"),
-                    //             ),
-                    //           ],
-                    //         ));
+                    showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                              title: const Text(
+                                "Are you sure you want to add a tag",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                    color: Color.fromARGB(255, 115, 99, 183),
+                                    fontSize: 17,
+                                    fontWeight: FontWeight.bold),
+                              ),
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(false);
+                                  },
+                                  child: const Text("No"),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.of(context).pop(true);
+                                    Marker newMarker = Marker(
+                                        markerId: MarkerId("value"),
+                                        position: LatLng(
+                                            latLng.latitude, latLng.longitude),
+                                        icon: _customMarkerIcon ??
+                                            BitmapDescriptor.defaultMarker);
+
+                                   //for tapping the new marker tag this should appear
+                                    // onTap:
+                                    // () {
+                                    //   Navigator.of(context).pop(true);
+                                    //   showDialog(
+                                    //       context: context,
+                                    //       builder: (context) =>
+                                    //           AdminTagInformation());
+                                    // };
+
+                                    _markers.add(newMarker);
+                                  },
+                                  child: const Text("Yes"),
+                                ),
+                              ],
+                            ));
                   },
                   initialCameraPosition: const CameraPosition(
                     target: _pGooglePlex,

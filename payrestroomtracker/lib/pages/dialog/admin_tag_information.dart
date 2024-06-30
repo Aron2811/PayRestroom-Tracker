@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_button/pages/dialog/admin_add_info.dart';
 import 'package:flutter_button/pages/dialog/admin_edit_info.dart';
 import 'package:flutter_button/pages/dialog/change_username_dialog.dart';
 
@@ -37,25 +38,7 @@ class AdminTagInformation extends StatelessWidget {
           ),
           //
         ),
-        const SizedBox(height: 15),
-        ElevatedButton.icon(
-          style: ElevatedButton.styleFrom(
-              enableFeedback: false,
-              backgroundColor: Colors.white,
-              minimumSize: const Size(100, 40),
-              shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(50)),
-              side: BorderSide(
-                color: Color.fromARGB(255, 115, 99, 183), //Set the border color
-                width: 2.0,
-              ),
-              textStyle:
-                  const TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-          onPressed: () {},
-          icon: Icon(Icons.upload_rounded,
-              color: Color.fromARGB(255, 115, 99, 183)),
-          label: const Text("Upload"),
-        ),
+        
         SizedBox(height: 20),
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -63,6 +46,9 @@ class AdminTagInformation extends StatelessWidget {
             IconButton(
               onPressed: () {
                 Navigator.of(context).pop(true);
+                showDialog(
+                    context: context, builder: (context) => AddInfoDialog());
+
               },
               icon: Icon(Icons.add_location_outlined),
               color: Color.fromARGB(255, 115, 99, 183),
