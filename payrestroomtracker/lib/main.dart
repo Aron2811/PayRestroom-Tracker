@@ -14,10 +14,10 @@ import 'package:flutter_button/pages/user/others_report_page.dart';
 import 'package:flutter_button/pages/dialog/privacy_dialog.dart';
 import 'package:flutter_button/pages/dialog/user_profile_dialog.dart';
 
-Future<void> main() async {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Firebase.initializeApp(options: DefaultFirebaseOptions.currentPlatform);
-  runApp(const Main());
+  await Firebase.initializeApp();
+  runApp(Main());
 }
 
 class Main extends StatelessWidget {

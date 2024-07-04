@@ -54,7 +54,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       }
     } catch (e) {
       debugPrint('Error: $e');
-      // Handle any Firestore query errors here
     }
 
     // Update UI to show errors

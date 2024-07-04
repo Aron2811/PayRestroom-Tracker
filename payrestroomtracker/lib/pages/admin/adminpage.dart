@@ -94,7 +94,7 @@ class AdminPage extends StatelessWidget {
         ),
         Column(
           children: [
-            Row(children: [
+            Row(mainAxisAlignment: MainAxisAlignment.center, children: [
               Padding(
                   padding: EdgeInsets.only(
                     top: 230,
