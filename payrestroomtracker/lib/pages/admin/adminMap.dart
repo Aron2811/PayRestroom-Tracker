@@ -59,32 +59,38 @@ class AdminMapState extends State<AdminMap> {
     );
   }
 
-  Future<Set<Marker>> loadMarkersFromPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final markerData = prefs.getStringList('markers') ?? [];
-    Set<Marker> loadedMarkers = markerData.map((markerString) {
-      final markerInfo = markerString.split(',');
-      final id = markerInfo[0];
-      final lat = double.parse(markerInfo[1]);
-      final lng = double.parse(markerInfo[2]);
-      return Marker(
-        markerId: MarkerId(id),
-        position: LatLng(lat, lng),
-        icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (context) => AdminTagInformation(
-              markerId: MarkerId(id),
-              deleteMarker: _deleteMarker,
-            ),
-          );
-        },
-      );
-    }).toSet();
+Future<Set<Marker>> loadMarkersFromPrefs() async {
+  final firestoreMarkers = await FirebaseFirestore.instance.collection('Tags').get();
+  Set<Marker> loadedMarkers = firestoreMarkers.docs.map((doc) {
+    final data = doc.data();
+    final id = data['TagId'] as String?;
+    final position = data['position'] as GeoPoint?;
+    LatLng latLng;
 
-    return loadedMarkers;
-  }
+    if (position != null) {
+      latLng = LatLng(position.latitude, position.longitude);
+    } else {
+      latLng = LatLng(0.0, 0.0); // Default value if position is null
+    }
+
+    return Marker(
+      markerId: MarkerId(id ?? 'unknown'),
+      position: latLng,
+      icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (context) => AdminTagInformation(
+            markerId: MarkerId(id ?? 'unknown'),
+            deleteMarker: _deleteMarker,
+          ),
+        );
+      },
+    );
+  }).toSet();
+
+  return loadedMarkers;
+}
 
   Future<void> _saveMarkersToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
