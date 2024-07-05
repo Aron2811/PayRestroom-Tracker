@@ -153,13 +153,12 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                       _usernameError,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Colors.red,
+                        color: Color.fromARGB(255, 236, 154, 148),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 15),
               // Password
               Padding(
                 padding: const EdgeInsets.symmetric(horizontal: 25.0),
@@ -218,13 +217,12 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                       _passwordError,
                       style: const TextStyle(
                         fontSize: 12,
-                        color: Colors.red,
+                        color: Color.fromARGB(255, 236, 154, 148),
                       ),
                     ),
                   ],
                 ),
               ),
-              const SizedBox(height: 15),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   enableFeedback: false,

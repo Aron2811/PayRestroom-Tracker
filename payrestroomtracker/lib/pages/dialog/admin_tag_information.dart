@@ -79,7 +79,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
-      contentPadding: EdgeInsets.all(20.0),
+      contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
       actions: [
         SizedBox(height: 30),
         TextField(
@@ -101,6 +101,19 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
           decoration: InputDecoration(
             border: InputBorder.none,
             hintText: 'Location',
+            hintStyle: TextStyle(
+              fontSize: 17,
+              color: Color.fromARGB(255, 115, 99, 183),
+            ),
+          ),
+        ),
+         SizedBox(height: 5),
+        TextField(
+          textAlign: TextAlign.center,
+          enabled: false,
+          decoration: InputDecoration(
+            border: InputBorder.none,
+            hintText: 'Cost',
             hintStyle: TextStyle(
               fontSize: 17,
               color: Color.fromARGB(255, 115, 99, 183),
@@ -137,16 +150,6 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
-            IconButton(
-              onPressed: () {
-                Navigator.of(context).pop(true);
-                showDialog(
-                    context: context, builder: (context) => AddInfoDialog());
-              },
-              icon: Icon(Icons.add_location_outlined),
-              color: Color.fromARGB(255, 115, 99, 183),
-              iconSize: 30,
-            ),
             IconButton(
               onPressed: () {
                 Navigator.of(context).pop(true);

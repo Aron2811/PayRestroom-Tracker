@@ -92,14 +92,14 @@ class AdminPage extends StatelessWidget {
             letterSpacing: 2,
           ),
         ),
-        Column(
+         Padding(
+                  padding: EdgeInsets.only(
+                    top: 230, bottom: 0,
+                  ),
+                  child:  Column(
           children: [
             Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-              Padding(
-                  padding: EdgeInsets.only(
-                    top: 230,
-                  ),
-                  child: ClipRRect(
+            ClipRRect(
                       borderRadius: BorderRadius.only(
                           topRight: Radius.circular(20),
                           topLeft: Radius.circular(20)),
@@ -138,15 +138,11 @@ class AdminPage extends StatelessWidget {
                                 ),
                               ),
                             ]),
-                          )))),
+                          ))),
               SizedBox(
                 width: 5,
               ),
-              Padding(
-                  padding: EdgeInsets.only(
-                    top: 230,
-                  ),
-                  child: ClipRRect(
+             ClipRRect(
                       borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(20),
                           topRight: Radius.circular(20)),
@@ -184,11 +180,11 @@ class AdminPage extends StatelessWidget {
                                     color: Color.fromARGB(255, 132, 119, 197)),
                               ),
                             ]),
-                          )))),
+                          ))),
             ]),
           ],
         )
-      ])
+      )])
     ])));
   }
 }

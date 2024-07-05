@@ -45,6 +45,15 @@ class PaidRestroomInfo extends StatelessWidget {
             ),
           ),
           SizedBox(height: 10),
+          Text(
+            "Cost",
+            textAlign: TextAlign.start,
+            style: TextStyle(
+              fontSize: 17,
+              color: Colors.white,
+            ),
+          ),
+          SizedBox(height: 10),
           Row(
             children: [
               SizedBox(width: 125),

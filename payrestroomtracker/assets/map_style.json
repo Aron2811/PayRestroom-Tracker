@@ -1,7 +1,16 @@
 [
   {
-    "featureType": "landscape.man_made",
+    "featureType": "administrative",
     "elementType": "geometry",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "landscape.man_made",
+    "elementType": "geometry.fill",
     "stylers": [
       {
         "color": "#d4c8da"
@@ -9,34 +18,54 @@
     ]
   },
   {
-    "featureType": "landscape.natural.landcover",
-    "elementType": "geometry",
+    "featureType": "landscape.man_made",
+    "elementType": "geometry.stroke",
     "stylers": [
       {
-        "color": "#959d98"
+        "color": "#361c4f"
+      },
+      {
+        "weight": 1.5
+      }
+    ]
+  },
+  {
+    "featureType": "landscape.natural",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#b2bdb7"
+      }
+    ]
+  },
+  {
+    "featureType": "landscape.natural.landcover",
+    "elementType": "geometry.fill",
+    "stylers": [
+      {
+        "color": "#d4c8da"
       }
     ]
   },
   {
     "featureType": "landscape.natural.terrain",
-    "elementType": "geometry",
+    "elementType": "geometry.fill",
     "stylers": [
       {
-        "color": "#3d0066"
+        "color": "#a89cb0"
       }
     ]
   },
   {
     "featureType": "poi",
-    "elementType": "geometry",
     "stylers": [
       {
-        "color": "#717f78"
+        "visibility": "off"
       }
     ]
   },
   {
-    "featureType": "road.highway",
+    "featureType": "road",
     "elementType": "geometry",
     "stylers": [
       {
@@ -45,8 +74,25 @@
     ]
   },
   {
+    "featureType": "road",
+    "elementType": "labels.icon",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
+    "featureType": "transit",
+    "stylers": [
+      {
+        "visibility": "off"
+      }
+    ]
+  },
+  {
     "featureType": "water",
-    "elementType": "geometry",
+    "elementType": "geometry.fill",
     "stylers": [
       {
         "color": "#709ecd"
@@ -59,14 +105,6 @@
     "stylers": [
       {
         "color": "#154d89"
-      }
-    ]
-  },
-  {
-    "featureType": "poi",
-    "stylers": [
-      {
-        "visibility": "off"
       }
     ]
   }
