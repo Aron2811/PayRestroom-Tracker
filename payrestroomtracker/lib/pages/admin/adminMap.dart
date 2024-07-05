@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/admin/adminpage.dart';
 import 'package:flutter_button/pages/dialog/admin_tag_information.dart';
@@ -7,39 +8,44 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:flutter/services.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminMap extends StatefulWidget {
-  const AdminMap({super.key, required this.username});
+  const AdminMap({Key? key, required this.username}) : super(key: key);
   final String username;
+
   @override
-  State<AdminMap> createState() => _AdminMapState();
+  State<AdminMap> createState() => AdminMapState();
 }
 
-class _AdminMapState extends State<AdminMap> {
+class AdminMapState extends State<AdminMap> {
   static const LatLng _pGooglePlex =
       LatLng(14.303142147986497, 121.07613374318477);
   late GoogleMapController mapController;
-  LatLng? _currentP = null;
+  LatLng? _currentP;
   String? _currentAddress;
   Set<Marker> _markers = {};
-  Location _locationController = new Location();
+  Location _locationController = Location();
   BitmapDescriptor? _customMarkerIcon;
   BitmapDescriptor? _personMarkerIcon;
   late String _mapStyleString;
   Set<Polyline> _polylines = {};
-  bool addclick = false;
-  bool editclick = false;
-  bool removeclick = false;
 
   @override
   void initState() {
+    super.initState();
     rootBundle.loadString('assets/map_style.json').then((string) {
       _mapStyleString = string;
     });
-    // TODO: implement initState
-    super.initState();
     getLocationUpdates();
     _loadCustomMarkerIcon();
+    loadMarkersFromPrefs();
+    _loadMarkers();
+  }
+
+  Future<void> _loadMarkers() async {
+    _markers = await loadMarkersFromPrefs();
+    setState(() {}); // Update UI after loading markers
   }
 
   Future<void> _loadCustomMarkerIcon() async {
@@ -51,6 +57,54 @@ class _AdminMapState extends State<AdminMap> {
       ImageConfiguration(size: Size(1, 1)),
       'assets/person_Tag.png',
     );
+  }
+
+  Future<Set<Marker>> loadMarkersFromPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final markerData = prefs.getStringList('markers') ?? [];
+    Set<Marker> loadedMarkers = markerData.map((markerString) {
+      final markerInfo = markerString.split(',');
+      final id = markerInfo[0];
+      final lat = double.parse(markerInfo[1]);
+      final lng = double.parse(markerInfo[2]);
+      return Marker(
+        markerId: MarkerId(id),
+        position: LatLng(lat, lng),
+        icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (context) => AdminTagInformation(
+              markerId: MarkerId(id),
+              deleteMarker: _deleteMarker,
+            ),
+          );
+        },
+      );
+    }).toSet();
+
+    return loadedMarkers;
+  }
+
+  Future<void> _saveMarkersToPrefs() async {
+    final prefs = await SharedPreferences.getInstance();
+    final markerData = _markers.map((marker) {
+      return '${marker.markerId.value},${marker.position.latitude},${marker.position.longitude}';
+    }).toList();
+    await prefs.setStringList('markers', markerData);
+  }
+
+  Future<void> _deleteMarker(MarkerId markerId) async {
+    setState(() {
+      _markers.removeWhere((marker) => marker.markerId == markerId);
+    });
+    await _saveMarkersToPrefs();
+
+    // Remove the marker from Firestore
+    await FirebaseFirestore.instance
+        .collection('Tags')
+        .doc(markerId.value)
+        .delete();
   }
 
   Future<void> updateCurrentAddress() async {
@@ -66,7 +120,6 @@ class _AdminMapState extends State<AdminMap> {
   @override
   Widget build(BuildContext context) {
     if (_currentP != null) {
-      print(_currentP);
       _markers.add(
         Marker(
           markerId: const MarkerId('User Location'),
@@ -76,176 +129,99 @@ class _AdminMapState extends State<AdminMap> {
       );
     }
 
-    var markers = {
-      Marker(
-          markerId: const MarkerId('1'),
-          position: LatLng(14.315468626815898, 121.07064669023518),
-          icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-          onTap: () => showDialog(
-              context: context, builder: (context) => AdminTagInformation())),
-      Marker(
-          markerId: const MarkerId('2'),
-          position: LatLng(14.356239417708707, 121.04451720560752),
-          icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-          onTap: () => showDialog(
-              context: context, builder: (context) => AdminTagInformation())),
-      Marker(
-          markerId: const MarkerId('3'),
-          position: LatLng(14.355059500353084, 121.0442736161414),
-          icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-          onTap: () => showDialog(
-              context: context, builder: (context) => AdminTagInformation())),
-      Marker(
-          markerId: const MarkerId('4'),
-          position: LatLng(14.33120930591894, 121.06947036325884),
-          icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-          onTap: () => showDialog(
-              context: context, builder: (context) => AdminTagInformation())),
-      Marker(
-          markerId: const MarkerId('5'),
-          position: LatLng(14.31992161435816, 121.1176986169851),
-          icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-          onTap: () => showDialog(
-              context: context, builder: (context) => AdminTagInformation())),
-      Marker(
-          markerId: const MarkerId('6'),
-          position: LatLng(14.263368532549292, 121.04213554806316),
-          icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-          onTap: () => showDialog(
-              context: context, builder: (context) => AdminTagInformation())),
-      Marker(
-          markerId: const MarkerId('7'),
-          position: LatLng(14.247512370849535, 121.06340147747518),
-          icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-          onTap: () => showDialog(
-              context: context, builder: (context) => AdminTagInformation())),
-      Marker(
-          markerId: const MarkerId('8'),
-          position: LatLng(14.247352099793037, 121.06342553348516),
-          icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-          onTap: () => showDialog(
-              context: context, builder: (context) => AdminTagInformation())),
-      Marker(
-          markerId: const MarkerId('9'),
-          position: LatLng(14.169189623465543, 121.14310662338366),
-          icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-          onTap: () => showDialog(
-              context: context, builder: (context) => AdminTagInformation())),
-      Marker(
-          markerId: const MarkerId('10'),
-          position: LatLng(14.293578936541783, 121.07870252060286),
-          icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-          onTap: () => showDialog(
-              context: context, builder: (context) => AdminTagInformation())),
-    };
-
-    _markers.addAll(markers);
-
     return WillPopScope(
-        onWillPop: _onBackButtonPressed,
-        child: Scaffold(
-            appBar: AppBar(
-              automaticallyImplyLeading: false,
-              title: const Text(
-                'Admin Map',
-                style: TextStyle(
-                    fontSize: 20,
-                    color: Colors.white,
-                    letterSpacing: 3,
-                    fontWeight: FontWeight.bold),
-              ),
-              backgroundColor: const Color.fromARGB(255, 97, 84, 158),
-              centerTitle: true,
+      onWillPop: _onBackButtonPressed,
+      child: Scaffold(
+        appBar: AppBar(
+          automaticallyImplyLeading: false,
+          title: const Text(
+            'Admin Map',
+            style: TextStyle(
+              fontSize: 20,
+              color: Colors.white,
+              letterSpacing: 3,
+              fontWeight: FontWeight.bold,
             ),
-            body: Stack(
-              children: [
-                GoogleMap(
-                  markers: _markers,
-                  polylines: _polylines,
-                  onTap: (LatLng latLng) {
-                    showDialog(
-                        context: context,
-                        builder: (context) => AlertDialog(
-                              title: const Text(
-                                "Are you sure you want to add a tag",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    color: Color.fromARGB(255, 115, 99, 183),
-                                    fontSize: 17,
-                                    fontWeight: FontWeight.bold),
-                              ),
-                              actions: <Widget>[
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop(false);
-                                  },
-                                  child: const Text("No"),
-                                ),
-                                TextButton(
-                                  onPressed: () {
-                                    Navigator.of(context).pop(true);
-                                    Marker newMarker = Marker(
-                                        markerId: MarkerId("value"),
-                                        position: LatLng(
-                                            latLng.latitude, latLng.longitude),
-                                        icon: _customMarkerIcon ??
-                                            BitmapDescriptor.defaultMarker);
-
-                                   //for tapping the new marker tag this should appear
-                                    // onTap:
-                                    // () {
-                                    //   Navigator.of(context).pop(true);
-                                    //   showDialog(
-                                    //       context: context,
-                                    //       builder: (context) =>
-                                    //           AdminTagInformation());
-                                    // };
-
-                                    _markers.add(newMarker);
-                                  },
-                                  child: const Text("Yes"),
-                                ),
-                              ],
-                            ));
-                  },
-                  initialCameraPosition: const CameraPosition(
-                    target: _pGooglePlex,
-                    zoom: 13,
-                  ),
-                  zoomControlsEnabled:
-                      false, // Disable zoom in and zoom out buttons
-                  onMapCreated: (GoogleMapController controller) {
-                    mapController = controller;
-                    mapController.setMapStyle(_mapStyleString);
-                  },
-                ),
-              ],
-            )));
+          ),
+          backgroundColor: const Color.fromARGB(255, 97, 84, 158),
+          centerTitle: true,
+        ),
+        body: Stack(
+          children: [
+            GoogleMap(
+              markers: _markers,
+              polylines: _polylines,
+              onTap: (LatLng latLng) {
+                showDialog(
+                    context: context,
+                    builder: (context) => AlertDialog(
+                          title: const Text(
+                            "Are you sure you want to add a tag",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                                color: Color.fromARGB(255, 115, 99, 183),
+                                fontSize: 17,
+                                fontWeight: FontWeight.bold),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(false);
+                              },
+                              child: const Text("No"),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(true);
+                                _addMarker(latLng);
+                              },
+                              child: const Text("Yes"),
+                            ),
+                          ],
+                        ));
+              },
+              initialCameraPosition: CameraPosition(
+                target: _pGooglePlex,
+                zoom: 13,
+              ),
+              zoomControlsEnabled: false,
+              onMapCreated: (GoogleMapController controller) {
+                mapController = controller;
+                mapController.setMapStyle(_mapStyleString);
+              },
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Future<bool> _onBackButtonPressed() async {
     return await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-              title: const Text("Exit Map"),
-              content: const Text("Do you want to exit this page?"),
-              actions: <Widget>[
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(false);
-                  },
-                  child: const Text("No"),
-                ),
-                TextButton(
-                  onPressed: () {
-                    Navigator.of(context).pop(true);
-                    Navigator.push(context,
-                        _createRoute(AdminPage(username: widget.username)));
-                  },
-                  child: const Text("Yes"),
-                ),
-              ],
-            ));
+      context: context,
+      builder: (context) => AlertDialog(
+        title: const Text("Exit Map"),
+        content: const Text("Do you want to exit this page?"),
+        actions: <Widget>[
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(false);
+            },
+            child: const Text("No"),
+          ),
+          TextButton(
+            onPressed: () {
+              Navigator.of(context).pop(true);
+              Navigator.push(
+                context,
+                _createRoute(AdminPage(username: widget.username)),
+              );
+            },
+            child: const Text("Yes"),
+          ),
+        ],
+      ),
+    );
   }
 
   Future<String?> getAddressFromLatLng(double lat, double lng) async {
@@ -311,10 +287,38 @@ class _AdminMapState extends State<AdminMap> {
       }
     });
   }
-}
 
-Route _createRoute(Widget child) {
-  return PageRouteBuilder(
+  void _addMarker(LatLng latLng) {
+    final markerId =
+        MarkerId('marker_${DateTime.now().millisecondsSinceEpoch}');
+    Marker newMarker = Marker(
+      markerId: markerId,
+      position: latLng,
+      icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (context) => AdminTagInformation(
+            markerId: markerId,
+            deleteMarker: _deleteMarker,
+          ),
+        );
+      },
+    );
+    setState(() {
+      _markers.add(newMarker);
+      _saveMarkersToPrefs();
+    });
+
+    // Add the marker to Firestore as well
+    FirebaseFirestore.instance.collection('Tags').doc(markerId.value).set({
+      'TagId': markerId.value,
+      'position': GeoPoint(latLng.latitude, latLng.longitude),
+    });
+  }
+
+  Route _createRoute(Widget child) {
+    return PageRouteBuilder(
       pageBuilder: (BuildContext context, Animation<double> animation,
               Animation<double> secondaryAnimation) =>
           child,
@@ -326,9 +330,13 @@ Route _createRoute(Widget child) {
         var tween =
             Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
 
+        var offsetAnimation = animation.drive(tween);
+
         return SlideTransition(
-          position: animation.drive(tween),
+          position: offsetAnimation,
           child: child,
         );
-      });
+      },
+    );
+  }
 }
