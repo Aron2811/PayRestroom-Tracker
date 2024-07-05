@@ -59,32 +59,38 @@ class AdminMapState extends State<AdminMap> {
     );
   }
 
-  Future<Set<Marker>> loadMarkersFromPrefs() async {
-    final prefs = await SharedPreferences.getInstance();
-    final markerData = prefs.getStringList('markers') ?? [];
-    Set<Marker> loadedMarkers = markerData.map((markerString) {
-      final markerInfo = markerString.split(',');
-      final id = markerInfo[0];
-      final lat = double.parse(markerInfo[1]);
-      final lng = double.parse(markerInfo[2]);
-      return Marker(
-        markerId: MarkerId(id),
-        position: LatLng(lat, lng),
-        icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-        onTap: () {
-          showDialog(
-            context: context,
-            builder: (context) => AdminTagInformation(
-              markerId: MarkerId(id),
-              deleteMarker: _deleteMarker,
-            ),
-          );
-        },
-      );
-    }).toSet();
+Future<Set<Marker>> loadMarkersFromPrefs() async {
+  final firestoreMarkers = await FirebaseFirestore.instance.collection('Tags').get();
+  Set<Marker> loadedMarkers = firestoreMarkers.docs.map((doc) {
+    final data = doc.data();
+    final id = data['TagId'] as String?;
+    final position = data['position'] as GeoPoint?;
+    LatLng latLng;
 
-    return loadedMarkers;
-  }
+    if (position != null) {
+      latLng = LatLng(position.latitude, position.longitude);
+    } else {
+      latLng = LatLng(0.0, 0.0); // Default value if position is null
+    }
+
+    return Marker(
+      markerId: MarkerId(id ?? 'unknown'),
+      position: latLng,
+      icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+      onTap: () {
+        showDialog(
+          context: context,
+          builder: (context) => AdminTagInformation(
+            markerId: MarkerId(id ?? 'unknown'),
+            deleteMarker: _deleteMarker,
+          ),
+        );
+      },
+    );
+  }).toSet();
+
+  return loadedMarkers;
+}
 
   Future<void> _saveMarkersToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
@@ -122,10 +128,36 @@ class AdminMapState extends State<AdminMap> {
     if (_currentP != null) {
       _markers.add(
         Marker(
-          markerId: const MarkerId('User Location'),
-          position: _currentP!,
-          icon: _personMarkerIcon ?? BitmapDescriptor.defaultMarker,
-        ),
+            markerId: const MarkerId('User Location'),
+            position: _currentP!,
+            icon: _personMarkerIcon ?? BitmapDescriptor.defaultMarker,
+            onTap: () => showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                      title: const Text(
+                        "Are you sure you want to add a tag",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Color.fromARGB(255, 115, 99, 183),
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(false);
+                          },
+                          child: const Text("No"),
+                        ),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(true);
+                            _addMarker(_currentP!);
+                          },
+                          child: const Text("Yes"),
+                        ),
+                      ],
+                    ))),
       );
     }
 
@@ -173,7 +205,6 @@ class AdminMapState extends State<AdminMap> {
                             TextButton(
                               onPressed: () {
                                 Navigator.of(context).pop(true);
-                                
                                 _addMarker(latLng);
                               },
                               child: const Text("Yes"),
@@ -308,9 +339,9 @@ class AdminMapState extends State<AdminMap> {
     );
     setState(() {
       _markers.add(newMarker);
-      _saveMarkersToPrefs();
     });
 
+    _saveMarkersToPrefs();
     // Add the marker to Firestore as well
     FirebaseFirestore.instance.collection('Tags').doc(markerId.value).set({
       'TagId': markerId.value,
