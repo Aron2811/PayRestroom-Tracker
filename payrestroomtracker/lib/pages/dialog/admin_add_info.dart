@@ -63,16 +63,16 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
         SetOptions(merge: true),
       );
 
-      if (mounted) {
+     if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image uploaded successfully')),
+          const SnackBar(content: Text('Image uploaded successfully'),backgroundColor: Color.fromARGB(255, 115, 99, 183)),
         );
       }
     } catch (e) {
       print('Error uploading image: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to upload image')),
+          const SnackBar(content: Text('Failed to upload image'),backgroundColor: Color.fromARGB(255, 115, 99, 183)),
         );
       }
     }

@@ -1,7 +1,43 @@
 import 'package:flutter/material.dart';
+import 'package:another_carousel_pro/another_carousel_pro.dart';
+import 'package:full_screen_image/full_screen_image.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-class ChangeInfoDialog extends StatelessWidget {
-  const ChangeInfoDialog({super.key});
+class ChangeInfoDialog extends StatefulWidget {
+  final MarkerId markerId;
+
+  const ChangeInfoDialog({
+    Key? key,
+    required this.markerId,
+  }) : super(key: key);
+
+  @override
+  State<ChangeInfoDialog> createState() => _ChangeInfoDialogState();
+}
+
+class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
+  List<String> imageUrls = [];
+
+  @override
+  void initState() {
+    super.initState();
+    fetchImageUrls();
+  }
+
+  Future<void> fetchImageUrls() async {
+    DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .doc(widget.markerId.value)
+        .get();
+
+    if (tagSnapshot.exists) {
+      List<dynamic> urls = tagSnapshot.get('ImageUrls') ?? [];
+      setState(() {
+        imageUrls = List<String>.from(urls);
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -108,7 +144,36 @@ class ChangeInfoDialog extends StatelessWidget {
               filled: true,
             ),
           )),
-      const SizedBox(height: 20),
+      const SizedBox(height: 15),
+      Column(
+        children: imageUrls.map((url) {
+          return Dismissible(
+              key: Key(url), // Provide a unique key
+              direction:
+                  DismissDirection.down, // Set the direction of dismissal
+              onDismissed: (direction) {
+                setState(() {
+                  imageUrls.remove(url);
+                });
+              },
+              child: FullScreenWidget(
+                  disposeLevel: DisposeLevel.High,
+                  child: Center(
+                      child: SizedBox(
+                    height: 250,
+                    width: 300,
+                    child: AnotherCarousel(
+                      borderRadius: true,
+                      boxFit: BoxFit.cover,
+                      radius: Radius.circular(10),
+                      images:
+                          imageUrls.map((url) => NetworkImage(url)).toList(),
+                      showIndicator: false,
+                    ),
+                  ))));
+        }).toList(),
+      ),
+      const SizedBox(height: 15),
       Align(
           alignment: Alignment.center,
           child: ElevatedButton.icon(

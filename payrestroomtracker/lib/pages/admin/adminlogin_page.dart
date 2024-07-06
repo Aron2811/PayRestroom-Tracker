@@ -23,6 +23,11 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   }
 
   Future<void> _login() async {
+    showDialog(
+        context: context,
+        builder: (context) {
+          return Center(child: CircularProgressIndicator());
+        });
     String username = _usernameController.text.trim();
     String password = _passwordController.text.trim();
     bool usernameValid = false;

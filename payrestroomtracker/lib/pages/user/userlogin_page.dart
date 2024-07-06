@@ -170,7 +170,6 @@ Future<void> signInWithGoogle(BuildContext context) async {
     print('Firebase user signed in with Google credentials');
 
     User? user = userCredential.user;
-    Navigator.of(context).pop();
     if (user != null) {
       // Store user information in Firestore
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({

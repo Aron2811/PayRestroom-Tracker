@@ -1,11 +1,8 @@
-import 'dart:io';
 import 'package:another_carousel_pro/another_carousel_pro.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_button/pages/dialog/admin_add_info.dart';
 import 'package:flutter_button/pages/dialog/admin_edit_info.dart';
+import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class AdminTagInformation extends StatefulWidget {
@@ -63,7 +60,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
             ),
           ),
         ),
-        SizedBox(height: 5),
+        SizedBox(height: 2),
         TextField(
           textAlign: TextAlign.center,
           enabled: false,
@@ -76,7 +73,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
             ),
           ),
         ),
-        SizedBox(height: 5),
+        SizedBox(height: 2),
         TextField(
           textAlign: TextAlign.center,
           enabled: false,
@@ -89,26 +86,26 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
             ),
           ),
         ),
-        
- Column(
+        const SizedBox(height: 10),
+        Column(
           children: [
-            SizedBox(
-              height: 250,
-              width: 300,
-              child: AnotherCarousel(
-                borderRadius: true,
-                boxFit: BoxFit.cover,
-                radius: Radius.circular(10),
-                images: imageUrls.map((url) => NetworkImage(url)).toList(),
-                showIndicator: false,
-              ),
-            ),
+            FullScreenWidget(
+                disposeLevel: DisposeLevel.High,
+                child: Center(
+                    child: SizedBox(
+                  height: 250,
+                  width: 300,
+                  child: AnotherCarousel(
+                    borderRadius: true,
+                    boxFit: BoxFit.cover,
+                    radius: Radius.circular(10),
+                    images: imageUrls.map((url) => NetworkImage(url)).toList(),
+                    showIndicator: false,
+                  ),
+                ))),
           ],
         ),
         SizedBox(height: 15),
-        
-        SizedBox(height: 20),
-
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [
@@ -116,7 +113,9 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
               onPressed: () {
                 Navigator.of(context).pop(true);
                 showDialog(
-                    context: context, builder: (context) => ChangeInfoDialog());
+                    context: context,
+                    builder: (context) =>
+                        ChangeInfoDialog(markerId: widget.markerId));
               },
               icon: Icon(Icons.edit_location_alt_outlined),
               color: Color.fromARGB(255, 115, 99, 183),
@@ -133,7 +132,6 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
             ),
           ],
         ),
-        SizedBox(height: 15),
       ],
     );
   }
