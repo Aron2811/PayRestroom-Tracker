@@ -61,134 +61,126 @@ class AdminPage extends StatelessWidget {
         ),
       ]),
 
-      Column(mainAxisAlignment: MainAxisAlignment.center, children: [
-        const SizedBox(height: 150),
+      Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          const SizedBox(height: 150),
 
-        // Image
-        Image.asset(
-          'assets/PO_tag.png',
-          width: 230,
-          height: 230,
-        ),
+          // Image
+          Image.asset(
+            'assets/PO_tag.png',
+            width: 230,
+            height: 230,
+          ),
 
-        SizedBox(height: 30),
-        Text(
-          'Hello',
-          textAlign: TextAlign.start,
-          style: TextStyle(
-            fontSize: 40,
-            fontWeight: FontWeight.bold,
-            color: Colors.white,
-            letterSpacing: 3,
+          SizedBox(height: 30),
+          Text(
+            'Hello',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 40,
+              fontWeight: FontWeight.bold,
+              color: Colors.white,
+              letterSpacing: 3,
+            ),
           ),
-        ),
-        SizedBox(height: 5),
-        Text(
-          '$username',
-          textAlign: TextAlign.start,
-          style: TextStyle(
-            fontSize: 17,
-            color: Colors.white,
-            letterSpacing: 2,
+          SizedBox(height: 5),
+          Text(
+            '$username',
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              fontSize: 17,
+              color: Colors.white,
+              letterSpacing: 2,
+            ),
           ),
-        ),
-        Column(
-          children: [
-            Row(children: [
-              Padding(
-                  padding: EdgeInsets.only(
-                    top: 230,
-                  ),
-                  child: ClipRRect(
+          SizedBox(height: 25),
+          Align(
+              alignment: Alignment.center,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  enableFeedback: false,
+                  backgroundColor: Colors.white,
+                  minimumSize: const Size(170, 40),
+                  shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.only(
-                          topRight: Radius.circular(20),
-                          topLeft: Radius.circular(20)),
-                      child: GestureDetector(
-                          onTap: () {
-                            Navigator.push(
-                                context,
-                                _createRoute(AdminMap(
-                                  username: username,
-                                )));
-                          },
-                          child: Container(
-                            color: Colors.white,
-                            width: 175,
-                            height: 50,
-                            child: Row(children: [
-                              SizedBox(
-                                width: 35,
-                                height: 10,
-                              ),
-                              Icon(
-                                Icons.map_rounded,
-                                color: Color.fromARGB(255, 132, 119, 197),
-                                size: 20,
-                              ),
-                              SizedBox(
-                                width: 5,
-                              ),
-                              Text(
-                                "View Map",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                  color: Color.fromARGB(255, 132, 119, 197),
-                                ),
-                              ),
-                            ]),
-                          )))),
-              SizedBox(
-                width: 5,
-              ),
-              Padding(
-                  padding: EdgeInsets.only(
-                    top: 230,
+                    topLeft: Radius.circular(10),
+                    topRight: Radius.circular(10),
+                    bottomLeft: Radius.circular(10),
+                    bottomRight: Radius.circular(10),
+                  )),
+                  foregroundColor: Color.fromARGB(255, 97, 84, 158),
+                  textStyle: const TextStyle(
+                    fontSize: 18,
                   ),
-                  child: ClipRRect(
+                ),
+                label: const Text(
+                  "View Map",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 132, 119, 197),
+                  ),
+                ),
+                icon: const Icon(
+                  Icons.map_rounded,
+                  color: Color.fromARGB(255, 132, 119, 197),
+                  size: 20,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      _createRoute(AdminMap(
+                        username: username,
+                      )));
+                },
+              )),
+          SizedBox(height: 8),
+
+          Align(
+              alignment: Alignment.center,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  enableFeedback: false,
+                  backgroundColor: Colors.white,
+                  minimumSize: const Size(170, 40),
+                  shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.only(
-                          topLeft: Radius.circular(20),
-                          topRight: Radius.circular(20)),
-                      child: Container(
-                          color: Colors.white,
-                          width: 180,
-                          height: 50,
-                          child: GestureDetector(
-                            onTap: () {
-                              Navigator.push(
-                                  context,
-                                  _createRoute(AdminReport(
-                                    username: username,
-                                  )));
-                            },
-                            child: Row(children: [
-                              SizedBox(
-                                width: 35,
-                                height: 10,
-                              ),
-                              Icon(
-                                Icons.report_problem_rounded,
-                                color: Color.fromARGB(255, 132, 119, 197),
-                                size: 20,
-                              ),
-                              SizedBox(
-                                width: 5,
-                              ),
-                              Text(
-                                "View Report",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                    fontSize: 16,
-                                    fontWeight: FontWeight.bold,
-                                    color: Color.fromARGB(255, 132, 119, 197)),
-                              ),
-                            ]),
-                          )))),
-            ]),
-          ],
-        )
-      ])
+                    topLeft: Radius.circular(10),
+                    topRight: Radius.circular(10),
+                    bottomLeft: Radius.circular(10),
+                    bottomRight: Radius.circular(10),
+                  )),
+                  foregroundColor: Color.fromARGB(255, 97, 84, 158),
+                  textStyle: const TextStyle(
+                    fontSize: 16,
+                  ),
+                ),
+                label: const Text(
+                  "View Report",
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 132, 119, 197),
+                  ),
+                ),
+                icon: const Icon(
+                  Icons.report_problem_rounded,
+                  color: Color.fromARGB(255, 132, 119, 197),
+                  size: 20,
+                ),
+                onPressed: () {
+                  Navigator.push(
+                      context,
+                      _createRoute(AdminMap(
+                        username: username,
+                      )));
+                },
+              )),
+        ],
+      )
     ])));
   }
 }

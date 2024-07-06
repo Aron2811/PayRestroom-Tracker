@@ -12,6 +12,7 @@ import 'package:flutter_button/pages/bottomsheet/recommendation_list.dart';
 import 'package:flutter_button/pages/bottomsheet/paidrestroom_info.dart';
 import 'package:flutter_button/pages/bottomsheet/draggablesheet.dart';
 import 'package:flutter_button/algo/Astar.dart';
+import 'package:flutter_button/pages/admin/adminMap.dart';
 import 'dart:math';
 
 class MapPage extends StatefulWidget {
@@ -28,6 +29,7 @@ class _MapPageState extends State<MapPage> {
   Location _locationController = new Location();
   LatLng? _currentP = null;
   String? _currentAddress;
+  final AdminMapState adminMap = AdminMapState();
   Set<Marker> _markers = {};
   BitmapDescriptor? _customMarkerIcon;
   BitmapDescriptor? _jeepMarkerIcon;
@@ -50,6 +52,24 @@ class _MapPageState extends State<MapPage> {
     super.initState();
     getLocationUpdates();
     _loadCustomMarkerIcon();
+    _loadMarkers();
+  }
+
+  Future<void> _loadMarkers() async {
+    _markers = await adminMap.loadMarkersFromPrefs().then((markers) {
+      return markers.map((marker) {
+        return Marker(
+          markerId: marker.markerId,
+          position: marker.position,
+          icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+          onTap: () {
+            _showPayToiletInformation(marker.position);
+          },
+        );
+      }).toSet();
+    });
+
+    setState(() {}); // Update UI after loading markers
   }
 
   Future<void> _loadCustomMarkerIcon() async {
@@ -136,6 +156,21 @@ class _MapPageState extends State<MapPage> {
     );
   }
 
+  void _showPayToiletInformation(LatLng destination) {
+    showModalBottomSheet(
+        context: context,
+        isScrollControlled: true,
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+        ),
+        backgroundColor: Colors.transparent,
+        builder: (context) => PaidRestroomInfo(
+              drawRouteToDestination: _drawRouteToDestination,
+              destination: destination,
+              toggleVisibility: toggleVisibility,
+            ));
+  }
+
   @override
   Widget build(BuildContext context) {
     if (_currentP != null) {
@@ -150,95 +185,78 @@ class _MapPageState extends State<MapPage> {
       );
     }
 
-    void _showPayToiletInformation(LatLng destination) {
-      showModalBottomSheet(
-          context: context,
-          isScrollControlled: true,
-          shape: const RoundedRectangleBorder(
-            borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-          ),
-          backgroundColor: Colors.transparent,
-          builder: (context) => PaidRestroomInfo(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
-              ));
-    }
-
-    var markers = {
-      Marker(
-        markerId: const MarkerId('1'),
-        position: LatLng(14.315468626815898, 121.07064669023518),
-        icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-        onTap: () => _showPayToiletInformation(
-            LatLng(14.315468626815898, 121.07064669023518)),
-      ),
-      Marker(
-        markerId: const MarkerId('2'),
-        position: LatLng(14.356239417708707, 121.04451720560752),
-        icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-        onTap: () => _showPayToiletInformation(
-            LatLng(14.356239417708707, 121.04451720560752)),
-      ),
-      Marker(
-        markerId: const MarkerId('3'),
-        position: LatLng(14.355059500353084, 121.0442736161414),
-        icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-        onTap: () => _showPayToiletInformation(
-            LatLng(14.355059500353084, 121.0442736161414)),
-      ),
-      Marker(
-        markerId: const MarkerId('4'),
-        position: LatLng(14.33120930591894, 121.06947036325884),
-        icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-        onTap: () => _showPayToiletInformation(
-            LatLng(14.33120930591894, 121.06947036325884)),
-      ),
-      Marker(
-        markerId: const MarkerId('5'),
-        position: LatLng(14.31992161435816, 121.1176986169851),
-        icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-        onTap: () => _showPayToiletInformation(
-            LatLng(14.31992161435816, 121.1176986169851)),
-      ),
-      Marker(
-        markerId: const MarkerId('6'),
-        position: LatLng(14.263368532549292, 121.04213554806316),
-        icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-        onTap: () => _showPayToiletInformation(
-            LatLng(14.263368532549292, 121.04213554806316)),
-      ),
-      Marker(
-        markerId: const MarkerId('7'),
-        position: LatLng(14.247512370849535, 121.06340147747518),
-        icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-        onTap: () => _showPayToiletInformation(
-            LatLng(14.247512370849535, 121.06340147747518)),
-      ),
-      Marker(
-        markerId: const MarkerId('8'),
-        position: LatLng(14.247352099793037, 121.06342553348516),
-        icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-        onTap: () => _showPayToiletInformation(
-            LatLng(14.247352099793037, 121.06342553348516)),
-      ),
-      Marker(
-        markerId: const MarkerId('9'),
-        position: LatLng(14.169189623465543, 121.14310662338366),
-        icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-        onTap: () => _showPayToiletInformation(
-            LatLng(14.169189623465543, 121.14310662338366)),
-      ),
-      Marker(
-        markerId: const MarkerId('10'),
-        position: LatLng(14.293578936541783, 121.07870252060286),
-        icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-        onTap: () => _showPayToiletInformation(
-            LatLng(14.293578936541783, 121.07870252060286)),
-      ),
-    };
-
-    _markers.addAll(markers);
+    // var markers = {
+    //   Marker(
+    //     markerId: const MarkerId('1'),
+    //     position: LatLng(14.315468626815898, 121.07064669023518),
+    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+    //     onTap: () => _showPayToiletInformation(
+    //         LatLng(14.315468626815898, 121.07064669023518)),
+    //   ),
+    //   Marker(
+    //     markerId: const MarkerId('2'),
+    //     position: LatLng(14.356239417708707, 121.04451720560752),
+    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+    //     onTap: () => _showPayToiletInformation(
+    //         LatLng(14.356239417708707, 121.04451720560752)),
+    //   ),
+    //   Marker(
+    //     markerId: const MarkerId('3'),
+    //     position: LatLng(14.355059500353084, 121.0442736161414),
+    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+    //     onTap: () => _showPayToiletInformation(
+    //         LatLng(14.355059500353084, 121.0442736161414)),
+    //   ),
+    //   Marker(
+    //     markerId: const MarkerId('4'),
+    //     position: LatLng(14.33120930591894, 121.06947036325884),
+    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+    //     onTap: () => _showPayToiletInformation(
+    //         LatLng(14.33120930591894, 121.06947036325884)),
+    //   ),
+    //   Marker(
+    //     markerId: const MarkerId('5'),
+    //     position: LatLng(14.31992161435816, 121.1176986169851),
+    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+    //     onTap: () => _showPayToiletInformation(
+    //         LatLng(14.31992161435816, 121.1176986169851)),
+    //   ),
+    //   Marker(
+    //     markerId: const MarkerId('6'),
+    //     position: LatLng(14.263368532549292, 121.04213554806316),
+    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+    //     onTap: () => _showPayToiletInformation(
+    //         LatLng(14.263368532549292, 121.04213554806316)),
+    //   ),
+    //   Marker(
+    //     markerId: const MarkerId('7'),
+    //     position: LatLng(14.247512370849535, 121.06340147747518),
+    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+    //     onTap: () => _showPayToiletInformation(
+    //         LatLng(14.247512370849535, 121.06340147747518)),
+    //   ),
+    //   Marker(
+    //     markerId: const MarkerId('8'),
+    //     position: LatLng(14.247352099793037, 121.06342553348516),
+    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+    //     onTap: () => _showPayToiletInformation(
+    //         LatLng(14.247352099793037, 121.06342553348516)),
+    //   ),
+    //   Marker(
+    //     markerId: const MarkerId('9'),
+    //     position: LatLng(14.169189623465543, 121.14310662338366),
+    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+    //     onTap: () => _showPayToiletInformation(
+    //         LatLng(14.169189623465543, 121.14310662338366)),
+    //   ),
+    //   Marker(
+    //     markerId: const MarkerId('10'),
+    //     position: LatLng(14.293578936541783, 121.07870252060286),
+    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+    //     onTap: () => _showPayToiletInformation(
+    //         LatLng(14.293578936541783, 121.07870252060286)),
+    //   ),
+    // };
 
     return WillPopScope(
         onWillPop: _onBackButtonPressed,
@@ -298,75 +316,130 @@ class _MapPageState extends State<MapPage> {
                   maintainSize: true,
                   maintainAnimation: true,
                   maintainState: true,
-                  child: Container(
-                      height: 40,
-                      width: 130,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.start,
-                        children: [
-                          Padding(
-                              padding: EdgeInsets.only(right: 10),
-                              child: GestureDetector(
-                                child: Container(
-                                    height: 40,
-                                    width: 40,
-                                    child: Image.asset('assets/car.png')),
-                                onTap: () {
-                                  _drawRouteToDestination(end!, 'private');
-                                  _markers.add(
-                                    Marker(
-                                      markerId: const MarkerId('User Location'),
-                                      position: _currentP!,
-                                      icon: _carMarkerIcon ??
-                                          BitmapDescriptor
-                                              .defaultMarker, // Set the custom icon here
+                  child: ClipRRect(
+                      borderRadius: BorderRadius.circular(25.0),
+                      child: Container(
+                          color: Color.fromARGB(255, 172, 161, 228),
+                          height: 70,
+                          width: 153,
+                          child: Padding(
+                              padding: EdgeInsets.only(top: 10),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  Padding(
+                                      padding: EdgeInsets.only(
+                                        right: 10,
+                                        left: 15,
+                                      ),
+                                      child: Column(
+                                        children: [
+                                          GestureDetector(
+                                            child: Container(
+                                                height: 35,
+                                                width: 35,
+                                                child: Image.asset(
+                                                    'assets/car.png')),
+                                            onTap: () {
+                                              _drawRouteToDestination(
+                                                  end!, 'private');
+                                              _markers.add(
+                                                Marker(
+                                                  markerId: const MarkerId(
+                                                      'User Location'),
+                                                  position: _currentP!,
+                                                  icon: _carMarkerIcon ??
+                                                      BitmapDescriptor
+                                                          .defaultMarker, // Set the custom icon here
+                                                ),
+                                              );
+                                            },
+                                          ),
+                                          SizedBox(height: 5),
+                                          Text(
+                                            '15m',
+                                            // textAlign: TextAlign.start,
+                                            style: TextStyle(
+                                              fontSize: 12,
+                                              fontWeight: FontWeight.bold,
+                                              color: Colors.white,
+                                            ),
+                                          ),
+                                        ],
+                                      )),
+                                  Column(children: [
+                                    Padding(
+                                        padding: EdgeInsets.only(right: 7),
+                                        child: GestureDetector(
+                                          child: Container(
+                                            height: 35,
+                                            width: 35,
+                                            child:
+                                                Image.asset('assets/jeep.png'),
+                                          ),
+                                          onTap: () {
+                                            _drawRouteToDestination(
+                                                end!, 'commute');
+                                            _markers.add(
+                                              Marker(
+                                                markerId: const MarkerId(
+                                                    'User Location'),
+                                                position: _currentP!,
+                                                icon: _jeepMarkerIcon ??
+                                                    BitmapDescriptor
+                                                        .defaultMarker, // Set the custom icon here
+                                              ),
+                                            );
+                                          },
+                                        )),
+                                    SizedBox(height: 5),
+                                    Text(
+                                      '15m',
+                                      // textAlign: TextAlign.start,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  );
-                                },
-                              )),
-                          Padding(
-                              padding: EdgeInsets.only(right: 10),
-                              child: GestureDetector(
-                                child: Container(
-                                  height: 30,
-                                  width: 30,
-                                  child: Image.asset('assets/jeep.png'),
-                                ),
-                                onTap: () {
-                                  _drawRouteToDestination(end!, 'commute');
-                                  _markers.add(
-                                    Marker(
-                                      markerId: const MarkerId('User Location'),
-                                      position: _currentP!,
-                                      icon: _jeepMarkerIcon ??
-                                          BitmapDescriptor
-                                              .defaultMarker, // Set the custom icon here
+                                  ]),
+                                  Column(children: [
+                                    Padding(
+                                        padding: EdgeInsets.only(right: 5),
+                                        child: GestureDetector(
+                                          child: Container(
+                                              height: 35,
+                                              width: 35,
+                                              child: Image.asset(
+                                                  'assets/person.png')),
+                                          onTap: () {
+                                            _drawRouteToDestination(
+                                                end!, 'byFoot');
+                                            _markers.add(
+                                              Marker(
+                                                markerId: const MarkerId(
+                                                    'User Location'),
+                                                position: _currentP!,
+                                                icon: _personMarkerIcon ??
+                                                    BitmapDescriptor
+                                                        .defaultMarker, // Set the custom icon here
+                                              ),
+                                            );
+                                          },
+                                        )),
+                                    SizedBox(height: 5),
+                                    Text(
+                                      '15m',
+                                      // textAlign: TextAlign.start,
+                                      style: TextStyle(
+                                        fontSize: 12,
+                                        fontWeight: FontWeight.bold,
+                                        color: Colors.white,
+                                      ),
                                     ),
-                                  );
-                                },
-                              )),
-                          Padding(
-                              padding: EdgeInsets.only(right: 10),
-                              child: GestureDetector(
-                                child: Container(
-                                    height: 30,
-                                    width: 30,
-                                    child: Image.asset('assets/person.png')),
-                                onTap: () {
-                                  _drawRouteToDestination(end!, 'byFoot');
-                                  _markers.add(
-                                    Marker(
-                                      markerId: const MarkerId('User Location'),
-                                      position: _currentP!,
-                                      icon: _personMarkerIcon ??
-                                          BitmapDescriptor
-                                              .defaultMarker, // Set the custom icon here
-                                    ),
-                                  );
-                                },
-                              )),
-                        ],
-                      )))),
+                                  ])
+                                ],
+                              )))))),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
