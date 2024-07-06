@@ -89,7 +89,8 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
             ),
           ),
         ),
-        Column(
+        
+ Column(
           children: [
             SizedBox(
               height: 250,
@@ -105,8 +106,9 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
           ],
         ),
         SizedBox(height: 15),
-        //
+        
         SizedBox(height: 20),
+
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [

@@ -81,7 +81,7 @@ class ChangeInfoDialog extends StatelessWidget {
               filled: true,
             ),
           )),
-          const SizedBox(height: 10),
+      const SizedBox(height: 10),
       const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10.0),
           child: TextField(
@@ -109,31 +109,29 @@ class ChangeInfoDialog extends StatelessWidget {
             ),
           )),
       const SizedBox(height: 20),
-      Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 70.0),
+      Align(
+          alignment: Alignment.center,
           child: ElevatedButton.icon(
-        style: ElevatedButton.styleFrom(
-            enableFeedback: false,
-            backgroundColor: Colors.white,
-            minimumSize: const Size(100, 40),
-            shape:
-                RoundedRectangleBorder(borderRadius: BorderRadius.circular(50)),
-            side: BorderSide(
-              color: Color.fromARGB(
-                      255, 149, 134, 225), //Set the border color
-              width: 2.0,
-            ),
-            textStyle:
-                const TextStyle(fontSize: 16)),
-        onPressed: () {},
-        icon: Icon(Icons.upload_rounded,
-            color: Color.fromARGB(
-                      255, 149, 134, 225)),
-        label: const Text("Upload"),
-      )),
-      const SizedBox(height: 20),
-      Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 50.0),
+            style: ElevatedButton.styleFrom(
+                enableFeedback: false,
+                backgroundColor: Colors.white,
+                minimumSize: const Size(100, 40),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(50)),
+                side: BorderSide(
+                  color:
+                      Color.fromARGB(255, 149, 134, 225), //Set the border color
+                  width: 2.0,
+                ),
+                textStyle: const TextStyle(fontSize: 16)),
+            onPressed: () {},
+            icon: Icon(Icons.upload_rounded,
+                color: Color.fromARGB(255, 149, 134, 225)),
+            label: const Text("Upload"),
+          )),
+      const SizedBox(height: 15),
+      Align(
+          alignment: Alignment.center,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               enableFeedback: false,
@@ -148,12 +146,9 @@ class ChangeInfoDialog extends StatelessWidget {
                   width: 2.0, // Set the border width
                 ),
               ),
-              foregroundColor: Color.fromARGB(
-                      255, 149, 134, 225),
-              textStyle: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold
-              ),
+              foregroundColor: Color.fromARGB(255, 149, 134, 225),
+              textStyle:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             child: const Text(
               "Confirm",

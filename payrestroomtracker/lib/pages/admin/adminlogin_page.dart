@@ -39,7 +39,6 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         var storedPassword = adminDoc['password'];
 
         if (storedPassword == password) {
-          // Navigate to admin page if login is successful
           Navigator.push(
             context,
             _createRoute(AdminPage(username: username)),

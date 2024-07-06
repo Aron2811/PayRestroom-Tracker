@@ -21,29 +21,36 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
   bool confirmPressed = false;
 
   Future<void> _uploadImage() async {
-    final pickedFile = await ImagePicker().pickImage(source: ImageSource.gallery);
+    final pickedFile =
+        await ImagePicker().pickImage(source: ImageSource.gallery);
     if (pickedFile == null) return;
 
     File imageFile = File(pickedFile.path);
 
     try {
-      String fileName = '${widget.markerId.value}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      firebase_storage.Reference storageRef = firebase_storage.FirebaseStorage.instance
+      String fileName =
+          '${widget.markerId.value}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+      firebase_storage.Reference storageRef = firebase_storage
+          .FirebaseStorage.instance
           .ref('Tags images')
           .child(fileName);
 
       await storageRef.putFile(imageFile);
       String downloadURL = await storageRef.getDownloadURL();
 
-      DocumentReference tagRef = FirebaseFirestore.instance.collection('Tags').doc(widget.markerId.value);
+      DocumentReference tagRef = FirebaseFirestore.instance
+          .collection('Tags')
+          .doc(widget.markerId.value);
 
       DocumentSnapshot tagSnapshot = await tagRef.get();
-      Map<String, dynamic>? tagData = tagSnapshot.data() as Map<String, dynamic>?;
+      Map<String, dynamic>? tagData =
+          tagSnapshot.data() as Map<String, dynamic>?;
 
       List<dynamic> imageUrls = tagData?['ImageUrls'] ?? [];
 
       if (imageUrls.length >= 3) {
-        imageUrls.removeAt(0); // Remove the oldest image URL if there are already 3
+        imageUrls
+            .removeAt(0); // Remove the oldest image URL if there are already 3
       }
 
       imageUrls.add(downloadURL);
@@ -96,18 +103,19 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             decoration: InputDecoration(
               labelText: 'Paid Restroom Name',
               enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
+                borderSide:
+                    BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
               ),
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
+                borderSide:
+                    BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
               ),
               labelStyle: TextStyle(
                 fontSize: 15,
                 color: Color.fromARGB(255, 115, 99, 183),
               ),
               floatingLabelStyle: TextStyle(
-                fontSize: 15,
-                color: Color.fromARGB(255, 115, 99, 183)),
+                  fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)),
               fillColor: Colors.white10,
               filled: true,
             ),
@@ -121,17 +129,17 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             decoration: InputDecoration(
               labelText: 'Location',
               enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
+                borderSide:
+                    BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
               ),
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
+                borderSide:
+                    BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
               ),
               labelStyle: TextStyle(
-                fontSize: 15,
-                color: Color.fromARGB(255, 115, 99, 183)),
+                  fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)),
               floatingLabelStyle: TextStyle(
-                fontSize: 15,
-                color: Color.fromARGB(255, 115, 99, 183)),
+                  fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)),
               fillColor: Colors.white10,
               filled: true,
             ),
@@ -145,25 +153,25 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             decoration: InputDecoration(
               labelText: 'Cost',
               enabledBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
+                borderSide:
+                    BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
               ),
               focusedBorder: UnderlineInputBorder(
-                borderSide: BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
+                borderSide:
+                    BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
               ),
               labelStyle: TextStyle(
-                fontSize: 15,
-                color: Color.fromARGB(255, 115, 99, 183)),
+                  fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)),
               floatingLabelStyle: TextStyle(
-                fontSize: 15,
-                color: Color.fromARGB(255, 115, 99, 183)),
+                  fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)),
               fillColor: Colors.white10,
               filled: true,
             ),
           ),
         ),
         const SizedBox(height: 20),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 70.0),
+        Align(
+          alignment: Alignment.center,
           child: ElevatedButton.icon(
             style: ElevatedButton.styleFrom(
               enableFeedback: false,
@@ -179,13 +187,14 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
               textStyle: const TextStyle(fontSize: 16),
             ),
             onPressed: _uploadImage,
-            icon: const Icon(Icons.upload_rounded, color: Color.fromARGB(255, 149, 134, 225)),
+            icon: const Icon(Icons.upload_rounded,
+                color: Color.fromARGB(255, 149, 134, 225)),
             label: const Text("Upload"),
           ),
         ),
-        const SizedBox(height: 20),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 50.0),
+        const SizedBox(height: 15),
+        Align(
+          alignment: Alignment.center,
           child: ElevatedButton(
             style: ElevatedButton.styleFrom(
               enableFeedback: false,
@@ -200,7 +209,8 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 ),
               ),
               foregroundColor: const Color.fromARGB(255, 149, 134, 225),
-              textStyle: const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+              textStyle:
+                  const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
             ),
             child: const Text(
               "Confirm",
