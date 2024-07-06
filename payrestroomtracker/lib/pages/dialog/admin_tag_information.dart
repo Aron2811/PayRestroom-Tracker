@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:another_carousel_pro/another_carousel_pro.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/dialog/admin_add_info.dart';
 import 'package:flutter_button/pages/dialog/admin_edit_info.dart';
@@ -22,57 +23,25 @@ class AdminTagInformation extends StatefulWidget {
 }
 
 class _AdminTagInformationState extends State<AdminTagInformation> {
-  Future<void> _uploadImage() async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile == null) return;
+  List<String> imageUrls = [];
 
-    File imageFile = File(pickedFile.path);
+  @override
+  void initState() {
+    super.initState();
+    fetchImageUrls();
+  }
 
-    try {
-      String fileName =
-          '${widget.markerId.value}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      firebase_storage.Reference storageRef = firebase_storage
-          .FirebaseStorage.instance
-          .ref('Tags images')
-          .child(fileName);
+  Future<void> fetchImageUrls() async {
+    DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .doc(widget.markerId.value)
+        .get();
 
-      await storageRef.putFile(imageFile);
-      String downloadURL = await storageRef.getDownloadURL();
-
-      DocumentReference tagRef = FirebaseFirestore.instance
-          .collection('Tags')
-          .doc(widget.markerId.value);
-
-      DocumentSnapshot tagSnapshot = await tagRef.get();
-      Map<String, dynamic>? tagData =
-          tagSnapshot.data() as Map<String, dynamic>?;
-
-      List<dynamic> imageUrls = tagData?['ImageUrls'] ?? [];
-
-      if (imageUrls.length >= 3) {
-        imageUrls
-            .removeAt(0); // Remove the oldest image URL if there are already 3
-      }
-
-      imageUrls.add(downloadURL);
-
-      await tagRef.set(
-        {
-          'TagId': widget.markerId.value,
-          'ImageUrls': imageUrls,
-        },
-        SetOptions(merge: true),
-      );
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Image uploaded successfully')),
-      );
-    } catch (e) {
-      print('Error uploading image: $e');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Failed to upload image')),
-      );
+    if (tagSnapshot.exists) {
+      List<dynamic> urls = tagSnapshot.get('ImageUrls') ?? [];
+      setState(() {
+        imageUrls = List<String>.from(urls);
+      });
     }
   }
 
@@ -107,7 +76,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
             ),
           ),
         ),
-         SizedBox(height: 5),
+        SizedBox(height: 5),
         TextField(
           textAlign: TextAlign.center,
           enabled: false,
@@ -120,6 +89,24 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
             ),
           ),
         ),
+        
+ Column(
+          children: [
+            SizedBox(
+              height: 250,
+              width: 300,
+              child: AnotherCarousel(
+                borderRadius: true,
+                boxFit: BoxFit.cover,
+                radius: Radius.circular(10),
+                images: imageUrls.map((url) => NetworkImage(url)).toList(),
+                showIndicator: false,
+              ),
+            ),
+          ],
+        ),
+        SizedBox(height: 15),
+        
         SizedBox(height: 20),
 
         Row(
