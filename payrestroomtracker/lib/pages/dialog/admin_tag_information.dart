@@ -120,33 +120,8 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
             ),
           ),
         ),
-        SizedBox(height: 15),
-        Padding(
-          padding: EdgeInsets.symmetric(horizontal: 60.0),
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              enableFeedback: false,
-              backgroundColor: Colors.white,
-              minimumSize: Size(100, 40),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(50),
-              ),
-              side: BorderSide(
-                color: Color.fromARGB(255, 115, 99, 183),
-                width: 2.0,
-              ),
-              textStyle: TextStyle(
-                fontSize: 20,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            onPressed: _uploadImage,
-            icon: Icon(Icons.upload_rounded,
-                color: Color.fromARGB(255, 115, 99, 183)),
-            label: Text("Upload"),
-          ),
-        ),
         SizedBox(height: 20),
+
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceEvenly,
           children: [

@@ -141,6 +141,12 @@ Future<void> signInWithGoogle(BuildContext context) async {
     await GoogleSignIn().signOut();
     print('User signed out');
 
+    showDialog(
+        context: context,
+        builder: (context) {
+          return Center(child: CircularProgressIndicator());
+        });
+
     // Sign in with Google
     GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
     if (googleUser == null) {
@@ -164,7 +170,7 @@ Future<void> signInWithGoogle(BuildContext context) async {
     print('Firebase user signed in with Google credentials');
 
     User? user = userCredential.user;
-
+    Navigator.of(context).pop();
     if (user != null) {
       // Store user information in Firestore
       await FirebaseFirestore.instance.collection('users').doc(user.uid).set({
@@ -175,8 +181,10 @@ Future<void> signInWithGoogle(BuildContext context) async {
       }, SetOptions(merge: true));
       print('User information stored in Firestore');
 
+      Navigator.of(context).pop();
       // Navigate to UserLoggedInPage upon successful sign-in
       Navigator.push(context, _createRoute(UserLoggedInPage()));
+
       print('Navigated to UserLoggedInPage');
     } else {
       print('Error: Firebase user is null');
