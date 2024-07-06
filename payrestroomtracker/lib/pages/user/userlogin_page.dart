@@ -135,22 +135,33 @@ Route _createRoute(Widget child) {
       });
 }
 
-//google login code
-
 Future<void> signInWithGoogle(BuildContext context) async {
   try {
     // Sign out the current user
     await GoogleSignIn().signOut();
+    print('User signed out');
 
     // Sign in with Google
     GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
-    GoogleSignInAuthentication? googleAuth = await googleUser?.authentication;
+    if (googleUser == null) {
+      print('Google Sign-In was cancelled.');
+      return; // The user canceled the sign-in
+    }
+    print('Google user signed in: ${googleUser.email}');
+
+    GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+    if (googleAuth.accessToken == null && googleAuth.idToken == null) {
+      print('Error: accessToken and idToken are both null.');
+      return; // Neither token is available, cannot proceed
+    }
+    print('Google authentication tokens received');
 
     AuthCredential credential = GoogleAuthProvider.credential(
-        accessToken: googleAuth?.accessToken, idToken: googleAuth?.idToken);
+        accessToken: googleAuth.accessToken, idToken: googleAuth.idToken);
 
     UserCredential userCredential =
         await FirebaseAuth.instance.signInWithCredential(credential);
+    print('Firebase user signed in with Google credentials');
 
     User? user = userCredential.user;
 
@@ -162,12 +173,16 @@ Future<void> signInWithGoogle(BuildContext context) async {
         'photoURL': user.photoURL,
         'lastSignInTime': user.metadata.lastSignInTime,
       }, SetOptions(merge: true));
+      print('User information stored in Firestore');
 
       // Navigate to UserLoggedInPage upon successful sign-in
       Navigator.push(context, _createRoute(UserLoggedInPage()));
+      print('Navigated to UserLoggedInPage');
+    } else {
+      print('Error: Firebase user is null');
     }
 
-    print(user?.displayName);
+    print('User displayName: ${user?.displayName}');
   } catch (e) {
     print("Error during Google sign-in: $e");
   }

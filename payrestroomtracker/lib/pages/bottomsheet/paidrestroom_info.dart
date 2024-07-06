@@ -6,6 +6,7 @@ import 'package:flutter_button/pages/bottomsheet/draggablesheet.dart';
 import 'package:flutter_button/pages/user/report_page.dart';
 import 'package:flutter_button/pages/user/reviews_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 
 class PaidRestroomInfo extends StatelessWidget {
   final Function(LatLng, String) drawRouteToDestination;
@@ -19,14 +20,29 @@ class PaidRestroomInfo extends StatelessWidget {
     required this.toggleVisibility,
   }) : super(key: key);
 
+Future<List<String>> _fetchImageUrls() async {
+  final querySnapshot = await FirebaseFirestore.instance
+      .collection('Tags')
+      .where('position', isEqualTo: GeoPoint(destination.latitude, destination.longitude))
+      .get();
+
+  if (querySnapshot.docs.isNotEmpty) {
+    final doc = querySnapshot.docs.first;
+    final data = doc.data();
+    final imageUrls = data?['ImageUrls'] as List<dynamic>? ?? [];
+    return List<String>.from(imageUrls);
+  } else {
+    return [];
+  }
+}
   @override
   Widget build(BuildContext context) {
     return MyDraggableSheet(
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
-          SizedBox(height: 10),
-          Text(
+          const SizedBox(height: 10),
+          const Text(
             "Paid Restroom Name",
             textAlign: TextAlign.start,
             style: TextStyle(
@@ -35,8 +51,8 @@ class PaidRestroomInfo extends StatelessWidget {
               fontWeight: FontWeight.bold,
             ),
           ),
-          SizedBox(height: 10),
-          Text(
+          const SizedBox(height: 10),
+          const Text(
             "Location",
             textAlign: TextAlign.start,
             style: TextStyle(
@@ -44,8 +60,8 @@ class PaidRestroomInfo extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          SizedBox(height: 10),
-          Text(
+          const SizedBox(height: 10),
+          const Text(
             "Cost",
             textAlign: TextAlign.start,
             style: TextStyle(
@@ -53,11 +69,11 @@ class PaidRestroomInfo extends StatelessWidget {
               color: Colors.white,
             ),
           ),
-          SizedBox(height: 10),
+          const SizedBox(height: 10),
           Row(
             children: [
-              SizedBox(width: 125),
-              Text(
+              const SizedBox(width: 125),
+              const Text(
                 "3.1",
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -79,19 +95,19 @@ class PaidRestroomInfo extends StatelessWidget {
               ),
             ],
           ),
-          SizedBox(height: 20),
+          const SizedBox(height: 20),
           Row(
             children: [
-              SizedBox(width: 30),
+              const SizedBox(width: 30),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   enableFeedback: false,
-                  backgroundColor: Color.fromARGB(255, 226, 223, 229),
-                  minimumSize: Size(150, 50),
+                  backgroundColor: const Color.fromARGB(255, 226, 223, 229),
+                  minimumSize: const Size(150, 50),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(50),
                   ),
-                  side: BorderSide(
+                  side: const BorderSide(
                     color: Color.fromARGB(255, 97, 84, 158),
                     width: 2.0,
                   ),
@@ -101,25 +117,25 @@ class PaidRestroomInfo extends StatelessWidget {
                   toggleVisibility();
                   drawRouteToDestination(destination, 'commute');
                 },
-                label: Text(
+                label: const Text(
                   'Directions',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                icon: Icon(
+                icon: const Icon(
                   Icons.directions,
                   color: Color.fromARGB(255, 97, 84, 158),
                 ),
               ),
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   enableFeedback: false,
-                  backgroundColor: Color.fromARGB(255, 226, 223, 229),
-                  minimumSize: Size(130, 50),
+                  backgroundColor: const Color.fromARGB(255, 226, 223, 229),
+                  minimumSize: const Size(130, 50),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(50),
                   ),
-                  side: BorderSide(
+                  side: const BorderSide(
                     color: Color.fromARGB(255, 97, 84, 158),
                     width: 2.0,
                   ),
@@ -127,79 +143,75 @@ class PaidRestroomInfo extends StatelessWidget {
                 onPressed: () {
                   Navigator.push(context, _createRoute(ReportPage()));
                 },
-                label: Text(
+                label: const Text(
                   'Report',
                   style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
-                icon: Icon(
+                icon: const Icon(
                   Icons.report_problem_outlined,
                   color: Color.fromARGB(255, 97, 84, 158),
                 ),
               ),
             ],
           ),
-          SizedBox(height: 30),
-          Column(
-            children: [
-              SizedBox(
-                height: 250,
-                width: 300,
-                child: AnotherCarousel(
-                  borderRadius: true,
-                  boxFit: BoxFit.cover,
-                  radius: Radius.circular(10),
-                  images: const [
-                    AssetImage("assets/V1.jpg"),
-
-                    AssetImage("assets/v2.jpg"),
-
-                    AssetImage("assets/v3.jpg"),
-
-                    // AssetImage("assets/paid_CR_Tag.png"),
-// AssetImage("assets/tag.png"),
-
-                    // NetworkImage(
-
-//     "https://cdn.pixabay.com/photo/2015/04/23/22/00/tree-736885_640.jpg"),
-                  ],
-                  showIndicator: false,
-                ),
-              ),
-            ],
+          const SizedBox(height: 30),
+          FutureBuilder<List<String>>(
+            future: _fetchImageUrls(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              } else if (snapshot.hasError) {
+                return const Text('Error loading images');
+              } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                return const Text('No images available');
+              } else {
+                return SizedBox(
+                  height: 250,
+                  width: 300,
+                  child: AnotherCarousel(
+                    borderRadius: true,
+                    boxFit: BoxFit.cover,
+                    radius: const Radius.circular(10),
+                    images: snapshot.data!.map((url) => NetworkImage(url)).toList(),
+                    showIndicator: false,
+                  ),
+                );
+              }
+            },
           ),
-          SizedBox(height: 30),
+          const SizedBox(height: 30),
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              SizedBox(width: 20),
+              const SizedBox(width: 20),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   enableFeedback: false,
-                  backgroundColor: Color.fromARGB(255, 148, 139, 192),
-                  minimumSize: Size(250, 45),
+                  backgroundColor: const Color.fromARGB(255, 148, 139, 192),
+                  minimumSize: const Size(250, 45),
                   shape: RoundedRectangleBorder(
-                    side: BorderSide(
+                    side: const BorderSide(
                       color: Color.fromARGB(255, 115, 99, 183),
                       width: 2.0,
                     ),
                   ),
                 ),
                 onPressed: () {
-                  Navigator.push(context, _createRoute(AddReviewPage()));
+                  Navigator.push(context, _createRoute(const AddReviewPage()));
                 },
-                label: Text(
+                label: const Text(
                   'Add a Review',
                   style: TextStyle(
                       fontSize: 17, color: Colors.white, letterSpacing: 3),
                 ),
-                icon: Icon(
+                icon: const Icon(
                   Icons.person_2_rounded,
                   color: Color.fromARGB(255, 97, 84, 158),
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               GestureDetector(
-                child: Text(
+                child: const Text(
                   "View All Reviews",
                   style: TextStyle(
                     fontSize: 17,
@@ -212,8 +224,8 @@ class PaidRestroomInfo extends StatelessWidget {
                   Navigator.push(context, _createRoute(ReviewsPage()));
                 },
               ),
-              SizedBox(height: 20),
-              Text(
+              const SizedBox(height: 20),
+              const Text(
                 "Share your experience to help others",
                 textAlign: TextAlign.start,
                 style: TextStyle(
@@ -221,33 +233,33 @@ class PaidRestroomInfo extends StatelessWidget {
                   color: Colors.white,
                 ),
               ),
-              SizedBox(height: 20),
+              const SizedBox(height: 20),
               Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  SizedBox(width: 20),
+                  const SizedBox(width: 20),
                   ClipRRect(
                     borderRadius: BorderRadius.circular(70),
                     child: Container(
-                      child: Icon(
+                      color: Colors.white,
+                      height: 40,
+                      width: 40,
+                      child: const Icon(
                         Icons.person_2_rounded,
                         color: Color.fromARGB(255, 97, 84, 158),
                         size: 30,
                       ),
-                      color: Colors.white,
-                      height: 40,
-                      width: 40,
                     ),
                   ),
-                  SizedBox(width: 10),
+                  const SizedBox(width: 10),
                   RatingBar(
                     size: 30,
                     alignment: Alignment.center,
                     filledIcon: Icons.star,
                     emptyIcon: Icons.star_border,
                     emptyColor: Colors.white24,
-                    filledColor: Color.fromARGB(255, 97, 84, 158),
-                    halfFilledColor: Color.fromARGB(255, 186, 176, 228),
+                    filledColor: const Color.fromARGB(255, 97, 84, 158),
+                    halfFilledColor: const Color.fromARGB(255, 186, 176, 228),
                     onRatingChanged: (p0) {},
                     initialRating: 3,
                     maxRating: 5,

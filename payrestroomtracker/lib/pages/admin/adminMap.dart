@@ -9,6 +9,7 @@ import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:flutter_button/pages/dialog/admin_add_info.dart';
 
 class AdminMap extends StatefulWidget {
   const AdminMap({Key? key, required this.username}) : super(key: key);
@@ -59,38 +60,39 @@ class AdminMapState extends State<AdminMap> {
     );
   }
 
-Future<Set<Marker>> loadMarkersFromPrefs() async {
-  final firestoreMarkers = await FirebaseFirestore.instance.collection('Tags').get();
-  Set<Marker> loadedMarkers = firestoreMarkers.docs.map((doc) {
-    final data = doc.data();
-    final id = data['TagId'] as String?;
-    final position = data['position'] as GeoPoint?;
-    LatLng latLng;
+  Future<Set<Marker>> loadMarkersFromPrefs() async {
+    final firestoreMarkers =
+        await FirebaseFirestore.instance.collection('Tags').get();
+    Set<Marker> loadedMarkers = firestoreMarkers.docs.map((doc) {
+      final data = doc.data();
+      final id = data['TagId'] as String?;
+      final position = data['position'] as GeoPoint?;
+      LatLng latLng;
 
-    if (position != null) {
-      latLng = LatLng(position.latitude, position.longitude);
-    } else {
-      latLng = LatLng(0.0, 0.0); // Default value if position is null
-    }
+      if (position != null) {
+        latLng = LatLng(position.latitude, position.longitude);
+      } else {
+        latLng = LatLng(0.0, 0.0); // Default value if position is null
+      }
 
-    return Marker(
-      markerId: MarkerId(id ?? 'unknown'),
-      position: latLng,
-      icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-      onTap: () {
-        showDialog(
-          context: context,
-          builder: (context) => AdminTagInformation(
-            markerId: MarkerId(id ?? 'unknown'),
-            deleteMarker: _deleteMarker,
-          ),
-        );
-      },
-    );
-  }).toSet();
+      return Marker(
+        markerId: MarkerId(id ?? 'unknown'),
+        position: latLng,
+        icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+        onTap: () {
+          showDialog(
+            context: context,
+            builder: (context) => AdminTagInformation(
+              markerId: MarkerId(id ?? 'unknown'),
+              deleteMarker: _deleteMarker,
+            ),
+          );
+        },
+      );
+    }).toSet();
 
-  return loadedMarkers;
-}
+    return loadedMarkers;
+  }
 
   Future<void> _saveMarkersToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
@@ -125,6 +127,9 @@ Future<Set<Marker>> loadMarkersFromPrefs() async {
 
   @override
   Widget build(BuildContext context) {
+    final markerId_ =
+        MarkerId('marker_${DateTime.now().millisecondsSinceEpoch}');
+
     if (_currentP != null) {
       _markers.add(
         Marker(
@@ -150,9 +155,18 @@ Future<Set<Marker>> loadMarkersFromPrefs() async {
                           child: const Text("No"),
                         ),
                         TextButton(
+                          
                           onPressed: () {
                             Navigator.of(context).pop(true);
-                            _addMarker(_currentP!);
+                            showDialog(
+                              context: context,
+                              builder: (context) => AddInfoDialog(markerId: markerId_),
+                            ).then((confirmed) {
+                              print(confirmed);
+                              if (confirmed == true) {
+                                _addMarker(_currentP!, markerId_);
+                              }
+                            });
                           },
                           child: const Text("Yes"),
                         ),
@@ -205,7 +219,15 @@ Future<Set<Marker>> loadMarkersFromPrefs() async {
                             TextButton(
                               onPressed: () {
                                 Navigator.of(context).pop(true);
-                                _addMarker(latLng);
+                                showDialog(
+                                  context: context,
+                                  builder: (context) => AddInfoDialog(markerId: markerId_),
+                                ).then((confirmed) {
+                                  print(confirmed);
+                                  if (confirmed == true) {
+                                    _addMarker(latLng, markerId_);
+                                  }
+                                });
                               },
                               child: const Text("Yes"),
                             ),
@@ -320,18 +342,16 @@ Future<Set<Marker>> loadMarkersFromPrefs() async {
     });
   }
 
-  void _addMarker(LatLng latLng) {
-    final markerId =
-        MarkerId('marker_${DateTime.now().millisecondsSinceEpoch}');
+  void _addMarker(LatLng latLng, MarkerId markerId_) {
     Marker newMarker = Marker(
-      markerId: markerId,
+      markerId: markerId_,
       position: latLng,
       icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
       onTap: () {
         showDialog(
           context: context,
           builder: (context) => AdminTagInformation(
-            markerId: markerId,
+            markerId: markerId_,
             deleteMarker: _deleteMarker,
           ),
         );
@@ -343,8 +363,8 @@ Future<Set<Marker>> loadMarkersFromPrefs() async {
 
     _saveMarkersToPrefs();
     // Add the marker to Firestore as well
-    FirebaseFirestore.instance.collection('Tags').doc(markerId.value).set({
-      'TagId': markerId.value,
+    FirebaseFirestore.instance.collection('Tags').doc(markerId_.value).set({
+      'TagId': markerId_.value,
       'position': GeoPoint(latLng.latitude, latLng.longitude),
     });
   }
