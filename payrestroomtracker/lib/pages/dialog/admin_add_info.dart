@@ -42,15 +42,9 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
-        Navigator.of(context).pop(false);
       }
       return;
     }
-    showDialog(
-        context: context,
-        builder: (context) {
-          return Center(child: CircularProgressIndicator());
-        });
 
     try {
       DocumentReference tagRef = FirebaseFirestore.instance
@@ -72,7 +66,6 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
               backgroundColor: Color.fromARGB(255, 115, 99, 183),
             ),
           );
-         
         }
         return;
       }
@@ -110,7 +103,6 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
-        Navigator.of(context).pop(false);
       }
     } catch (e) {
       if (mounted) {
@@ -120,7 +112,6 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
-        
       }
     }
   }
@@ -136,7 +127,6 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
       setState(() {
         imageUrls = List<String>.from(urls);
       });
-      
     }
   }
 
@@ -175,7 +165,6 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
               backgroundColor: Color.fromARGB(255, 115, 99, 183),
             ),
           );
-          Navigator.of(context).pop(false);
         }
       } else {
         if (mounted) {
@@ -185,7 +174,6 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
               backgroundColor: Color.fromARGB(255, 241, 138, 130),
             ),
           );
-          Navigator.of(context).pop(false);
         }
       }
     } catch (e) {
@@ -196,7 +184,6 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
-        Navigator.of(context).pop(false);
       }
     }
   }

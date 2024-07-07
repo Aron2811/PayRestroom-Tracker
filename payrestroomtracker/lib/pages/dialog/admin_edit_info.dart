@@ -45,11 +45,6 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       }
       return;
     }
-    showDialog(
-        context: context,
-        builder: (context) {
-          return Center(child: CircularProgressIndicator());
-        });
 
     try {
       DocumentReference tagRef = FirebaseFirestore.instance
@@ -108,7 +103,6 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
-        Navigator.of(context).pop(false);
       }
     } catch (e) {
       if (mounted) {
@@ -118,7 +112,6 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
-        
       }
     }
   }
@@ -133,7 +126,6 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       List<dynamic> urls = tagSnapshot.get('ImageUrls') ?? [];
       setState(() {
         imageUrls = List<String>.from(urls);
-        
       });
     }
   }
@@ -173,7 +165,6 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               backgroundColor: Color.fromARGB(255, 115, 99, 183),
             ),
           );
-          Navigator.of(context).pop(false);
         }
       } else {
         if (mounted) {
@@ -183,7 +174,6 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               backgroundColor: Color.fromARGB(255, 241, 138, 130),
             ),
           );
-          // Navigator.of(context).pop(false);
         }
       }
     } catch (e) {
@@ -194,7 +184,6 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
-        // Navigator.of(context).pop(false);
       }
     }
   }
@@ -408,7 +397,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
                 color: Color.fromARGB(255, 149, 134, 225)),
             label: const Text("Upload"),
           )),
-      const SizedBox(height: 15),
+      const SizedBox(height: 10),
       Align(
           alignment: Alignment.center,
           child: ElevatedButton(
