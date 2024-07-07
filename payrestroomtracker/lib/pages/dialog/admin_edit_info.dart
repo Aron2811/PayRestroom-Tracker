@@ -42,7 +42,6 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
-        Navigator.of(context).pop(false);
       }
       return;
     }
@@ -72,7 +71,6 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               backgroundColor: Color.fromARGB(255, 115, 99, 183),
             ),
           );
-          Navigator.of(context).pop(false);
         }
         return;
       }
@@ -120,7 +118,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
-        Navigator.of(context).pop(false);
+        
       }
     }
   }
@@ -135,6 +133,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       List<dynamic> urls = tagSnapshot.get('ImageUrls') ?? [];
       setState(() {
         imageUrls = List<String>.from(urls);
+        
       });
     }
   }
@@ -184,7 +183,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               backgroundColor: Color.fromARGB(255, 241, 138, 130),
             ),
           );
-          Navigator.of(context).pop(false);
+          // Navigator.of(context).pop(false);
         }
       }
     } catch (e) {
@@ -195,7 +194,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
-        Navigator.of(context).pop(false);
+        // Navigator.of(context).pop(false);
       }
     }
   }

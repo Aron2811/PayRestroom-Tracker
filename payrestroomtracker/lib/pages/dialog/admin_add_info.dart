@@ -72,7 +72,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
               backgroundColor: Color.fromARGB(255, 115, 99, 183),
             ),
           );
-          Navigator.of(context).pop(false);
+         
         }
         return;
       }
@@ -120,7 +120,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
-        Navigator.of(context).pop(false);
+        
       }
     }
   }
@@ -136,6 +136,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
       setState(() {
         imageUrls = List<String>.from(urls);
       });
+      
     }
   }
 
