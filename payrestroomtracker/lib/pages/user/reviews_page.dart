@@ -23,7 +23,7 @@ class ReviewsPage extends StatelessWidget {
         ),
         title: const Text(
           'Paid Restroom Name Reviews',
-          style: TextStyle(fontSize: 20, color: Colors.white, letterSpacing: 4),
+          style: TextStyle(fontSize: 20, color: Colors.white),
         ),
         backgroundColor: const Color.fromARGB(255, 97, 84, 158),
         centerTitle: true,
