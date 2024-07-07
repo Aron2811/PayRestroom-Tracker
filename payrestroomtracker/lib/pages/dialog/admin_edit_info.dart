@@ -42,9 +42,15 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
+        Navigator.of(context).pop(false);
       }
       return;
     }
+    showDialog(
+        context: context,
+        builder: (context) {
+          return Center(child: CircularProgressIndicator());
+        });
 
     try {
       DocumentReference tagRef = FirebaseFirestore.instance
@@ -66,6 +72,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               backgroundColor: Color.fromARGB(255, 115, 99, 183),
             ),
           );
+          Navigator.of(context).pop(false);
         }
         return;
       }
@@ -103,6 +110,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
+        Navigator.of(context).pop(false);
       }
     } catch (e) {
       if (mounted) {
@@ -112,6 +120,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
+        Navigator.of(context).pop(false);
       }
     }
   }
@@ -165,6 +174,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               backgroundColor: Color.fromARGB(255, 115, 99, 183),
             ),
           );
+          Navigator.of(context).pop(false);
         }
       } else {
         if (mounted) {
@@ -174,6 +184,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               backgroundColor: Color.fromARGB(255, 241, 138, 130),
             ),
           );
+          Navigator.of(context).pop(false);
         }
       }
     } catch (e) {
@@ -184,6 +195,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
+        Navigator.of(context).pop(false);
       }
     }
   }
