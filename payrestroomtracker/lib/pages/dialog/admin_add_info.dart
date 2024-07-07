@@ -23,14 +23,17 @@ class AddInfoDialog extends StatefulWidget {
 class _AddInfoDialogState extends State<AddInfoDialog> {
   List<String> imageUrls = [];
   bool confirmPressed = false;
+  bool isVisible = false;
 
   @override
   void initState() {
     super.initState();
+    fetchImageUrls();
   }
 
   Future<void> _uploadImages() async {
     final pickedFiles = await ImagePicker().pickMultiImage();
+
     if (pickedFiles == null || pickedFiles.isEmpty) return;
 
     if (pickedFiles.length > 3) {
@@ -41,7 +44,6 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
-        Navigator.of(context).pop(false);
       }
       return;
     }
@@ -103,6 +105,9 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
+        setState(() {
+          isVisible = !isVisible;
+        });
       }
     } catch (e) {
       if (mounted) {
@@ -113,6 +118,20 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
           ),
         );
       }
+    }
+  }
+
+  Future<void> fetchImageUrls() async {
+    DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .doc(widget.markerId.value)
+        .get();
+
+    if (tagSnapshot.exists) {
+      List<dynamic> urls = tagSnapshot.get('ImageUrls') ?? [];
+      setState(() {
+        imageUrls = List<String>.from(urls);
+      });
     }
   }
 
@@ -214,70 +233,25 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
           ),
         ),
         const SizedBox(height: 15),
-        // Column(children: [
-        //   FullScreenWidget(
-        //       disposeLevel: DisposeLevel.High,
-        //       child: Center(
-        //         child: SizedBox(
-        //           height: 250,
-        //           width: 300,
-        //           child: Stack(
-        //             children: [
-        //               AnotherCarousel(
-        //                 borderRadius: true,
-        //                 boxFit: BoxFit.cover,
-        //                 radius: Radius.circular(10),
-        //                 images:
-        //                     imageUrls.map((url) => NetworkImage(url)).toList(),
-        //                 showIndicator: false,
-        //               ),
-        //               Positioned(
-        //                   bottom: 10,
-        //                   right: 10,
-        //                   child: IconButton(
-        //                     icon: Icon(Icons.delete,
-        //                         color: Color.fromARGB(255, 115, 99, 183)),
-        //                     onPressed: () {
-        //                       showDialog(
-        //                         context: context,
-        //                         builder: (context) => AlertDialog(
-        //                           title: const Text(
-        //                             "Are you sure you want to delete this image",
-        //                             textAlign: TextAlign.center,
-        //                             style: TextStyle(
-        //                               color: Color.fromARGB(255, 115, 99, 183),
-        //                               fontSize: 17,
-        //                               fontWeight: FontWeight.bold,
-        //                             ),
-        //                           ),
-        //                           actions: <Widget>[
-        //                             TextButton(
-        //                               onPressed: () {
-        //                                 Navigator.of(context).pop(false);
-        //                               },
-        //                               child: const Text("No"),
-        //                             ),
-        //                             TextButton(
-        //                               onPressed: () {
-        //                                 Navigator.of(context).pop(true);
-        //                                 for (int index = 0;
-        //                                     index < imageUrls.length;
-        //                                     index++) {
-        //                                   _deleteImage(index);
-        //                                 }
-        //                               },
-        //                               child: const Text("Yes"),
-        //                             )
-        //                           ],
-        //                         ),
-        //                       );
-        //                     },
-        //                   )),
-        //             ],
-        //           ),
-        //         ),
-        //       ))
-        // ]),
+        Visibility(
+            visible: !isVisible,
+            child: Column(children: [
+              FullScreenWidget(
+                  disposeLevel: DisposeLevel.High,
+                  child: Center(
+                      child: SizedBox(
+                    height: 250,
+                    width: 300,
+                    child: AnotherCarousel(
+                      borderRadius: true,
+                      boxFit: BoxFit.cover,
+                      radius: Radius.circular(10),
+                      images:
+                          imageUrls.map((url) => NetworkImage(url)).toList(),
+                      showIndicator: false,
+                    ),
+                  ))),
+            ])),
         const SizedBox(height: 20),
         Align(
           alignment: Alignment.center,
@@ -341,7 +315,8 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             onPressed: () {
-              confirmPressed = true; // Set confirmation status
+              confirmPressed = true;
+              // Set confirmation status
               Navigator.of(context).pop(confirmPressed);
             },
           ),
