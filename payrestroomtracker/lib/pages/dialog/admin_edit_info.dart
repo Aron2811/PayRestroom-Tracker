@@ -1,8 +1,12 @@
+import 'dart:io';
+
+import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:another_carousel_pro/another_carousel_pro.dart';
 import 'package:full_screen_image/full_screen_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:image_picker/image_picker.dart';
 
 class ChangeInfoDialog extends StatefulWidget {
   final MarkerId markerId;
@@ -25,6 +29,92 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
     fetchImageUrls();
   }
 
+  Future<void> _uploadImages() async {
+    final pickedFiles = await ImagePicker().pickMultiImage();
+    if (pickedFiles == null || pickedFiles.isEmpty) return;
+
+    if (pickedFiles.length > 3) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('You can upload a maximum of 3 images at a time'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+      }
+      return;
+    }
+
+    try {
+      DocumentReference tagRef = FirebaseFirestore.instance
+          .collection('Tags')
+          .doc(widget.markerId.value);
+      DocumentSnapshot tagSnapshot = await tagRef.get();
+      Map<String, dynamic>? tagData =
+          tagSnapshot.data() as Map<String, dynamic>?;
+
+      List<dynamic> imageUrls = tagData?['ImageUrls'] ?? [];
+
+      // Check if adding new images would exceed the limit of 3
+      if (imageUrls.length + pickedFiles.length > 3) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'You have reached the limit of 3 images. Please delete an image before uploading a new one.'),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
+          );
+        }
+        return;
+      }
+
+      List<String> downloadURLs = [];
+
+      for (var pickedFile in pickedFiles) {
+        File imageFile = File(pickedFile.path);
+        String fileName =
+            '${widget.markerId.value}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        firebase_storage.Reference storageRef = firebase_storage
+            .FirebaseStorage.instance
+            .ref('Tags images')
+            .child(fileName);
+
+        await storageRef.putFile(imageFile);
+        String downloadURL = await storageRef.getDownloadURL();
+        downloadURLs.add(downloadURL);
+      }
+
+      imageUrls.addAll(downloadURLs);
+
+      await tagRef.set(
+        {
+          'TagId': widget.markerId.value,
+          'ImageUrls': imageUrls,
+        },
+        SetOptions(merge: true),
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Images uploaded successfully'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to upload images'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> fetchImageUrls() async {
     DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -36,6 +126,64 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       setState(() {
         imageUrls = List<String>.from(urls);
       });
+    }
+  }
+
+  Future<void> _deleteImage(int index) async {
+    try {
+      DocumentReference tagRef = FirebaseFirestore.instance
+          .collection('Tags')
+          .doc(widget.markerId.value);
+
+      // Fetch current imageUrls from Firestore
+      DocumentSnapshot tagSnapshot = await tagRef.get();
+      Map<String, dynamic>? tagData =
+          tagSnapshot.data() as Map<String, dynamic>?;
+
+      List<dynamic> currentImageUrls = tagData?['ImageUrls'] ?? [];
+
+      // Ensure index is within bounds
+      if (index >= 0 && index < currentImageUrls.length) {
+        // Remove the specified imageUrl from the list
+        String imageUrlToDelete = currentImageUrls[index];
+        currentImageUrls.removeAt(index);
+
+        // Update Firestore with the new imageUrls
+        await tagRef.set(
+          {
+            'TagId': widget.markerId.value,
+            'ImageUrls': currentImageUrls,
+          },
+          SetOptions(merge: true),
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Image deleted successfully'),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid index provided for deletion'),
+              backgroundColor: Colors.red,
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete image'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+      }
     }
   }
 
@@ -145,16 +293,14 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             ),
           )),
       const SizedBox(height: 15),
-      Column(
-        children: imageUrls.map((url) {
-          return Dismissible(
-              key: Key(url), // Provide a unique key
+      Column(children: [
+        for (int index = 0; index < imageUrls.length; index++)
+          Dismissible(
+              key: Key(imageUrls[index]), // Provide a unique key
               direction:
                   DismissDirection.down, // Set the direction of dismissal
               onDismissed: (direction) {
-                setState(() {
-                  imageUrls.remove(url);
-                });
+                _deleteImage(index);
               },
               child: FullScreenWidget(
                   disposeLevel: DisposeLevel.High,
@@ -170,9 +316,8 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
                           imageUrls.map((url) => NetworkImage(url)).toList(),
                       showIndicator: false,
                     ),
-                  ))));
-        }).toList(),
-      ),
+                  ))))
+      ]),
       const SizedBox(height: 15),
       Align(
           alignment: Alignment.center,
@@ -189,7 +334,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
                   width: 2.0,
                 ),
                 textStyle: const TextStyle(fontSize: 16)),
-            onPressed: () {},
+            onPressed: _uploadImages,
             icon: Icon(Icons.upload_rounded,
                 color: Color.fromARGB(255, 149, 134, 225)),
             label: const Text("Upload"),
