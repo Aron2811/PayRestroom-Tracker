@@ -27,20 +27,34 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
   @override
   void initState() {
     super.initState();
-    fetchImageUrls();
+    fetchImageUrls(context);
   }
 
-  Future<void> fetchImageUrls() async {
-    DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .doc(widget.markerId.value)
-        .get();
+  Future<void> fetchImageUrls(BuildContext context) async {
+    try {
+      DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .doc(widget.markerId.value)
+          .get();
 
-    if (tagSnapshot.exists) {
-      List<dynamic> urls = tagSnapshot.get('ImageUrls') ?? [];
-      setState(() {
-        imageUrls = List<String>.from(urls);
-      });
+      if (tagSnapshot.exists) {
+        List<dynamic> urls = tagSnapshot.get('ImageUrls') ?? [];
+        setState(() {
+          imageUrls = List<String>.from(urls);
+        });
+      } else {
+        setState(() {
+          imageUrls = []; // or set to a default value as needed
+        });
+      }
+    } catch (e) {
+      // Display error message as a snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error fetching image URLs: Add Image'),
+          duration: Duration(seconds: 3), // Adjust the duration as needed
+        ),
+      );
     }
   }
 

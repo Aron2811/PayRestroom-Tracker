@@ -27,7 +27,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
   @override
   void initState() {
     super.initState();
-    fetchImageUrls();
+    fetchImageUrls(context);
   }
 
   Future<void> _uploadImages() async {
@@ -42,9 +42,15 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
+        Navigator.of(context).pop(false);
       }
       return;
     }
+    showDialog(
+        context: context,
+        builder: (context) {
+          return Center(child: CircularProgressIndicator());
+        });
 
     try {
       DocumentReference tagRef = FirebaseFirestore.instance
@@ -66,6 +72,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               backgroundColor: Color.fromARGB(255, 115, 99, 183),
             ),
           );
+          Navigator.of(context).pop(false);
         }
         return;
       }
@@ -103,6 +110,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
+        Navigator.of(context).pop(false);
       }
     } catch (e) {
       if (mounted) {
@@ -112,21 +120,36 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
+        Navigator.of(context).pop(false);
       }
     }
   }
 
-  Future<void> fetchImageUrls() async {
-    DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .doc(widget.markerId.value)
-        .get();
+  Future<void> fetchImageUrls(BuildContext context) async {
+    try {
+      DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .doc(widget.markerId.value)
+          .get();
 
-    if (tagSnapshot.exists) {
-      List<dynamic> urls = tagSnapshot.get('ImageUrls') ?? [];
-      setState(() {
-        imageUrls = List<String>.from(urls);
-      });
+      if (tagSnapshot.exists) {
+        List<dynamic> urls = tagSnapshot.get('ImageUrls') ?? [];
+        setState(() {
+          imageUrls = List<String>.from(urls);
+        });
+      } else {
+        setState(() {
+          imageUrls = []; // or set to a default value as needed
+        });
+      }
+    } catch (e) {
+      // Display error message as a snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error fetching image URLs: Add Image'),
+          duration: Duration(seconds: 3), // Adjust the duration as needed
+        ),
+      );
     }
   }
 
@@ -165,6 +188,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               backgroundColor: Color.fromARGB(255, 115, 99, 183),
             ),
           );
+          Navigator.of(context).pop(false);
         }
       } else {
         if (mounted) {
@@ -174,6 +198,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               backgroundColor: Color.fromARGB(255, 241, 138, 130),
             ),
           );
+          Navigator.of(context).pop(false);
         }
       }
     } catch (e) {
@@ -184,6 +209,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
+        Navigator.of(context).pop(false);
       }
     }
   }
@@ -397,7 +423,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
                 color: Color.fromARGB(255, 149, 134, 225)),
             label: const Text("Upload"),
           )),
-      const SizedBox(height: 10),
+      const SizedBox(height: 15),
       Align(
           alignment: Alignment.center,
           child: ElevatedButton(
