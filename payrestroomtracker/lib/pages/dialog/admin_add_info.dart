@@ -21,13 +21,13 @@ class AddInfoDialog extends StatefulWidget {
 }
 
 class _AddInfoDialogState extends State<AddInfoDialog> {
+  bool isVisible = false;
   List<String> imageUrls = [];
   bool confirmPressed = false;
 
   @override
   void initState() {
     super.initState();
-    fetchImageUrls();
   }
 
   Future<void> _uploadImages() async {
@@ -42,6 +42,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
+        Navigator.of(context).pop(false);
       }
       return;
     }
@@ -109,78 +110,6 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Failed to upload images'),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          ),
-        );
-      }
-    }
-  }
-
-  Future<void> fetchImageUrls() async {
-    DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .doc(widget.markerId.value)
-        .get();
-
-    if (tagSnapshot.exists) {
-      List<dynamic> urls = tagSnapshot.get('ImageUrls') ?? [];
-      setState(() {
-        imageUrls = List<String>.from(urls);
-      });
-    }
-  }
-
-  Future<void> _deleteImage(int index) async {
-    try {
-      DocumentReference tagRef = FirebaseFirestore.instance
-          .collection('Tags')
-          .doc(widget.markerId.value);
-
-      // Fetch current imageUrls from Firestore
-      DocumentSnapshot tagSnapshot = await tagRef.get();
-      Map<String, dynamic>? tagData =
-          tagSnapshot.data() as Map<String, dynamic>?;
-
-      List<dynamic> currentImageUrls = tagData?['ImageUrls'] ?? [];
-
-      // Ensure index is within bounds
-      if (index >= 0 && index < currentImageUrls.length) {
-        // Remove the specified imageUrl from the list
-        String imageUrlToDelete = currentImageUrls[index];
-        currentImageUrls.removeAt(index);
-
-        // Update Firestore with the new imageUrls
-        await tagRef.set(
-          {
-            'TagId': widget.markerId.value,
-            'ImageUrls': currentImageUrls,
-          },
-          SetOptions(merge: true),
-        );
-
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Image deleted successfully'),
-              backgroundColor: Color.fromARGB(255, 115, 99, 183),
-            ),
-          );
-        }
-      } else {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('Invalid index provided for deletion'),
-              backgroundColor: Color.fromARGB(255, 241, 138, 130),
-            ),
-          );
-        }
-      }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to delete image'),
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
@@ -265,6 +194,8 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10.0),
           child: TextField(
+            minLines: 1,
+            maxLines: 2,
             textAlign: TextAlign.center,
             decoration: InputDecoration(
               labelText: 'Cost',
@@ -286,70 +217,22 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
           ),
         ),
         const SizedBox(height: 15),
-        // Column(children: [
-        //   FullScreenWidget(
-        //       disposeLevel: DisposeLevel.High,
-        //       child: Center(
-        //         child: SizedBox(
-        //           height: 250,
-        //           width: 300,
-        //           child: Stack(
-        //             children: [
-        //               AnotherCarousel(
-        //                 borderRadius: true,
-        //                 boxFit: BoxFit.cover,
-        //                 radius: Radius.circular(10),
-        //                 images:
-        //                     imageUrls.map((url) => NetworkImage(url)).toList(),
-        //                 showIndicator: false,
-        //               ),
-        //               Positioned(
-        //                   bottom: 10,
-        //                   right: 10,
-        //                   child: IconButton(
-        //                     icon: Icon(Icons.delete,
-        //                         color: Color.fromARGB(255, 115, 99, 183)),
-        //                     onPressed: () {
-        //                       showDialog(
-        //                         context: context,
-        //                         builder: (context) => AlertDialog(
-        //                           title: const Text(
-        //                             "Are you sure you want to delete this image",
-        //                             textAlign: TextAlign.center,
-        //                             style: TextStyle(
-        //                               color: Color.fromARGB(255, 115, 99, 183),
-        //                               fontSize: 17,
-        //                               fontWeight: FontWeight.bold,
-        //                             ),
-        //                           ),
-        //                           actions: <Widget>[
-        //                             TextButton(
-        //                               onPressed: () {
-        //                                 Navigator.of(context).pop(false);
-        //                               },
-        //                               child: const Text("No"),
-        //                             ),
-        //                             TextButton(
-        //                               onPressed: () {
-        //                                 Navigator.of(context).pop(true);
-        //                                 for (int index = 0;
-        //                                     index < imageUrls.length;
-        //                                     index++) {
-        //                                   _deleteImage(index);
-        //                                 }
-        //                               },
-        //                               child: const Text("Yes"),
-        //                             )
-        //                           ],
-        //                         ),
-        //                       );
-        //                     },
-        //                   )),
-        //             ],
-        //           ),
-        //         ),
-        //       ))
-        // ]),
+        Column(children: [
+          FullScreenWidget(
+              disposeLevel: DisposeLevel.High,
+              child: Center(
+                  child: SizedBox(
+                height: 250,
+                width: 300,
+                child: AnotherCarousel(
+                  borderRadius: true,
+                  boxFit: BoxFit.cover,
+                  radius: Radius.circular(10),
+                  images: imageUrls.map((url) => NetworkImage(url)).toList(),
+                  showIndicator: false,
+                ),
+              ))),
+        ]),
         const SizedBox(height: 20),
         Align(
           alignment: Alignment.center,
