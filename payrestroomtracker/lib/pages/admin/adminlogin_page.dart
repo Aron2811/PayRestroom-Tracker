@@ -50,11 +50,15 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
           );
           return;
         } else {
-          passwordValid = false; // Password is incorrect
+          passwordValid = false; 
+          // Password is incorrect
+         Navigator.of(context).pop(false);
         }
         usernameValid = true; // Username is valid (found in database)
       } else {
-        usernameValid = false; // Username is incorrect (not found in database)
+        usernameValid = false; 
+        // Username is incorrect (not found in database)
+         Navigator.of(context).pop(false);
       }
     } catch (e) {
       debugPrint('Error: $e');

@@ -44,6 +44,15 @@ class PaidRestroomRecommendationList extends StatelessWidget {
                         ),
                       ),
                       const SizedBox(height: 5),
+                      const Text(
+                        "Cost",
+                        textAlign: TextAlign.start,
+                        style: TextStyle(
+                          fontSize: 17,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
                       Row(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
@@ -66,7 +75,6 @@ class PaidRestroomRecommendationList extends StatelessWidget {
                               halfFilledColor:
                                   const Color.fromARGB(255, 186, 176, 228),
                               onRatingChanged: (value) => debugPrint(''),
-                              // onRatingChanged: (value) => debugPrint('$value'),
                               initialRating: 3,
                               maxRating: 5,
                             )

@@ -5,6 +5,7 @@ import 'package:flutter_button/pages/user/add_review_page.dart';
 import 'package:flutter_button/pages/bottomsheet/draggablesheet.dart';
 import 'package:flutter_button/pages/user/report_page.dart';
 import 'package:flutter_button/pages/user/reviews_page.dart';
+import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
@@ -20,21 +21,23 @@ class PaidRestroomInfo extends StatelessWidget {
     required this.toggleVisibility,
   }) : super(key: key);
 
-Future<List<String>> _fetchImageUrls() async {
-  final querySnapshot = await FirebaseFirestore.instance
-      .collection('Tags')
-      .where('position', isEqualTo: GeoPoint(destination.latitude, destination.longitude))
-      .get();
+  Future<List<String>> _fetchImageUrls() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(destination.latitude, destination.longitude))
+        .get();
 
-  if (querySnapshot.docs.isNotEmpty) {
-    final doc = querySnapshot.docs.first;
-    final data = doc.data();
-    final imageUrls = data?['ImageUrls'] as List<dynamic>? ?? [];
-    return List<String>.from(imageUrls);
-  } else {
-    return [];
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final imageUrls = data?['ImageUrls'] as List<dynamic>? ?? [];
+      return List<String>.from(imageUrls);
+    } else {
+      return [];
+    }
   }
-}
+
   @override
   Widget build(BuildContext context) {
     return MyDraggableSheet(
@@ -165,16 +168,25 @@ Future<List<String>> _fetchImageUrls() async {
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
                 return const Text('No images available');
               } else {
-                return SizedBox(
-                  height: 250,
-                  width: 300,
-                  child: AnotherCarousel(
-                    borderRadius: true,
-                    boxFit: BoxFit.cover,
-                    radius: const Radius.circular(10),
-                    images: snapshot.data!.map((url) => NetworkImage(url)).toList(),
-                    showIndicator: false,
-                  ),
+                return Column(
+                  children: [
+                    FullScreenWidget(
+                        disposeLevel: DisposeLevel.High,
+                        child: Center(
+                            child: SizedBox(
+                          height: 250,
+                          width: 300,
+                          child: AnotherCarousel(
+                            borderRadius: true,
+                            boxFit: BoxFit.cover,
+                            radius: Radius.circular(10),
+                            images: snapshot.data!
+                                .map((url) => NetworkImage(url))
+                                .toList(),
+                            showIndicator: false,
+                          ),
+                        ))),
+                  ],
                 );
               }
             },

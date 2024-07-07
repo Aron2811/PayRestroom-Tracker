@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:custom_rating_bar/custom_rating_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
@@ -20,40 +21,63 @@ class AddInfoDialog extends StatefulWidget {
 class _AddInfoDialogState extends State<AddInfoDialog> {
   bool confirmPressed = false;
 
-  Future<void> _uploadImage() async {
-    final pickedFile =
-        await ImagePicker().pickImage(source: ImageSource.gallery);
-    if (pickedFile == null) return;
+  Future<void> _uploadImages() async {
+    final pickedFiles = await ImagePicker().pickMultiImage();
+    if (pickedFiles == null || pickedFiles.isEmpty) return;
 
-    File imageFile = File(pickedFile.path);
+    if (pickedFiles.length > 3) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('You can upload a maximum of 3 images at a time'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+      }
+      return;
+    }
 
     try {
-      String fileName =
-          '${widget.markerId.value}_${DateTime.now().millisecondsSinceEpoch}.jpg';
-      firebase_storage.Reference storageRef = firebase_storage
-          .FirebaseStorage.instance
-          .ref('Tags images')
-          .child(fileName);
-
-      await storageRef.putFile(imageFile);
-      String downloadURL = await storageRef.getDownloadURL();
-
       DocumentReference tagRef = FirebaseFirestore.instance
           .collection('Tags')
           .doc(widget.markerId.value);
-
       DocumentSnapshot tagSnapshot = await tagRef.get();
       Map<String, dynamic>? tagData =
           tagSnapshot.data() as Map<String, dynamic>?;
 
       List<dynamic> imageUrls = tagData?['ImageUrls'] ?? [];
 
-      if (imageUrls.length >= 3) {
-        imageUrls
-            .removeAt(0); // Remove the oldest image URL if there are already 3
+      // Check if adding new images would exceed the limit of 3
+      if (imageUrls.length + pickedFiles.length > 3) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text(
+                  'You have reached the limit of 3 images. Please delete an image before uploading a new one.'),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
+          );
+        }
+        return;
       }
 
-      imageUrls.add(downloadURL);
+      List<String> downloadURLs = [];
+
+      for (var pickedFile in pickedFiles) {
+        File imageFile = File(pickedFile.path);
+        String fileName =
+            '${widget.markerId.value}_${DateTime.now().millisecondsSinceEpoch}.jpg';
+        firebase_storage.Reference storageRef = firebase_storage
+            .FirebaseStorage.instance
+            .ref('Tags images')
+            .child(fileName);
+
+        await storageRef.putFile(imageFile);
+        String downloadURL = await storageRef.getDownloadURL();
+        downloadURLs.add(downloadURL);
+      }
+
+      imageUrls.addAll(downloadURLs);
 
       await tagRef.set(
         {
@@ -63,16 +87,21 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
         SetOptions(merge: true),
       );
 
-     if (mounted) {
+      if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Image uploaded successfully'),backgroundColor: Color.fromARGB(255, 115, 99, 183)),
+          const SnackBar(
+            content: Text('Images uploaded successfully'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
         );
       }
     } catch (e) {
-      print('Error uploading image: $e');
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Failed to upload image'),backgroundColor: Color.fromARGB(255, 115, 99, 183)),
+          const SnackBar(
+            content: Text('Failed to upload images'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
         );
       }
     }
@@ -80,7 +109,9 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
+    return SingleChildScrollView(
+        child: Center(
+            child: AlertDialog(
       actions: [
         const SizedBox(height: 30),
         const Padding(
@@ -99,6 +130,8 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10.0),
           child: TextField(
+            minLines: 1,
+            maxLines: 2,
             textAlign: TextAlign.center,
             decoration: InputDecoration(
               labelText: 'Paid Restroom Name',
@@ -125,6 +158,8 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
         const Padding(
           padding: EdgeInsets.symmetric(horizontal: 10.0),
           child: TextField(
+            minLines: 1,
+            maxLines: 2,
             textAlign: TextAlign.center,
             decoration: InputDecoration(
               labelText: 'Location',
@@ -186,12 +221,27 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
               ),
               textStyle: const TextStyle(fontSize: 16),
             ),
-            onPressed: _uploadImage,
+            onPressed: _uploadImages,
             icon: const Icon(Icons.upload_rounded,
                 color: Color.fromARGB(255, 149, 134, 225)),
             label: const Text("Upload"),
           ),
         ),
+        const SizedBox(height: 20),
+        Align(
+            alignment: Alignment.center,
+            child: RatingBar(
+              size: 20,
+              alignment: Alignment.center,
+              filledIcon: Icons.star,
+              emptyIcon: Icons.star_border,
+              emptyColor: const Color.fromARGB(255, 153, 149, 149),
+              filledColor: Color.fromARGB(255, 97, 84, 158),
+              halfFilledColor: Color.fromARGB(255, 148, 139, 185),
+              onRatingChanged: (p0) {},
+              initialRating: 3,
+              maxRating: 5,
+            )),
         const SizedBox(height: 15),
         Align(
           alignment: Alignment.center,
@@ -223,6 +273,6 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
           ),
         ),
       ],
-    );
+    )));
   }
 }
