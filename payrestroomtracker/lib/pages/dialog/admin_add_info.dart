@@ -30,6 +30,56 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
     super.initState();
   }
 
+  void _confirmedPressed() async {
+    // Handle confirmation logic here
+    confirmPressed = true; // Set confirmation status
+    Navigator.of(context).pop(confirmPressed);
+
+    try {
+      // Get the current tag data from Firestore
+      DocumentReference tagRef = FirebaseFirestore.instance
+          .collection('Tags')
+          .doc(widget.markerId.value);
+      DocumentSnapshot tagSnapshot = await tagRef.get();
+      Map<String, dynamic>? tagData =
+          tagSnapshot.data() as Map<String, dynamic>?;
+
+      List<dynamic> existingImageUrls = tagData?['ImageUrls'] ?? [];
+
+      // Merge existing image URLs with newly uploaded ones
+      List<String> updatedImageUrls = [...existingImageUrls, ...imageUrls];
+
+      // Update Firestore with the merged image URLs
+      await tagRef.set(
+        {
+          'TagId': widget.markerId.value,
+          'ImageUrls': updatedImageUrls,
+        },
+        SetOptions(merge: true),
+      );
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Paid restroom information added successfully'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+      }
+    } catch (e) {
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to save paid restroom information'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
+  }
+
   Future<void> _uploadImages() async {
     final pickedFiles = await ImagePicker().pickMultiImage();
     if (pickedFiles == null || pickedFiles.isEmpty) return;
@@ -48,29 +98,6 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
     }
 
     try {
-      DocumentReference tagRef = FirebaseFirestore.instance
-          .collection('Tags')
-          .doc(widget.markerId.value);
-      DocumentSnapshot tagSnapshot = await tagRef.get();
-      Map<String, dynamic>? tagData =
-          tagSnapshot.data() as Map<String, dynamic>?;
-
-      List<dynamic> imageUrls = tagData?['ImageUrls'] ?? [];
-
-      // Check if adding new images would exceed the limit of 3
-      if (imageUrls.length + pickedFiles.length > 3) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                  'You have reached the limit of 3 images. Please delete an image before uploading a new one.'),
-              backgroundColor: Color.fromARGB(255, 115, 99, 183),
-            ),
-          );
-        }
-        return;
-      }
-
       List<String> downloadURLs = [];
 
       for (var pickedFile in pickedFiles) {
@@ -87,15 +114,10 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
         downloadURLs.add(downloadURL);
       }
 
-      imageUrls.addAll(downloadURLs);
-
-      await tagRef.set(
-        {
-          'TagId': widget.markerId.value,
-          'ImageUrls': imageUrls,
-        },
-        SetOptions(merge: true),
-      );
+      // Update local imageUrls state with new download URLs
+      setState(() {
+        imageUrls.addAll(downloadURLs);
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -296,8 +318,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             onPressed: () {
-              confirmPressed = true; // Set confirmation status
-              Navigator.of(context).pop(confirmPressed);
+              _confirmedPressed();
             },
           ),
         ),
