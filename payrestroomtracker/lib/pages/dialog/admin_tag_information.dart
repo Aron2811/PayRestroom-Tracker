@@ -111,6 +111,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                   height: 250,
                   width: 300,
                   child: AnotherCarousel(
+                    autoplay: false,
                     borderRadius: true,
                     boxFit: BoxFit.cover,
                     radius: Radius.circular(10),

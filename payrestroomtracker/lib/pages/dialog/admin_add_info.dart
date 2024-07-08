@@ -28,9 +28,61 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
   @override
   void initState() {
     super.initState();
+    fetchImageUrls(context);
+  }
+
+  void _confirmedPressed() async {
+    // Handle confirmation logic here
+    confirmPressed = true; // Set confirmation status
+    Navigator.of(context).pop(confirmPressed);
+
+    try {
+      // Get the current tag data from Firestore
+      DocumentReference tagRef = FirebaseFirestore.instance
+          .collection('Tags')
+          .doc(widget.markerId.value);
+      DocumentSnapshot tagSnapshot = await tagRef.get();
+      Map<String, dynamic>? tagData =
+          tagSnapshot.data() as Map<String, dynamic>?;
+
+      List<dynamic> existingImageUrls = tagData?['ImageUrls'] ?? [];
+
+      // Merge existing image URLs with newly uploaded ones
+      List<String> updatedImageUrls = [...existingImageUrls, ...imageUrls];
+
+      // Update Firestore with the merged image URLs
+      await tagRef.set(
+        {
+          'TagId': widget.markerId.value,
+          'ImageUrls': updatedImageUrls,
+        },
+        SetOptions(merge: true),
+      );
+
+      // Show success message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Paid restroom information added successfully'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+      }
+    } catch (e) {
+      // Show error message
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to save paid restroom information'),
+            backgroundColor: Colors.red,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _uploadImages() async {
+    
     final pickedFiles = await ImagePicker().pickMultiImage();
     if (pickedFiles == null || pickedFiles.isEmpty) return;
 
@@ -47,30 +99,13 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
       return;
     }
 
+    showDialog(
+        context: context,
+        builder: (context) {
+          return Center(child: CircularProgressIndicator());
+        });
+
     try {
-      DocumentReference tagRef = FirebaseFirestore.instance
-          .collection('Tags')
-          .doc(widget.markerId.value);
-      DocumentSnapshot tagSnapshot = await tagRef.get();
-      Map<String, dynamic>? tagData =
-          tagSnapshot.data() as Map<String, dynamic>?;
-
-      List<dynamic> imageUrls = tagData?['ImageUrls'] ?? [];
-
-      // Check if adding new images would exceed the limit of 3
-      if (imageUrls.length + pickedFiles.length > 3) {
-        if (mounted) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text(
-                  'You have reached the limit of 3 images. Please delete an image before uploading a new one.'),
-              backgroundColor: Color.fromARGB(255, 115, 99, 183),
-            ),
-          );
-        }
-        return;
-      }
-
       List<String> downloadURLs = [];
 
       for (var pickedFile in pickedFiles) {
@@ -87,15 +122,10 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
         downloadURLs.add(downloadURL);
       }
 
-      imageUrls.addAll(downloadURLs);
-
-      await tagRef.set(
-        {
-          'TagId': widget.markerId.value,
-          'ImageUrls': imageUrls,
-        },
-        SetOptions(merge: true),
-      );
+      // Update local imageUrls state with new download URLs
+      setState(() {
+        imageUrls.addAll(downloadURLs);
+      });
 
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -104,12 +134,104 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
+        setState(() {
+          isVisible = !isVisible;
+        });
+        Navigator.of(context).pop(false);
       }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Failed to upload images'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+        Navigator.of(context).pop(false);
+      }
+    }
+  }
+
+  Future<void> fetchImageUrls(BuildContext context) async {
+    try {
+      DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .doc(widget.markerId.value)
+          .get();
+
+      if (tagSnapshot.exists) {
+        List<dynamic> urls = tagSnapshot.get('ImageUrls') ?? [];
+        setState(() {
+          imageUrls = List<String>.from(urls);
+        });
+      } else {
+        setState(() {
+          imageUrls = []; // or set to a default value as needed
+        });
+      }
+    } catch (e) {
+      // Display error message as a snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error fetching image URLs: Add Image'),
+          duration: Duration(seconds: 3), // Adjust the duration as needed
+        ),
+      );
+      Navigator.of(context).pop(false);
+    }
+  }
+
+  Future<void> _deleteImage(int index) async {
+    try {
+      DocumentReference tagRef = FirebaseFirestore.instance
+          .collection('Tags')
+          .doc(widget.markerId.value);
+
+      // Fetch current imageUrls from Firestore
+      DocumentSnapshot tagSnapshot = await tagRef.get();
+      Map<String, dynamic>? tagData =
+          tagSnapshot.data() as Map<String, dynamic>?;
+
+      List<dynamic> currentImageUrls = tagData?['ImageUrls'] ?? [];
+
+      // Ensure index is within bounds
+      if (index >= 0 && index < currentImageUrls.length) {
+        // Remove the specified imageUrl from the list
+        String imageUrlToDelete = currentImageUrls[index];
+        currentImageUrls.removeAt(index);
+
+        // Update Firestore with the new imageUrls
+        await tagRef.set(
+          {
+            'TagId': widget.markerId.value,
+            'ImageUrls': currentImageUrls,
+          },
+          SetOptions(merge: true),
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Image deleted successfully'),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
+          );
+        }
+      } else {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Invalid index provided for deletion'),
+              backgroundColor: Color.fromARGB(255, 241, 138, 130),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to delete image'),
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
@@ -217,22 +339,75 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
           ),
         ),
         const SizedBox(height: 15),
-        Column(children: [
-          FullScreenWidget(
-              disposeLevel: DisposeLevel.High,
-              child: Center(
-                  child: SizedBox(
-                height: 250,
-                width: 300,
-                child: AnotherCarousel(
-                  borderRadius: true,
-                  boxFit: BoxFit.cover,
-                  radius: Radius.circular(10),
-                  images: imageUrls.map((url) => NetworkImage(url)).toList(),
-                  showIndicator: false,
-                ),
-              ))),
-        ]),
+        Visibility(
+            visible: isVisible,
+            child: Column(children: [
+              FullScreenWidget(
+                  disposeLevel: DisposeLevel.High,
+                  child: Center(
+                    child: SizedBox(
+                      height: 250,
+                      width: 300,
+                      child: Stack(
+                        children: [
+                          AnotherCarousel(
+                            autoplay: false,
+                            borderRadius: true,
+                            boxFit: BoxFit.cover,
+                            radius: Radius.circular(10),
+                            images: imageUrls
+                                .map((url) => NetworkImage(url))
+                                .toList(),
+                            showIndicator: false,
+                          ),
+                          Positioned(
+                              bottom: 10,
+                              right: 10,
+                              child: IconButton(
+                                icon: Icon(Icons.delete,
+                                    color: Color.fromARGB(255, 115, 99, 183)),
+                                onPressed: () {
+                                  showDialog(
+                                    context: context,
+                                    builder: (context) => AlertDialog(
+                                      title: const Text(
+                                        "Are you sure you want to delete this image",
+                                        textAlign: TextAlign.center,
+                                        style: TextStyle(
+                                          color:
+                                              Color.fromARGB(255, 115, 99, 183),
+                                          fontSize: 17,
+                                          fontWeight: FontWeight.bold,
+                                        ),
+                                      ),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop(false);
+                                          },
+                                          child: const Text("No"),
+                                        ),
+                                        TextButton(
+                                          onPressed: () {
+                                            Navigator.of(context).pop(true);
+                                            for (int index = 0;
+                                                index < imageUrls.length;
+                                                index++) {
+                                              _deleteImage(index);
+                                            }
+                                          },
+                                          child: const Text("Yes"),
+                                        )
+                                      ],
+                                    ),
+                                  );
+                                },
+                              )),
+                        ],
+                      ),
+                    ),
+                  ))
+            ])),
         const SizedBox(height: 20),
         Align(
           alignment: Alignment.center,
@@ -296,8 +471,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             onPressed: () {
-              confirmPressed = true; // Set confirmation status
-              Navigator.of(context).pop(confirmPressed);
+              _confirmedPressed();
             },
           ),
         ),

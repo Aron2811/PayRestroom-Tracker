@@ -46,6 +46,12 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       return;
     }
 
+ showDialog(
+        context: context,
+        builder: (context) {
+          return Center(child: CircularProgressIndicator());
+        });
+
     try {
       DocumentReference tagRef = FirebaseFirestore.instance
           .collection('Tags')
@@ -103,6 +109,8 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
+        Navigator.of(context).pop(false);
+
       }
     } catch (e) {
       if (mounted) {
@@ -112,11 +120,12 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
+  Navigator.of(context).pop(false);
       }
     }
   }
 
-  Future<void> fetchImageUrls(BuildContext context) async {
+   Future<void> fetchImageUrls(BuildContext context) async {
     try {
       DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
           .collection('Tags')
@@ -141,6 +150,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
           duration: Duration(seconds: 3), // Adjust the duration as needed
         ),
       );
+      Navigator.of(context).pop(false);
     }
   }
 
@@ -324,6 +334,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
                       borderRadius: true,
                       boxFit: BoxFit.cover,
                       radius: Radius.circular(10),
+                      autoplay: false,
                       images:
                           imageUrls.map((url) => NetworkImage(url)).toList(),
                       showIndicator: false,
@@ -437,7 +448,8 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             onPressed: () {
-              Navigator.of(context).pop();
+             Navigator.of(context).pop();
+             
             },
           ))
     ]));
