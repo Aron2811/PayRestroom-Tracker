@@ -71,7 +71,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
               border: InputBorder.none,
               hintText: '$_displayName',
               hintStyle: TextStyle(
-                fontSize: 15,
+                fontSize: 17,
                 color: Color.fromARGB(255, 115, 99, 183),
               ),
             ),

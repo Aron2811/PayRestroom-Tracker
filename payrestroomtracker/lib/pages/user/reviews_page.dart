@@ -1,28 +1,28 @@
+import 'package:custom_rating_bar/custom_rating_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:readmore/readmore.dart';
 
-class ReviewsPage extends StatelessWidget {
-  final List _reviews = [
-    'reviews 1',
-    'reviews 2',
-    'reviews 3',
-    'reviews 4',
-    'reviews 5',
-    'reviews 6',
-    'reviews 7',
-    'reviews 8',
-  ];
+class ReviewsPage extends StatefulWidget {
+  @override
+  State<ReviewsPage> createState() => _ReviewsPageState();
+}
+
+class _ReviewsPageState extends State<ReviewsPage> {
+  List<int> _reviews = List<int>.generate(10, (int index) => index);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(
+          color: Colors.white,
           onPressed: () {
             Navigator.pushNamed(context, '/mappage');
           },
         ),
         title: const Text(
-          'Paid Restroom Name Reviews',
+          'Reviews',
           style: TextStyle(fontSize: 20, color: Colors.white),
         ),
         backgroundColor: const Color.fromARGB(255, 97, 84, 158),
@@ -34,77 +34,72 @@ class ReviewsPage extends StatelessWidget {
             child: ListView.builder(
                 itemCount: _reviews.length,
                 itemBuilder: (context, index) {
-                  return AllReviews(child: _reviews[index]);
+                  return Padding(
+                    padding: const EdgeInsets.all(20.0),
+                    child: Column(children: [
+                      Row(
+                          mainAxisAlignment: MainAxisAlignment.start,
+                          children: [
+                            CircleAvatar(
+                              radius: 20,
+                              backgroundImage: NetworkImage(
+                                  FirebaseAuth.instance.currentUser?.photoURL ??
+                                      ''),
+                            ),
+                            const SizedBox(width: 20),
+                            const Text(
+                              "Username",
+                              textAlign: TextAlign.start,
+                              style: TextStyle(
+                                fontSize: 17,
+                                color: Color.fromARGB(255, 97, 84, 158),
+                              ),
+                            ),
+                          ]),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          RatingBar.readOnly(
+                            size: 20,
+                            alignment: Alignment.center,
+                            filledIcon: Icons.star,
+                            emptyIcon: Icons.star_border,
+                            emptyColor: Colors.grey,
+                            filledColor: const Color.fromARGB(255, 97, 84, 158),
+                            halfFilledColor:
+                                const Color.fromARGB(255, 186, 176, 228),
+                            initialRating:
+                                0.0, // Update this to snapshot.data if needed
+                            maxRating: 5,
+                          ),
+                          const SizedBox(width: 10),
+                          Text(
+                            "07 July, 2024",
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          )
+                        ],
+                      ),
+                      SizedBox(height: 10),
+                      ReadMoreText(
+                        "Please, please, please Don't prove I'm right And please, please, please Don't bring me to tears when I just did my makeup so nice Heartbreak is one thing My ego's another I beg you: Don't embarrass me, motherfucker, ah-oh Please, please, please (ah-ah-ah)",
+                        textAlign: TextAlign.justify,
+                        trimLines: 2,
+                        trimMode: TrimMode.Line,
+                        trimExpandedText: ' Show less',
+                        moreStyle: TextStyle(
+                          color: const Color.fromARGB(255, 97, 84, 158),
+                          fontWeight: FontWeight.bold,
+                        ),
+                        trimCollapsedText: ' Show more',
+                        lessStyle: TextStyle(
+                            color: const Color.fromARGB(255, 97, 84, 158),
+                            fontWeight: FontWeight.bold),
+                      ),
+                    ]),
+                  );
                 }),
           ),
         ],
-      ),
-    );
-  }
-}
-
-class AllReviews extends StatelessWidget {
-  AllReviews({required this.child});
-
-  final String child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Container(
-        height: 150,
-        color: Colors.deepPurple[100],
-        child: Row(children: [
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const SizedBox(width: 20),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(70),
-              child: Container(
-                child: const Icon(
-                  Icons.person_2_rounded,
-                  color: Color.fromARGB(255, 97, 84, 158),
-                  size: 30,
-                ),
-                color: Colors.white,
-                height: 40,
-                width: 40,
-              ),
-            ),
-            const SizedBox(width: 20),
-            Column(
-              children: [
-                const SizedBox(height: 50),
-                const Text(
-                  "Username",
-                  textAlign: TextAlign.start,
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Color.fromARGB(255, 97, 84, 158),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                const Text(
-                  "Reviews",
-                  textAlign: TextAlign.start,
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Color.fromARGB(255, 97, 84, 158),
-                  ),
-                ),
-                const SizedBox(height: 3),
-                const Text(
-                  "Reviews",
-                  textAlign: TextAlign.start,
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Color.fromARGB(255, 97, 84, 158),
-                  ),
-                ),
-              ],
-            ),
-          ]),
-        ]),
       ),
     );
   }

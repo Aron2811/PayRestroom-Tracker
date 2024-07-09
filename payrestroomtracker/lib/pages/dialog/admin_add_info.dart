@@ -74,7 +74,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
             content: Text('Failed to save paid restroom information'),
-            backgroundColor: Colors.red,
+            backgroundColor: Color.fromARGB(255, 240, 148, 142),
           ),
         );
       }
@@ -174,7 +174,8 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error fetching image URLs: Add Image'),
-          duration: Duration(seconds: 3), // Adjust the duration as needed
+          duration: Duration(seconds: 3), 
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),// Adjust the duration as needed
         ),
       );
       Navigator.of(context).pop(false);
@@ -241,8 +242,8 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-        child: Center(
+    return Center(
+        child: SingleChildScrollView(
             child: AlertDialog(
       actions: [
         const SizedBox(height: 30),

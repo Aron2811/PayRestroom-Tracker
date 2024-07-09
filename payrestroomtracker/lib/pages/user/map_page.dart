@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/intro_page.dart';
@@ -40,6 +41,7 @@ class _MapPageState extends State<MapPage> {
   Set<Polyline> _polylines = {};
   LatLng? end;
 
+  bool hasBeenListed = false;
   bool isVisible = false;
   bool isUserLocationVisible = false;
 
@@ -101,60 +103,102 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  void _showFindNearestPayToilet(LatLng destination) {
+ Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
+    Map<Marker, double> markerRatings = {};
+
+    for (Marker marker in markers) {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .where('position',
+              isEqualTo: GeoPoint(marker.position.latitude, marker.position.longitude))
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final data = doc.data();
+        final fetchedRating = data?['rating'] as double? ?? 0.0;
+        markerRatings[marker] = fetchedRating;
+      } else {
+        markerRatings[marker] = 0.0;
+      }
+    }
+
+    return markerRatings;
+  }
+
+  Future<List<Marker>> getNearestMarkers(LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
+    List<Marker> markers = _markers.where((marker) => marker.icon == customMarkerIcon).toList();
+
+    // Fetch ratings for all markers
+    Map<Marker, double> markerRatings = await _fetchRatings(markers);
+
+    // Sort by distance first
+    markers.sort((a, b) {
+      final distanceA = _calculateDistance(userPosition, a.position);
+      final distanceB = _calculateDistance(userPosition, b.position);
+      return distanceA.compareTo(distanceB);
+    });
+
+    // Take the top 'count' markers by distance
+    markers = markers.take(count).toList();
+
+    // Sort by rating (highest rating first)
+    markers.sort((a, b) {
+      final ratingA = markerRatings[a]!;
+      final ratingB = markerRatings[b]!;
+      return ratingB.compareTo(ratingA);
+    });
+
+    return markers;
+  }
+
+  double _calculateDistance(LatLng start, LatLng end) {
+    var distance = sqrt(pow(end.latitude - start.latitude, 2) +
+        pow(end.longitude - start.longitude, 2));
+    return distance;
+  }
+
+  void _showFindNearestPayToilet() async {
+    LatLng userPosition = _currentP!;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
-      backgroundColor:
-          Colors.transparent, // Set background color to transparent
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return MyDraggableSheet(
-          child: Column(
-            children: [
-              PaidRestroomRecommendationList(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
+        return FutureBuilder<List<Marker>>(
+          future: getNearestMarkers(userPosition, 10, _customMarkerIcon ?? BitmapDescriptor.defaultMarker),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
+
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text('No restrooms found.'));
+            }
+
+            final nearestMarkers = snapshot.data!;
+
+            return MyDraggableSheet(
+              child: Column(
+                children: nearestMarkers.map((marker) {
+                  return PaidRestroomRecommendationList(
+                    drawRouteToDestination: _drawRouteToDestination,
+                    destination: marker.position,
+                    toggleVisibility: toggleVisibility,
+                  );
+                }).toList(),
               ),
-              PaidRestroomRecommendationList(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
-              ),
-              PaidRestroomRecommendationList(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
-              ),
-              PaidRestroomRecommendationList(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
-              ),
-              PaidRestroomRecommendationList(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
-              ),
-              PaidRestroomRecommendationList(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
-              ),
-              PaidRestroomRecommendationList(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
+
 
   void _showPayToiletInformation(LatLng destination) {
     showModalBottomSheet(
@@ -184,79 +228,6 @@ class _MapPageState extends State<MapPage> {
         ),
       );
     }
-
-    // var markers = {
-    //   Marker(
-    //     markerId: const MarkerId('1'),
-    //     position: LatLng(14.315468626815898, 121.07064669023518),
-    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-    //     onTap: () => _showPayToiletInformation(
-    //         LatLng(14.315468626815898, 121.07064669023518)),
-    //   ),
-    //   Marker(
-    //     markerId: const MarkerId('2'),
-    //     position: LatLng(14.356239417708707, 121.04451720560752),
-    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-    //     onTap: () => _showPayToiletInformation(
-    //         LatLng(14.356239417708707, 121.04451720560752)),
-    //   ),
-    //   Marker(
-    //     markerId: const MarkerId('3'),
-    //     position: LatLng(14.355059500353084, 121.0442736161414),
-    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-    //     onTap: () => _showPayToiletInformation(
-    //         LatLng(14.355059500353084, 121.0442736161414)),
-    //   ),
-    //   Marker(
-    //     markerId: const MarkerId('4'),
-    //     position: LatLng(14.33120930591894, 121.06947036325884),
-    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-    //     onTap: () => _showPayToiletInformation(
-    //         LatLng(14.33120930591894, 121.06947036325884)),
-    //   ),
-    //   Marker(
-    //     markerId: const MarkerId('5'),
-    //     position: LatLng(14.31992161435816, 121.1176986169851),
-    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-    //     onTap: () => _showPayToiletInformation(
-    //         LatLng(14.31992161435816, 121.1176986169851)),
-    //   ),
-    //   Marker(
-    //     markerId: const MarkerId('6'),
-    //     position: LatLng(14.263368532549292, 121.04213554806316),
-    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-    //     onTap: () => _showPayToiletInformation(
-    //         LatLng(14.263368532549292, 121.04213554806316)),
-    //   ),
-    //   Marker(
-    //     markerId: const MarkerId('7'),
-    //     position: LatLng(14.247512370849535, 121.06340147747518),
-    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-    //     onTap: () => _showPayToiletInformation(
-    //         LatLng(14.247512370849535, 121.06340147747518)),
-    //   ),
-    //   Marker(
-    //     markerId: const MarkerId('8'),
-    //     position: LatLng(14.247352099793037, 121.06342553348516),
-    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-    //     onTap: () => _showPayToiletInformation(
-    //         LatLng(14.247352099793037, 121.06342553348516)),
-    //   ),
-    //   Marker(
-    //     markerId: const MarkerId('9'),
-    //     position: LatLng(14.169189623465543, 121.14310662338366),
-    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-    //     onTap: () => _showPayToiletInformation(
-    //         LatLng(14.169189623465543, 121.14310662338366)),
-    //   ),
-    //   Marker(
-    //     markerId: const MarkerId('10'),
-    //     position: LatLng(14.293578936541783, 121.07870252060286),
-    //     icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-    //     onTap: () => _showPayToiletInformation(
-    //         LatLng(14.293578936541783, 121.07870252060286)),
-    //   ),
-    // };
 
     return WillPopScope(
         onWillPop: _onBackButtonPressed,
@@ -479,7 +450,7 @@ class _MapPageState extends State<MapPage> {
                       color: Color.fromARGB(255, 97, 84, 158),
                     ),
                     onPressed: () {
-                      _showFindNearestPayToilet(_pGooglePlex);
+                      _showFindNearestPayToilet();
                     },
                   ),
                 ),

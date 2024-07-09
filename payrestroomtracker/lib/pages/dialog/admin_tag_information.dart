@@ -1,8 +1,8 @@
 import 'package:another_carousel_pro/another_carousel_pro.dart';
 import 'package:custom_rating_bar/custom_rating_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_button/pages/admin/admin_reviewpage.dart';
 import 'package:flutter_button/pages/dialog/admin_edit_info.dart';
-import 'package:flutter_button/pages/user/reviews_page.dart';
 import 'package:full_screen_image/full_screen_image.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -60,7 +60,8 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
+    return Center(
+    child: SingleChildScrollView(
         child: AlertDialog(
       contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
       actions: [
@@ -130,14 +131,13 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                       color: Color.fromARGB(255, 97, 84, 158),
                     ),
                   ),
-                  RatingBar(
+                  RatingBar.readOnly(
                     size: 20,
                     filledIcon: Icons.star,
                     emptyIcon: Icons.star_border,
                     emptyColor: const Color.fromARGB(255, 153, 149, 149),
                     filledColor: Color.fromARGB(255, 97, 84, 158),
                     halfFilledColor: Color.fromARGB(255, 148, 139, 185),
-                    onRatingChanged: (rating) {},
                     initialRating: 3,
                     maxRating: 5,
                   ),
@@ -155,7 +155,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                     ),
                   ),
                   onTap: () {
-                    Navigator.push(context, _createRoute(ReviewsPage()));
+                    Navigator.push(context, _createRoute(AdminReviewsPage()));
                   },
                 )),
             const SizedBox(height: 15),
@@ -218,7 +218,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
           ],
         ),
       ],
-    ));
+    )));
   }
 }
 

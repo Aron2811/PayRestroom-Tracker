@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_button/firebase_options.dart';
+import 'package:flutter_button/pages/admin/adminMap.dart';
 import 'package:flutter_button/pages/loading_page.dart';
 import 'package:flutter_button/pages/intro_page.dart';
 import 'package:flutter_button/pages/user/map_page.dart';
@@ -35,6 +36,7 @@ class Main extends StatelessWidget {
           '/userloggedinpage': (context) => const UserLoggedInPage(),
           '/adminloginpage': (context) => const AdminLoginPage(),
           '/mappage': (context) => const MapPage(),
+          '/adminmappage' : (context) => const AdminMap(username: '',),
           '/addreviewpage': (context) => const AddReviewPage(),
           '/reviewspage': (context) => ReviewsPage(),
           '/reportpage': (context) => ReportPage(),

@@ -46,7 +46,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       return;
     }
 
- showDialog(
+    showDialog(
         context: context,
         builder: (context) {
           return Center(child: CircularProgressIndicator());
@@ -110,7 +110,6 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
           ),
         );
         Navigator.of(context).pop(false);
-
       }
     } catch (e) {
       if (mounted) {
@@ -120,12 +119,12 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             backgroundColor: Color.fromARGB(255, 115, 99, 183),
           ),
         );
-  Navigator.of(context).pop(false);
+        Navigator.of(context).pop(false);
       }
     }
   }
 
-   Future<void> fetchImageUrls(BuildContext context) async {
+  Future<void> fetchImageUrls(BuildContext context) async {
     try {
       DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
           .collection('Tags')
@@ -214,8 +213,9 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return SingleChildScrollView(
-        child: AlertDialog(actions: [
+    return Center(
+        child: SingleChildScrollView(
+            child: AlertDialog(actions: [
       const SizedBox(
         height: 30,
       ),
@@ -448,10 +448,9 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
             onPressed: () {
-             Navigator.of(context).pop();
-             
+              Navigator.of(context).pop();
             },
           ))
-    ]));
+    ])));
   }
 }
