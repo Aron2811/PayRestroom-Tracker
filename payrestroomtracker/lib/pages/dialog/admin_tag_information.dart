@@ -28,19 +28,37 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
     fetchImageUrls();
   }
 
-  Future<void> fetchImageUrls() async {
+Future<void> fetchImageUrls() async {
+  try {
     DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
         .collection('Tags')
         .doc(widget.markerId.value)
         .get();
 
     if (tagSnapshot.exists) {
-      List<dynamic> urls = tagSnapshot.get('ImageUrls') ?? [];
-      setState(() {
-        imageUrls = List<String>.from(urls);
-      });
+      // Explicitly cast data() to Map<String, dynamic>
+      Map<String, dynamic>? data = tagSnapshot.data() as Map<String, dynamic>?;
+
+      // Check if 'ImageUrls' field exists
+      if (data != null && data.containsKey('ImageUrls')) {
+        List<dynamic> urls = data['ImageUrls'];
+        // Process the URLs as needed
+        print('Image URLs: $urls');
+      } else {
+        print('ImageUrls field does not exist in the document');
+        // Handle case where ImageUrls field is missing
+      }
+    } else {
+      print('Document does not exist');
+      // Handle case where document doesn't exist
     }
+  } catch (e) {
+    print('Error fetching image URLs: $e');
+    // Handle error appropriately
   }
+}
+
+
 
   @override
   Widget build(BuildContext context) {

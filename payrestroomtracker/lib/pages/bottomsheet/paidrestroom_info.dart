@@ -2,13 +2,13 @@ import 'package:flutter/material.dart';
 import 'package:custom_rating_bar/custom_rating_bar.dart';
 import 'package:another_carousel_pro/another_carousel_pro.dart';
 import 'package:flutter_button/pages/user/add_review_page.dart';
-import 'package:flutter_button/pages/bottomsheet/draggablesheet.dart';
 import 'package:flutter_button/pages/user/report_page.dart';
 import 'package:flutter_button/pages/user/reviews_page.dart';
+import 'package:flutter_button/pages/bottomsheet/draggablesheet.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class PaidRestroomInfo extends StatelessWidget {
+class PaidRestroomInfo extends StatefulWidget {
   final Function(LatLng, String) drawRouteToDestination;
   final LatLng destination;
   final Function toggleVisibility;
@@ -20,21 +20,93 @@ class PaidRestroomInfo extends StatelessWidget {
     required this.toggleVisibility,
   }) : super(key: key);
 
-Future<List<String>> _fetchImageUrls() async {
-  final querySnapshot = await FirebaseFirestore.instance
-      .collection('Tags')
-      .where('position', isEqualTo: GeoPoint(destination.latitude, destination.longitude))
-      .get();
-
-  if (querySnapshot.docs.isNotEmpty) {
-    final doc = querySnapshot.docs.first;
-    final data = doc.data();
-    final imageUrls = data?['ImageUrls'] as List<dynamic>? ?? [];
-    return List<String>.from(imageUrls);
-  } else {
-    return [];
-  }
+  @override
+  _PaidRestroomInfoState createState() => _PaidRestroomInfoState();
 }
+
+class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
+  late Future<double> _currentRatingFuture;
+
+  @override
+  void initState() {
+    super.initState();
+    _currentRatingFuture = fetchRating();
+  }
+
+  Future<List<String>> _fetchImageUrls() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final imageUrls = data?['ImageUrls'] as List<dynamic>? ?? [];
+      return List<String>.from(imageUrls);
+    } else {
+      return [];
+    }
+  }
+
+  Future<double> fetchRating() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedRating = data?['rating'] as double? ?? 0.0;
+      return fetchedRating;
+    } else {
+      return 0.0;
+    }
+  }
+
+  void _updateRating(double newRating) async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .where('position',
+              isEqualTo: GeoPoint(
+                  widget.destination.latitude, widget.destination.longitude))
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final docRef =
+            FirebaseFirestore.instance.collection('Tags').doc(doc.id);
+
+        await docRef.update({
+          'rating': newRating,
+        });
+
+        setState(() {
+          _currentRatingFuture = Future.value(newRating);
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Rating updated successfully!')),
+        );
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+              content: Text('No document found for the specified location')),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to update rating')),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return MyDraggableSheet(
@@ -70,86 +142,104 @@ Future<List<String>> _fetchImageUrls() async {
             ),
           ),
           const SizedBox(height: 10),
-          Row(
-            children: [
-              const SizedBox(width: 125),
-              const Text(
-                "3.1",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 17,
-                  color: Colors.white,
-                ),
-              ),
-              RatingBar(
-                size: 20,
-                alignment: Alignment.center,
-                filledIcon: Icons.star,
-                emptyIcon: Icons.star_border,
-                emptyColor: Colors.white24,
-                filledColor: Color.fromARGB(255, 97, 84, 158),
-                halfFilledColor: Color.fromARGB(255, 186, 176, 228),
-                onRatingChanged: (value) => debugPrint(''),
-                initialRating: 3,
-                maxRating: 5,
-              ),
-            ],
+          FutureBuilder<double>(
+            future: _currentRatingFuture,
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return const CircularProgressIndicator();
+              } else if (snapshot.hasError) {
+                return const Text('Error loading rating');
+              } else if (!snapshot.hasData) {
+                return const Text('No rating available');
+              } else {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${snapshot.data}',
+                      textAlign: TextAlign.center,
+                      style: const TextStyle(
+                        fontSize: 17,
+                        color: Colors.white,
+                      ),
+                    ),
+                    RatingBar(
+                      size: 20,
+                      alignment: Alignment.center,
+                      filledIcon: Icons.star,
+                      emptyIcon: Icons.star_border,
+                      emptyColor: Colors.white24,
+                      filledColor: const Color.fromARGB(255, 97, 84, 158),
+                      halfFilledColor: const Color.fromARGB(255, 186, 176, 228),
+                      onRatingChanged: _updateRating,
+                      initialRating: snapshot.data!,
+                      maxRating: 5,
+                    ),
+                  ],
+                );
+              }
+            },
           ),
           const SizedBox(height: 20),
           Row(
             children: [
               const SizedBox(width: 30),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  enableFeedback: false,
-                  backgroundColor: const Color.fromARGB(255, 226, 223, 229),
-                  minimumSize: const Size(150, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(50),
+              Expanded(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    enableFeedback: false,
+                    backgroundColor: const Color.fromARGB(255, 226, 223, 229),
+                    minimumSize: const Size(150, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                    side: const BorderSide(
+                      color: Color.fromARGB(255, 97, 84, 158),
+                      width: 2.0,
+                    ),
                   ),
-                  side: const BorderSide(
+                  onPressed: () {
+                    Navigator.pop(context); // Close bottom sheet
+                    widget.toggleVisibility();
+                    widget.drawRouteToDestination(
+                        widget.destination, 'commute');
+                  },
+                  label: const Text(
+                    'Directions',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  icon: const Icon(
+                    Icons.directions,
                     color: Color.fromARGB(255, 97, 84, 158),
-                    width: 2.0,
                   ),
-                ),
-                onPressed: () {
-                  Navigator.pop(context); // Close bottom sheet
-                  toggleVisibility();
-                  drawRouteToDestination(destination, 'commute');
-                },
-                label: const Text(
-                  'Directions',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                icon: const Icon(
-                  Icons.directions,
-                  color: Color.fromARGB(255, 97, 84, 158),
                 ),
               ),
               const SizedBox(width: 20),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  enableFeedback: false,
-                  backgroundColor: const Color.fromARGB(255, 226, 223, 229),
-                  minimumSize: const Size(130, 50),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(50),
+              Expanded(
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    enableFeedback: false,
+                    backgroundColor: const Color.fromARGB(255, 226, 223, 229),
+                    minimumSize: const Size(130, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50),
+                    ),
+                    side: const BorderSide(
+                      color: Color.fromARGB(255, 97, 84, 158),
+                      width: 2.0,
+                    ),
                   ),
-                  side: const BorderSide(
+                  onPressed: () {
+                    Navigator.push(context, _createRoute(ReportPage()));
+                  },
+                  label: const Text(
+                    'Report',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  icon: const Icon(
+                    Icons.report_problem_outlined,
                     color: Color.fromARGB(255, 97, 84, 158),
-                    width: 2.0,
                   ),
-                ),
-                onPressed: () {
-                  Navigator.push(context, _createRoute(ReportPage()));
-                },
-                label: const Text(
-                  'Report',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                ),
-                icon: const Icon(
-                  Icons.report_problem_outlined,
-                  color: Color.fromARGB(255, 97, 84, 158),
                 ),
               ),
             ],
@@ -172,7 +262,8 @@ Future<List<String>> _fetchImageUrls() async {
                     borderRadius: true,
                     boxFit: BoxFit.cover,
                     radius: const Radius.circular(10),
-                    images: snapshot.data!.map((url) => NetworkImage(url)).toList(),
+                    images:
+                        snapshot.data!.map((url) => NetworkImage(url)).toList(),
                     showIndicator: false,
                   ),
                 );
@@ -260,8 +351,8 @@ Future<List<String>> _fetchImageUrls() async {
                     emptyColor: Colors.white24,
                     filledColor: const Color.fromARGB(255, 97, 84, 158),
                     halfFilledColor: const Color.fromARGB(255, 186, 176, 228),
-                    onRatingChanged: (p0) {},
-                    initialRating: 3,
+                    onRatingChanged: _updateRating,
+                    initialRating: 0.0, // Update this to snapshot.data if needed
                     maxRating: 5,
                   ),
                 ],

@@ -1,3 +1,4 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/intro_page.dart';
@@ -40,6 +41,7 @@ class _MapPageState extends State<MapPage> {
   Set<Polyline> _polylines = {};
   LatLng? end;
 
+  bool hasBeenListed = false;
   bool isVisible = false;
   bool isUserLocationVisible = false;
 
@@ -101,60 +103,102 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
-  void _showFindNearestPayToilet(LatLng destination) {
+ Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
+    Map<Marker, double> markerRatings = {};
+
+    for (Marker marker in markers) {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .where('position',
+              isEqualTo: GeoPoint(marker.position.latitude, marker.position.longitude))
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final data = doc.data();
+        final fetchedRating = data?['rating'] as double? ?? 0.0;
+        markerRatings[marker] = fetchedRating;
+      } else {
+        markerRatings[marker] = 0.0;
+      }
+    }
+
+    return markerRatings;
+  }
+
+  Future<List<Marker>> getNearestMarkers(LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
+    List<Marker> markers = _markers.where((marker) => marker.icon == customMarkerIcon).toList();
+
+    // Fetch ratings for all markers
+    Map<Marker, double> markerRatings = await _fetchRatings(markers);
+
+    // Sort by distance first
+    markers.sort((a, b) {
+      final distanceA = _calculateDistance(userPosition, a.position);
+      final distanceB = _calculateDistance(userPosition, b.position);
+      return distanceA.compareTo(distanceB);
+    });
+
+    // Take the top 'count' markers by distance
+    markers = markers.take(count).toList();
+
+    // Sort by rating (highest rating first)
+    markers.sort((a, b) {
+      final ratingA = markerRatings[a]!;
+      final ratingB = markerRatings[b]!;
+      return ratingB.compareTo(ratingA);
+    });
+
+    return markers;
+  }
+
+  double _calculateDistance(LatLng start, LatLng end) {
+    var distance = sqrt(pow(end.latitude - start.latitude, 2) +
+        pow(end.longitude - start.longitude, 2));
+    return distance;
+  }
+
+  void _showFindNearestPayToilet() async {
+    LatLng userPosition = _currentP!;
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
       ),
-      backgroundColor:
-          Colors.transparent, // Set background color to transparent
+      backgroundColor: Colors.transparent,
       builder: (context) {
-        return MyDraggableSheet(
-          child: Column(
-            children: [
-              PaidRestroomRecommendationList(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
+        return FutureBuilder<List<Marker>>(
+          future: getNearestMarkers(userPosition, 10, _customMarkerIcon ?? BitmapDescriptor.defaultMarker),
+          builder: (context, snapshot) {
+            if (snapshot.connectionState == ConnectionState.waiting) {
+              return Center(child: CircularProgressIndicator());
+            }
+
+            if (!snapshot.hasData || snapshot.data!.isEmpty) {
+              return Center(child: Text('No restrooms found.'));
+            }
+
+            final nearestMarkers = snapshot.data!;
+
+            return MyDraggableSheet(
+              child: Column(
+                children: nearestMarkers.map((marker) {
+                  return PaidRestroomRecommendationList(
+                    drawRouteToDestination: _drawRouteToDestination,
+                    destination: marker.position,
+                    toggleVisibility: toggleVisibility,
+                  );
+                }).toList(),
               ),
-              PaidRestroomRecommendationList(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
-              ),
-              PaidRestroomRecommendationList(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
-              ),
-              PaidRestroomRecommendationList(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
-              ),
-              PaidRestroomRecommendationList(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
-              ),
-              PaidRestroomRecommendationList(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
-              ),
-              PaidRestroomRecommendationList(
-                drawRouteToDestination: _drawRouteToDestination,
-                destination: destination,
-                toggleVisibility: toggleVisibility,
-              ),
-            ],
-          ),
+            );
+          },
         );
       },
     );
   }
+
 
   void _showPayToiletInformation(LatLng destination) {
     showModalBottomSheet(
@@ -479,7 +523,7 @@ class _MapPageState extends State<MapPage> {
                       color: Color.fromARGB(255, 97, 84, 158),
                     ),
                     onPressed: () {
-                      _showFindNearestPayToilet(_pGooglePlex);
+                      _showFindNearestPayToilet();
                     },
                   ),
                 ),
