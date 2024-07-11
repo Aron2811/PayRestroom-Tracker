@@ -85,6 +85,7 @@ class AdminMapState extends State<AdminMap> {
             builder: (context) => AdminTagInformation(
               markerId: MarkerId(id ?? 'unknown'),
               deleteMarker: _deleteMarker,
+              destination: latLng,
             ),
           );
         },
@@ -160,7 +161,7 @@ class AdminMapState extends State<AdminMap> {
                             Navigator.of(context).pop(true);
                             showDialog(
                               context: context,
-                              builder: (context) => AddInfoDialog(markerId: markerId_),
+                              builder: (context) => AddInfoDialog(markerId: markerId_, ),
                             ).then((confirmed) {
                               print(confirmed);
                               if (confirmed == true) {
@@ -353,6 +354,7 @@ class AdminMapState extends State<AdminMap> {
           builder: (context) => AdminTagInformation(
             markerId: markerId_,
             deleteMarker: _deleteMarker,
+            destination:latLng,
           ),
         );
       },

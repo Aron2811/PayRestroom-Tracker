@@ -40,10 +40,16 @@ class _MapPageState extends State<MapPage> {
   late String _mapStyleString;
   Set<Polyline> _polylines = {};
   LatLng? end;
+  String? _displayPaidRestroomName;
+  String? _displayLocationGuide;
+  String? _displayCost;
+  String? estimatedTime;
 
   bool hasBeenListed = false;
   bool isVisible = false;
   bool isUserLocationVisible = false;
+
+  late AStar _aStar;
 
   @override
   void initState() {
@@ -55,6 +61,19 @@ class _MapPageState extends State<MapPage> {
     getLocationUpdates();
     _loadCustomMarkerIcon();
     _loadMarkers();
+    _aStar = AStar('YOUR_GOOGLE_MAPS_API_KEY', _updateDuration);
+  }
+
+  void _updateDuration(String mode, String duration) {
+    setState(() {
+      if (mode == 'private') {
+        estimatedTime = duration;
+      } else if (mode == 'commute') {
+        estimatedTime = duration;
+      } else if (mode == 'byFoot') {
+        estimatedTime = duration;
+      }
+    });
   }
 
   Future<void> _loadMarkers() async {
@@ -103,14 +122,15 @@ class _MapPageState extends State<MapPage> {
     }
   }
 
- Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
+  Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
     Map<Marker, double> markerRatings = {};
 
     for (Marker marker in markers) {
       final querySnapshot = await FirebaseFirestore.instance
           .collection('Tags')
           .where('position',
-              isEqualTo: GeoPoint(marker.position.latitude, marker.position.longitude))
+              isEqualTo:
+                  GeoPoint(marker.position.latitude, marker.position.longitude))
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
@@ -126,8 +146,10 @@ class _MapPageState extends State<MapPage> {
     return markerRatings;
   }
 
-  Future<List<Marker>> getNearestMarkers(LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
-    List<Marker> markers = _markers.where((marker) => marker.icon == customMarkerIcon).toList();
+  Future<List<Marker>> getNearestMarkers(
+      LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
+    List<Marker> markers =
+        _markers.where((marker) => marker.icon == customMarkerIcon).toList();
 
     // Fetch ratings for all markers
     Map<Marker, double> markerRatings = await _fetchRatings(markers);
@@ -170,7 +192,8 @@ class _MapPageState extends State<MapPage> {
       backgroundColor: Colors.transparent,
       builder: (context) {
         return FutureBuilder<List<Marker>>(
-          future: getNearestMarkers(userPosition, 10, _customMarkerIcon ?? BitmapDescriptor.defaultMarker),
+          future: getNearestMarkers(userPosition, 10,
+              _customMarkerIcon ?? BitmapDescriptor.defaultMarker),
           builder: (context, snapshot) {
             if (snapshot.connectionState == ConnectionState.waiting) {
               return Center(child: CircularProgressIndicator());
@@ -198,7 +221,6 @@ class _MapPageState extends State<MapPage> {
       },
     );
   }
-
 
   void _showPayToiletInformation(LatLng destination) {
     showModalBottomSheet(
@@ -328,8 +350,8 @@ class _MapPageState extends State<MapPage> {
                                           ),
                                           SizedBox(height: 5),
                                           Text(
-                                            '15m',
-                                            // textAlign: TextAlign.start,
+                                            'Estimated Time: ${estimatedTime ?? '15m'}',
+                                            overflow: TextOverflow.ellipsis,
                                             style: TextStyle(
                                               fontSize: 12,
                                               fontWeight: FontWeight.bold,
@@ -364,15 +386,15 @@ class _MapPageState extends State<MapPage> {
                                           },
                                         )),
                                     SizedBox(height: 5),
-                                    Text(
-                                      '15m',
-                                      // textAlign: TextAlign.start,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                                    // Text(
+                                    //   '15m',
+                                    //   // textAlign: TextAlign.start,
+                                    //   style: TextStyle(
+                                    //     fontSize: 12,
+                                    //     fontWeight: FontWeight.bold,
+                                    //     color: Colors.white,
+                                    //   ),
+                                    // ),
                                   ]),
                                   Column(children: [
                                     Padding(
@@ -399,15 +421,15 @@ class _MapPageState extends State<MapPage> {
                                           },
                                         )),
                                     SizedBox(height: 5),
-                                    Text(
-                                      '15m',
-                                      // textAlign: TextAlign.start,
-                                      style: TextStyle(
-                                        fontSize: 12,
-                                        fontWeight: FontWeight.bold,
-                                        color: Colors.white,
-                                      ),
-                                    ),
+                                    // Text(
+                                    //   '15m',
+                                    //   // textAlign: TextAlign.start,
+                                    //   style: TextStyle(
+                                    //     fontSize: 12,
+                                    //     fontWeight: FontWeight.bold,
+                                    //     color: Colors.white,
+                                    //   ),
+                                    // ),
                                   ])
                                 ],
                               )))))),
@@ -592,7 +614,8 @@ class _MapPageState extends State<MapPage> {
       return;
     }
 
-    AStar aStar = AStar('AIzaSyATlFmBj-83JvPniLILsfpyawS8NlKIEDc');
+    AStar aStar =
+        AStar('AIzaSyATlFmBj-83JvPniLILsfpyawS8NlKIEDc', _updateDuration);
 
     // Calculate the path asynchronously
     List<LatLng> path =

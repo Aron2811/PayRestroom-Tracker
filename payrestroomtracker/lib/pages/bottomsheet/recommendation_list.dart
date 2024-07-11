@@ -24,11 +24,75 @@ class PaidRestroomRecommendationList extends StatefulWidget {
 class _PaidRestroomRecommendationListState
     extends State<PaidRestroomRecommendationList> {
   late Future<double> _currentRatingFuture;
+  String _name = "Paid Restroom Name";
+  String _location = "Location";
+  String _cost = "Cost";
 
   @override
   void initState() {
     super.initState();
     _currentRatingFuture = fetchRating();
+    _fetchPaidRestroomName();
+    _fetchPaidRestroomLocation();
+    _fetchPaidRestroomCost();
+  }
+
+  Future<void> _fetchPaidRestroomName() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedName =
+          data['PaidRestroomName'] as String? ?? "Paid Restroom Name";
+
+      setState(() {
+        _name = fetchedName;
+      });
+    }
+  }
+
+  Future<void> _fetchPaidRestroomLocation() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedLocation = data['Location'] as String? ?? "Location";
+
+      setState(() {
+        _location = fetchedLocation;
+      });
+    }
+  }
+
+  Future<void> _fetchPaidRestroomCost() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedCost = data['Cost'] as String? ?? "Cost";
+
+      setState(() {
+        _cost = fetchedCost;
+      });
+    }
   }
 
   Future<double> fetchRating() async {
@@ -101,8 +165,9 @@ class _PaidRestroomRecommendationListState
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 10),
-                      const Text(
-                        "Paid Restroom Name",
+                      Text(
+                        _name,
+                        maxLines: 3,
                         textAlign: TextAlign.start,
                         style: TextStyle(
                           fontSize: 20,
@@ -110,11 +175,21 @@ class _PaidRestroomRecommendationListState
                         ),
                       ),
                       const SizedBox(height: 5),
-                      const Text(
-                        "Location",
+                      Text(
+                        _location,
+                        maxLines: 3,
                         textAlign: TextAlign.start,
                         style: TextStyle(
                           fontSize: 17,
+                          color: Colors.white,
+                        ),
+                      ),
+                      const SizedBox(height: 5),
+                      Text(
+                        _cost,
+                        textAlign: TextAlign.start,
+                        style: TextStyle(
+                          fontSize: 18,
                           color: Colors.white,
                         ),
                       ),

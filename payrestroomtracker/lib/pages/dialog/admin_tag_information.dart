@@ -10,11 +10,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 class AdminTagInformation extends StatefulWidget {
   final MarkerId markerId;
   final Future<void> Function(MarkerId) deleteMarker;
+  final LatLng destination;
 
   const AdminTagInformation({
     Key? key,
     required this.markerId,
     required this.deleteMarker,
+    required this.destination,
   }) : super(key: key);
 
   @override
@@ -23,11 +25,74 @@ class AdminTagInformation extends StatefulWidget {
 
 class _AdminTagInformationState extends State<AdminTagInformation> {
   List<String> imageUrls = [];
+  String _name = "Paid Restroom Name";
+  String _location = "Location";
+  String _cost = "Cost";
 
   @override
   void initState() {
     super.initState();
     fetchImageUrls(context);
+    _fetchPaidRestroomName();
+    _fetchPaidRestroomLocation();
+    _fetchPaidRestroomCost();
+  }
+
+  Future<void> _fetchPaidRestroomName() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedName = data['Name'] as String? ?? "Paid Restroom Name";
+
+      setState(() {
+        _name = fetchedName;
+      });
+    }
+  }
+
+  Future<void> _fetchPaidRestroomLocation() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedLocation = data['Location'] as String? ?? "Location";
+
+      setState(() {
+        _location = fetchedLocation;
+      });
+    }
+  }
+
+  Future<void> _fetchPaidRestroomCost() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedCost = data['Cost'] as String? ?? "Cost";
+
+      setState(() {
+        _cost = fetchedCost;
+      });
+    }
   }
 
   Future<void> fetchImageUrls(BuildContext context) async {
@@ -52,7 +117,9 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error fetching image URLs: Add Image'),
-          duration: Duration(seconds: 3), // Adjust the duration as needed
+          duration: Duration(seconds: 3),
+          backgroundColor: Color.fromARGB(
+              255, 115, 99, 183), // Adjust the duration as needed
         ),
       );
     }
@@ -61,47 +128,49 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
   @override
   Widget build(BuildContext context) {
     return Center(
-    child: SingleChildScrollView(
-        child: AlertDialog(
+        child: SingleChildScrollView(
+            child: AlertDialog(
       contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
       actions: [
         SizedBox(height: 30),
-        TextField(
-          textAlign: TextAlign.center,
-          enabled: false,
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            hintText: 'Paid Restroom Name',
-            hintStyle: TextStyle(
-              fontSize: 20,
-              color: Color.fromARGB(255, 115, 99, 183),
-            ),
-          ),
-        ),
-        TextField(
-          textAlign: TextAlign.center,
-          enabled: false,
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            hintText: 'Location',
-            hintStyle: TextStyle(
-              fontSize: 17,
-              color: Color.fromARGB(255, 115, 99, 183),
-            ),
-          ),
-        ),
-        TextField(
-          textAlign: TextAlign.center,
-          enabled: false,
-          decoration: InputDecoration(
-            border: InputBorder.none,
-            hintText: 'Cost',
-            hintStyle: TextStyle(
-              fontSize: 17,
-              color: Color.fromARGB(255, 115, 99, 183),
-            ),
-          ),
-        ),
+        Padding(
+            padding: EdgeInsets.only(left: 10, right: 10),
+            child: Align(
+                alignment: Alignment.center,
+                child: Text(
+                  _name,
+                  maxLines: 3,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 18,
+                    color: Color.fromARGB(255, 97, 84, 158),
+                    fontWeight: FontWeight.bold,
+                  ),
+                ))),
+        const SizedBox(height: 10),
+        Padding(
+            padding: EdgeInsets.only(left: 20, right: 20),
+            child: Align(
+                alignment: Alignment.center,
+                child: Text(
+                  _location,
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 17,
+                    color: Color.fromARGB(255, 97, 84, 158),
+                  ),
+                ))),
+        const SizedBox(height: 10),
+        Align(
+            alignment: Alignment.center,
+            child: Text(
+              _cost,
+              textAlign: TextAlign.start,
+              style: TextStyle(
+                fontSize: 18,
+                color: Color.fromARGB(255, 97, 84, 158),
+              ),
+            )),
         const SizedBox(height: 10),
         Column(
           children: [

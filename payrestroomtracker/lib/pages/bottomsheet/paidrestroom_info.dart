@@ -27,11 +27,74 @@ class PaidRestroomInfo extends StatefulWidget {
 
 class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
   late Future<double> _currentRatingFuture;
+  String _name = "Paid Restroom Name";
+  String _location = "Location";
+  String _cost = "Cost";
 
   @override
   void initState() {
     super.initState();
     _currentRatingFuture = fetchRating();
+    _fetchPaidRestroomName();
+    _fetchPaidRestroomLocation();
+    _fetchPaidRestroomCost();
+  }
+
+  Future<void> _fetchPaidRestroomName() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedName = data['Name'] as String? ?? "Paid Restroom Name";
+
+      setState(() {
+        _name = fetchedName;
+      });
+    }
+  }
+
+  Future<void> _fetchPaidRestroomLocation() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedLocation = data['Location'] as String? ?? "Location";
+
+      setState(() {
+        _location = fetchedLocation;
+      });
+    }
+  }
+
+  Future<void> _fetchPaidRestroomCost() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedCost = data['Cost'] as String? ?? "Cost";
+
+      setState(() {
+        _cost = fetchedCost;
+      });
+    }
   }
 
   Future<List<String>> _fetchImageUrls() async {
@@ -93,56 +156,59 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
         });
 
         SnackBar(
-            content: Text('Rating updated successfully!'),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          );
+          content: Text('Rating updated successfully!'),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        );
       } else {
         SnackBar(
-            content: Text('No document found for the specified location'),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          );
-        
+          content: Text('No document found for the specified location'),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        );
       }
     } catch (e) {
       SnackBar(
-            content: Text('Failed to update rating'),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          );
+        content: Text('Failed to update rating'),
+        backgroundColor: Color.fromARGB(255, 115, 99, 183),
+      );
     }
   }
 
   @override
   Widget build(BuildContext context) {
     return MyDraggableSheet(
-      
       child: Column(
         mainAxisAlignment: MainAxisAlignment.start,
         children: [
           const SizedBox(height: 10),
-          const Text(
-            "Paid Restroom Name",
-            textAlign: TextAlign.start,
-            style: TextStyle(
-              fontSize: 20,
-              color: Color.fromARGB(255, 64, 55, 107),
-              fontWeight: FontWeight.bold,
-            ),
-          ),
+          Padding(
+              padding: EdgeInsets.only(left: 10, right: 10),
+              child: Text(
+                _name,
+                maxLines: 3,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 20,
+                  color: Color.fromARGB(255, 64, 55, 107),
+                  fontWeight: FontWeight.bold,
+                ),
+              )),
           const SizedBox(height: 10),
-          const Text(
-            "Location",
-            textAlign: TextAlign.start,
-            style: TextStyle(
-              fontSize: 17,
-              color: Colors.white,
-            ),
-          ),
+          Padding(
+              padding: EdgeInsets.only(left: 20, right: 20),
+              child: Text(
+                _location,
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: 17,
+                  color: Colors.white,
+                ),
+              )),
           const SizedBox(height: 10),
-          const Text(
-            "Cost",
+          Text(
+            _cost,
             textAlign: TextAlign.start,
             style: TextStyle(
-              fontSize: 17,
+              fontSize: 18,
               color: Colors.white,
             ),
           ),

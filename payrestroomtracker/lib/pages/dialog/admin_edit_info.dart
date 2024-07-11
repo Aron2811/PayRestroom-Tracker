@@ -23,14 +23,44 @@ class ChangeInfoDialog extends StatefulWidget {
 
 class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
   List<String> imageUrls = [];
+  TextEditingController nameController = TextEditingController();
+  TextEditingController locationController = TextEditingController();
+  TextEditingController costController = TextEditingController();
 
   @override
   void initState() {
     super.initState();
     fetchImageUrls(context);
+    fetchRestroomInfo();
   }
 
-  Future<void> _uploadImages() async {
+  Future<void> fetchRestroomInfo() async {
+    try {
+      DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .doc(widget.markerId.value)
+          .get();
+
+      if (tagSnapshot.exists) {
+        setState(() {
+          nameController.text = tagSnapshot.get('Name') ?? '';
+          locationController.text = tagSnapshot.get('Location') ?? '';
+          costController.text = tagSnapshot.get('Cost') ?? '';
+        });
+      }
+    } catch (e) {
+      // Display error message as a snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error fetching restroom info: ${e.toString()}'),
+          duration: Duration(seconds: 3),
+        ),
+      );
+      Navigator.of(context).pop(false);
+    }
+  }
+
+   Future<void> _uploadImages() async {
     final pickedFiles = await ImagePicker().pickMultiImage();
     if (pickedFiles == null || pickedFiles.isEmpty) return;
 
@@ -59,6 +89,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       DocumentSnapshot tagSnapshot = await tagRef.get();
       Map<String, dynamic>? tagData =
           tagSnapshot.data() as Map<String, dynamic>?;
+
 
       List<dynamic> imageUrls = tagData?['ImageUrls'] ?? [];
 
@@ -153,7 +184,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
     }
   }
 
-  Future<void> _deleteImage(int index) async {
+ Future<void> _deleteImage(int index) async {
     try {
       DocumentReference tagRef = FirebaseFirestore.instance
           .collection('Tags')
@@ -211,6 +242,58 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
     }
   }
 
+  Future<void> _updateRestroomInfo() async {
+    try {
+      DocumentReference tagRef = FirebaseFirestore.instance
+          .collection('Tags')
+          .doc(widget.markerId.value);
+
+      DocumentSnapshot tagSnapshot = await tagRef.get();
+      Map<String, dynamic>? tagData =
+          tagSnapshot.data() as Map<String, dynamic>?;
+
+      String currentName = tagData?['Name'] ?? '';
+      String currentLocation = tagData?['Location'] ?? '';
+      String currentCost = tagData?['Cost'] ?? '';
+
+      String newName =
+          nameController.text.isEmpty ? currentName : nameController.text;
+      String newLocation = locationController.text.isEmpty
+          ? currentLocation
+          : locationController.text;
+      String newCost =
+          costController.text.isEmpty ? currentCost : costController.text;
+
+      await tagRef.set(
+        {
+          'Name': newName,
+          'Location': newLocation,
+          'Cost': newCost,
+        },
+        SetOptions(merge: true),
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Restroom information updated successfully'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+        Navigator.of(context).pop();
+      }
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Failed to update restroom information'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+      }
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Center(
@@ -227,16 +310,17 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
           style: TextStyle(
             fontSize: 19,
             fontWeight: FontWeight.bold,
-            color: Color.fromARGB(255, 97, 84, 158),
+            color: Color.fromARGB(255, 97, 61, 189),
           ),
         ),
       ),
       SizedBox(
         height: 10,
       ),
-      const Padding(
+      Padding(
           padding: EdgeInsets.symmetric(horizontal: 10.0),
           child: TextField(
+            controller: nameController,
             minLines: 1,
             maxLines: 2,
             textAlign: TextAlign.center,
@@ -262,10 +346,13 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               filled: true,
             ),
           )),
-      const SizedBox(height: 10),
-      const Padding(
+      SizedBox(
+        height: 10,
+      ),
+      Padding(
           padding: EdgeInsets.symmetric(horizontal: 10.0),
           child: TextField(
+            controller: locationController,
             minLines: 1,
             maxLines: 3,
             textAlign: TextAlign.center,
@@ -292,9 +379,10 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             ),
           )),
       const SizedBox(height: 10),
-      const Padding(
+      Padding(
           padding: EdgeInsets.symmetric(horizontal: 10.0),
           child: TextField(
+            controller: costController,
             minLines: 1,
             maxLines: 2,
             textAlign: TextAlign.center,
@@ -447,9 +535,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               "Confirm",
               style: TextStyle(fontWeight: FontWeight.bold),
             ),
-            onPressed: () {
-              Navigator.of(context).pop();
-            },
+            onPressed: _updateRestroomInfo,
           ))
     ])));
   }

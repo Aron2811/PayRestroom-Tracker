@@ -24,6 +24,9 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
   bool isVisible = false;
   List<String> imageUrls = [];
   bool confirmPressed = false;
+  final TextEditingController nameController = TextEditingController();
+  final TextEditingController locationController = TextEditingController();
+  final TextEditingController costController = TextEditingController();
 
   @override
   void initState() {
@@ -50,11 +53,14 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
       // Merge existing image URLs with newly uploaded ones
       List<String> updatedImageUrls = [...existingImageUrls, ...imageUrls];
 
-      // Update Firestore with the merged image URLs
+      // Update Firestore with the new data
       await tagRef.set(
         {
           'TagId': widget.markerId.value,
           'ImageUrls': updatedImageUrls,
+          'Name': nameController.text,
+          'Location': locationController.text,
+          'Cost': costController.text,
         },
         SetOptions(merge: true),
       );
@@ -82,7 +88,6 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
   }
 
   Future<void> _uploadImages() async {
-    
     final pickedFiles = await ImagePicker().pickMultiImage();
     if (pickedFiles == null || pickedFiles.isEmpty) return;
 
@@ -260,13 +265,14 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
           ),
         ),
         const SizedBox(height: 10),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10.0),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
           child: TextField(
+            controller: nameController,
             minLines: 1,
             maxLines: 2,
             textAlign: TextAlign.center,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Paid Restroom Name',
               enabledBorder: UnderlineInputBorder(
                 borderSide:
@@ -288,13 +294,14 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
           ),
         ),
         const SizedBox(height: 10),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10.0),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
           child: TextField(
+            controller: locationController,
             minLines: 1,
             maxLines: 2,
             textAlign: TextAlign.center,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Location',
               enabledBorder: UnderlineInputBorder(
                 borderSide:
@@ -314,13 +321,14 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
           ),
         ),
         const SizedBox(height: 10),
-        const Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10.0),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
           child: TextField(
+            controller: costController,
             minLines: 1,
             maxLines: 2,
             textAlign: TextAlign.center,
-            decoration: InputDecoration(
+            decoration: const InputDecoration(
               labelText: 'Cost',
               enabledBorder: UnderlineInputBorder(
                 borderSide:

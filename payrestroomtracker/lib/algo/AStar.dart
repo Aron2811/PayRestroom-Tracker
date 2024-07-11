@@ -3,12 +3,13 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math';
 import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
+import 'package:flutter_button/pages/user/map_page.dart';
 
 class AStar {
   final String googleMapsApiKey;
+  final Function(String, String) updateDurationCallback;
 
-  AStar(this.googleMapsApiKey);
+  AStar(this.googleMapsApiKey, this.updateDurationCallback);
 
   Future<List<LatLng>> findAndDrawPath(
       LatLng start, LatLng goal, String options) async {
@@ -121,34 +122,57 @@ class AStar {
     }
   }
 
-  Future<List<LatLng>> _fetchRouteFromGoogleMaps(
-      LatLng start, LatLng goal, String options) async {
-    final String travelMode =
-        (options == 'byFoot' || options == 'commute') ? 'walking' : 'driving';
+Future<List<LatLng>> _fetchRouteFromGoogleMaps(
+  LatLng start, LatLng goal, String options) async {
+  
+  final String travelMode =
+    (options == 'byFoot' || options == 'commute') ? 'walking' : 'driving';
 
-    final String url =
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${goal.latitude},${goal.longitude}&mode=$travelMode&key=$googleMapsApiKey';
+  final String url =
+    'https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${goal.latitude},${goal.longitude}&mode=$travelMode&key=$googleMapsApiKey';
 
-    final response = await http.get(Uri.parse(url));
-    if (response.statusCode == 200) {
-      final data = json.decode(response.body);
-      if (data['status'] == 'OK') {
-        List<LatLng> pathPoints = _decodeDetailedPolyline(
-            data['routes'][0]['overview_polyline']['points']);
-        print('Path points retrieved from Google Maps:');
-        pathPoints.forEach((point) {
-          print('$point');
-        });
-        return pathPoints;
-      } else {
-        print('Error fetching route: ${data['status']}');
-        return [];
+  final response = await http.get(Uri.parse(url));
+  if (response.statusCode == 200) {
+    final data = json.decode(response.body);
+    if (data['status'] == 'OK') {
+      List<LatLng> pathPoints = _decodeDetailedPolyline(
+        data['routes'][0]['overview_polyline']['points']);
+      print('Path points retrieved from Google Maps:');
+      pathPoints.forEach((point) {
+        print('$point');
+      });
+
+      // Initialize durationString with a default value
+      String durationString = '';
+
+      // Extract the duration and store it in the appropriate variable
+      int durationSeconds = data['routes'][0]['legs'][0]['duration']['value'];
+
+      if (options == 'byFoot') {
+        durationString = '${(durationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(durationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}m';
+      } else if (options == 'commute') {
+        // Subtract 11 minutes from the byFoot duration
+        int commuteDurationSeconds = durationSeconds - (8 * 60);
+        durationString = '${(commuteDurationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(commuteDurationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}m';
+      } else if (options == 'private') {
+        // Handle private mode, assuming it's driving
+        durationString = '${(durationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(durationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}m';
       }
+
+      // Use the callback to update the state in the parent widget
+      updateDurationCallback(options, durationString);
+
+      return pathPoints;
     } else {
-      print('Error fetching route: ${response.statusCode}');
+      print('Error fetching route: ${data['status']}');
       return [];
     }
+  } else {
+    print('Error fetching route: ${response.statusCode}');
+    return [];
   }
+}
+
 
   List<LatLng> _decodeDetailedPolyline(String encoded) {
     List<LatLng> polyline = [];
