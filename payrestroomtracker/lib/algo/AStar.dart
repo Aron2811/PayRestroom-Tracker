@@ -149,14 +149,14 @@ Future<List<LatLng>> _fetchRouteFromGoogleMaps(
       int durationSeconds = data['routes'][0]['legs'][0]['duration']['value'];
 
       if (options == 'byFoot') {
-        durationString = '${(durationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(durationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}m';
+        durationString = '${(durationSeconds ~/ 3600).toString().padLeft(2, '0')} hr ${(durationSeconds ~/ 60 % 60).toString().padLeft(2, '0')} min';
       } else if (options == 'commute') {
         // Subtract 11 minutes from the byFoot duration
         int commuteDurationSeconds = durationSeconds - (8 * 60);
-        durationString = '${(commuteDurationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(commuteDurationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}m';
+        durationString = '${(commuteDurationSeconds ~/ 3600).toString().padLeft(2, '0')} hr ${(commuteDurationSeconds ~/ 60 % 60).toString().padLeft(2, '0')} min';
       } else if (options == 'private') {
         // Handle private mode, assuming it's driving
-        durationString = '${(durationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(durationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}m';
+        durationString = '${(durationSeconds ~/ 3600).toString().padLeft(2, '0')} hr ${(durationSeconds ~/ 60 % 60).toString().padLeft(2, '0')} min';
       }
 
       // Use the callback to update the state in the parent widget
