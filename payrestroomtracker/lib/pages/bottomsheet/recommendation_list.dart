@@ -10,11 +10,11 @@ class PaidRestroomRecommendationList extends StatefulWidget {
   final Function toggleVisibility;
 
   const PaidRestroomRecommendationList({
-    super.key,
+    Key? key,
     required this.drawRouteToDestination,
     required this.destination,
     required this.toggleVisibility,
-  });
+  }) : super(key: key);
 
   @override
   _PaidRestroomRecommendationListState createState() =>
@@ -48,8 +48,7 @@ class _PaidRestroomRecommendationListState
     if (querySnapshot.docs.isNotEmpty) {
       final doc = querySnapshot.docs.first;
       final data = doc.data();
-      final fetchedName =
-          data['PaidRestroomName'] as String? ?? "Paid Restroom Name";
+      final fetchedName = data['Name'] as String? ?? "Paid Restroom Name";
 
       setState(() {
         _name = fetchedName;
@@ -106,8 +105,8 @@ class _PaidRestroomRecommendationListState
     if (querySnapshot.docs.isNotEmpty) {
       final doc = querySnapshot.docs.first;
       final data = doc.data();
-      final fetchedRating = data?['rating'] as double? ?? 0.0;
-      return fetchedRating;
+     final fetchedRating = data['Rating'] as String? ?? "0.0";
+      return double.parse(fetchedRating);
     } else {
       return 0.0;
     }
@@ -128,7 +127,7 @@ class _PaidRestroomRecommendationListState
             FirebaseFirestore.instance.collection('Tags').doc(doc.id);
 
         await docRef.update({
-          'rating': newRating,
+          'Rating': newRating,
         });
 
         setState(() {
@@ -136,17 +135,20 @@ class _PaidRestroomRecommendationListState
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rating updated successfully!')),
+          const SnackBar(content: Text('Rating updated successfully!'),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('No document found for the specified location')),
+              content: Text('No document found for the specified location'),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update rating')),
+        const SnackBar(content: Text('Failed to update rating'),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
       );
     }
   }
@@ -171,7 +173,7 @@ class _PaidRestroomRecommendationListState
                         textAlign: TextAlign.start,
                         style: TextStyle(
                           fontSize: 20,
-                          color: Colors.white,
+                          color: Color.fromARGB(255, 85, 70, 152),
                         ),
                       ),
                       const SizedBox(height: 5),
@@ -203,9 +205,9 @@ class _PaidRestroomRecommendationListState
                                   ConnectionState.waiting) {
                                 return const CircularProgressIndicator();
                               } else if (snapshot.hasError) {
-                                return const Text('Error loading rating');
+                                return const Text('Error loading rating',style: TextStyle(color: Color.fromARGB(255, 97, 84, 158),),);
                               } else if (!snapshot.hasData) {
-                                return const Text('No rating available');
+                                return const Text('No rating available',style: TextStyle(color: Color.fromARGB(255, 97, 84, 158),),);
                               } else {
                                 return Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -218,6 +220,7 @@ class _PaidRestroomRecommendationListState
                                         color: Colors.white,
                                       ),
                                     ),
+                                    SizedBox(width: 8),
                                     RatingBar.readOnly(
                                       size: 20,
                                       alignment: Alignment.center,
@@ -228,7 +231,6 @@ class _PaidRestroomRecommendationListState
                                           255, 97, 84, 158),
                                       halfFilledColor: const Color.fromARGB(
                                           255, 186, 176, 228),
-                                      //onRatingChanged: _updateRating,
                                       initialRating: snapshot.data!,
                                       maxRating: 5,
                                     ),
@@ -280,7 +282,11 @@ class _PaidRestroomRecommendationListState
                   drawRouteToDestination: widget.drawRouteToDestination,
                   destination: widget.destination,
                   toggleVisibility: widget.toggleVisibility,
-                ));
+                )).whenComplete(() {
+          setState(() {
+            _currentRatingFuture = fetchRating();
+          });
+        });
       },
     );
   }

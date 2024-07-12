@@ -97,6 +97,24 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
     }
   }
 
+  Future<double> fetchRating() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+     final fetchedRating = data['Rating'] as String? ?? "0.0";
+      return double.parse(fetchedRating);
+    } else {
+      return 0.0;
+    }
+  }
+
   Future<List<String>> _fetchImageUrls() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -115,24 +133,8 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
     }
   }
 
-  Future<double> fetchRating() async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position',
-            isEqualTo: GeoPoint(
-                widget.destination.latitude, widget.destination.longitude))
-        .get();
 
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final data = doc.data();
-      final fetchedRating = data?['rating'] as double? ?? 0.0;
-      return fetchedRating;
-    } else {
-      return 0.0;
-    }
-  }
-
+//this rating should be store in database as string and displayed in the app as double
   void _updateRating(double newRating) async {
     try {
       final querySnapshot = await FirebaseFirestore.instance
@@ -148,28 +150,28 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
             FirebaseFirestore.instance.collection('Tags').doc(doc.id);
 
         await docRef.update({
-          'rating': newRating,
+          'Rating': newRating,
         });
 
         setState(() {
           _currentRatingFuture = Future.value(newRating);
         });
 
-        SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('Rating updated successfully!'),
           backgroundColor: Color.fromARGB(255, 115, 99, 183),
-        );
+        ));
       } else {
-        SnackBar(
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
           content: Text('No document found for the specified location'),
           backgroundColor: Color.fromARGB(255, 115, 99, 183),
-        );
+        ));
       }
     } catch (e) {
-      SnackBar(
+      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('Failed to update rating'),
         backgroundColor: Color.fromARGB(255, 115, 99, 183),
-      );
+      ));
     }
   }
 
@@ -219,35 +221,35 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const CircularProgressIndicator();
               } else if (snapshot.hasError) {
-                return const Text('Error loading rating');
+                return const Text('Error loading rating',style: TextStyle(color: Color.fromARGB(255, 97, 84, 158),),);
               } else if (!snapshot.hasData) {
-                return const Text('No rating available');
+                return const Text('No rating available',style: TextStyle(color: Color.fromARGB(255, 97, 84, 158),),);
               } else {
-                return Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    Text(
-                      '${snapshot.data}',
-                      textAlign: TextAlign.center,
-                      style: const TextStyle(
-                        fontSize: 17,
-                        color: Colors.white,
+                return  Padding(
+              padding: EdgeInsets.only(left: 120, right: 80),
+                    child: Row(children: [
+                      Text(
+                        '${snapshot.data}',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 17,
+                          color: Color.fromARGB(255, 97, 84, 158),
+                        ),
                       ),
-                    ),
-                    SizedBox(width: 5),
-                    RatingBar.readOnly(
-                      size: 20,
-                      alignment: Alignment.center,
-                      filledIcon: Icons.star,
-                      emptyIcon: Icons.star_border,
-                      emptyColor: Colors.white24,
-                      filledColor: const Color.fromARGB(255, 97, 84, 158),
-                      halfFilledColor: const Color.fromARGB(255, 186, 176, 228),
-                      initialRating: snapshot.data!,
-                      maxRating: 5,
-                    ),
-                  ],
-                );
+                      SizedBox(width: 8),
+                      RatingBar.readOnly(
+                        size: 20,
+                        alignment: Alignment.center,
+                        filledIcon: Icons.star,
+                        emptyIcon: Icons.star_border,
+                        emptyColor: Colors.white24,
+                        filledColor: const Color.fromARGB(255, 97, 84, 158),
+                        halfFilledColor:
+                            const Color.fromARGB(255, 186, 176, 228),
+                        initialRating: snapshot.data!,
+                        maxRating: 5,
+                      ),
+                    ]));
               }
             },
           ),
@@ -322,9 +324,9 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const CircularProgressIndicator();
               } else if (snapshot.hasError) {
-                return const Text('Error loading images');
+                return const Text('Error loading images',style: TextStyle(color: Color.fromARGB(255, 97, 84, 158),),);
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Text('No images available');
+                return const Text('No images available',style: TextStyle(color: Color.fromARGB(255, 97, 84, 158),),);
               } else {
                 return SizedBox(
                   height: 250,
@@ -414,7 +416,8 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                     emptyColor: Colors.white24,
                     filledColor: const Color.fromARGB(255, 97, 84, 158),
                     halfFilledColor: const Color.fromARGB(255, 186, 176, 228),
-                    onRatingChanged: _updateRating,
+                    onRatingChanged: (p0){},
+                    //_updateRating,
                     initialRating:
                         0.0, // Update this to snapshot.data if needed
                     maxRating: 5,
