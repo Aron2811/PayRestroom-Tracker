@@ -275,6 +275,7 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                       widget.toggleVisibility();
                       widget.drawRouteToDestination(
                           widget.destination, 'commute');
+                          
                     },
                     label: const Text(
                       'Directions',
@@ -359,7 +360,7 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                   ),
                 ),
                 onPressed: () {
-                  Navigator.push(context, _createRoute(const AddReviewPage()));
+                  Navigator.push(context, _createRoute(AddReviewPage(destination: widget.destination)));
                 },
                 label: const Text(
                   'Add a Review',
@@ -383,7 +384,7 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                   ),
                 ),
                 onTap: () {
-                  Navigator.push(context, _createRoute(ReviewsPage()));
+                  Navigator.push(context, _createRoute(ReviewsPage(destination: widget.destination,)));
                 },
               ),
               const SizedBox(height: 20),

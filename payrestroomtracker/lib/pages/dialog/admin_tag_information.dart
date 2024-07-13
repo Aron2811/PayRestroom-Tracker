@@ -224,7 +224,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                     ),
                   ),
                   onTap: () {
-                    Navigator.push(context, _createRoute(AdminReviewsPage()));
+                    Navigator.push(context, _createRoute(AdminReviewsPage(destination: widget.destination)));
                   },
                 )),
             const SizedBox(height: 15),
