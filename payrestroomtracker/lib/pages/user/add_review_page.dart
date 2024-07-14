@@ -139,8 +139,8 @@ class _AddReviewPageState extends State<AddReviewPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Rate and Review',
-          style: TextStyle(fontSize: 20, color: Colors.white, letterSpacing: 3),
+          'Rate & Review',
+          style: TextStyle(fontSize: 20, color: Colors.white),
         ),
         backgroundColor: const Color.fromARGB(255, 97, 84, 158),
         centerTitle: true,

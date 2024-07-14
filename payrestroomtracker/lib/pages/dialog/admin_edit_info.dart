@@ -26,12 +26,11 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
   TextEditingController nameController = TextEditingController();
   TextEditingController locationController = TextEditingController();
   TextEditingController costController = TextEditingController();
-  double rating = 0;
-  bool isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    fetchImageUrls(context);
     fetchRestroomInfo();
   }
 
@@ -47,18 +46,10 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
           nameController.text = tagSnapshot.get('Name') ?? '';
           locationController.text = tagSnapshot.get('Location') ?? '';
           costController.text = tagSnapshot.get('Cost') ?? '';
-          rating = tagSnapshot.get('Rating') is double
-              ? tagSnapshot.get('Rating')
-              : double.tryParse(tagSnapshot.get('Rating') ?? '0') ?? 0;
-          imageUrls = List<String>.from(tagSnapshot.get('ImageUrls') ?? []);
-          isLoading = false;
-        });
-      } else {
-        setState(() {
-          isLoading = false;
         });
       }
     } catch (e) {
+      // Display error message as a snackbar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error fetching restroom info: ${e.toString()}'),
@@ -140,7 +131,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
         },
         SetOptions(merge: true),
       );
-
+      await fetchImageUrls(context);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -177,14 +168,15 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
         });
       } else {
         setState(() {
-          imageUrls = [];
+          imageUrls = []; // or set to a default value as needed
         });
       }
     } catch (e) {
+      // Display error message as a snackbar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error fetching image URLs: Add Image'),
-          duration: Duration(seconds: 3),
+          duration: Duration(seconds: 3), // Adjust the duration as needed
         ),
       );
       Navigator.of(context).pop(false);
@@ -197,16 +189,20 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
           .collection('Tags')
           .doc(widget.markerId.value);
 
+      // Fetch current imageUrls from Firestore
       DocumentSnapshot tagSnapshot = await tagRef.get();
       Map<String, dynamic>? tagData =
           tagSnapshot.data() as Map<String, dynamic>?;
 
       List<dynamic> currentImageUrls = tagData?['ImageUrls'] ?? [];
 
+      // Ensure index is within bounds
       if (index >= 0 && index < currentImageUrls.length) {
+        // Remove the specified imageUrl from the list
         String imageUrlToDelete = currentImageUrls[index];
         currentImageUrls.removeAt(index);
 
+        // Update Firestore with the new imageUrls
         await tagRef.set(
           {
             'TagId': widget.markerId.value,
@@ -215,6 +211,8 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
           SetOptions(merge: true),
         );
 
+        //update image in realtime
+        await fetchImageUrls(context);
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -272,7 +270,6 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
           'Name': newName,
           'Location': newLocation,
           'Cost': newCost,
-          'Rating': rating.toString(),
         },
         SetOptions(merge: true),
       );
@@ -298,16 +295,82 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
     }
   }
 
+  Widget _buildCarousel() {
+    return FullScreenWidget(
+      disposeLevel: DisposeLevel.High,
+      child: Center(
+        child: SizedBox(
+          height: 250,
+          width: 350,
+          child: imageUrls.isEmpty
+              ? Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Icon(
+                      Icons.image_not_supported,
+                      size: 50,
+                      color: Colors.grey,
+                    ),
+                    SizedBox(height: 10),
+                    Text(
+                      'No images available',
+                      style: TextStyle(fontSize: 16, color: Colors.grey),
+                    ),
+                  ],
+                )
+              : AnotherCarousel(
+                  images: List<Widget>.generate(
+                    imageUrls.length,
+                    (index) {
+                      return Stack(
+                        children: [
+                          Image.network(
+                            imageUrls[index],
+                            fit: BoxFit.cover,
+                            width: double.infinity,
+                            height: double.infinity,
+                          ),
+                          Positioned(
+                            top: 10,
+                            right: 10,
+                            child: IconButton(
+                              icon: Icon(
+                                Icons.delete,
+                                color: Colors.red,
+                              ),
+                              onPressed: () {
+                                _deleteImage(index);
+                                setState(() {
+                                  imageUrls.removeAt(index);
+                                });
+                              },
+                            ),
+                          ),
+                        ],
+                      );
+                    },
+                  ),
+                  dotSize: 5.0,
+                  dotSpacing: 15.0,
+                  dotColor: Colors.lightBlueAccent,
+                  indicatorBgPadding: 5.0,
+                  dotBgColor: Colors.purple.withOpacity(0.5),
+                  borderRadius: true,
+                  autoplay: false,
+                ),
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
-    return isLoading
-        ? Center(child: CircularProgressIndicator())
-        : SingleChildScrollView(
-            child: AlertDialog(actions: [
-            const SizedBox(
-              height: 30,
-            ),
-            const Padding(
+    return Center(
+      child: SingleChildScrollView(
+        child: AlertDialog(
+          actions: [
+            SizedBox(height: 30),
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.0),
               child: Text(
                 "Update Paid Restroom Information",
@@ -319,247 +382,172 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
                 ),
               ),
             ),
-            SizedBox(
-              height: 10,
-            ),
+            SizedBox(height: 10),
             Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.0),
-                child: TextField(
-                  controller: nameController,
-                  minLines: 1,
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    labelText: 'Paid Restroom Name',
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
-                    ),
-                    labelStyle: TextStyle(
-                      fontSize: 15,
-                      color: Color.fromARGB(255, 115, 99, 183),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                        fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)
-                        // Change this color to the desired color,
-                        ),
-                    fillColor: Colors.white10,
-                    filled: true,
+              padding: EdgeInsets.symmetric(horizontal: 10.0),
+              child: TextField(
+                controller: nameController,
+                minLines: 1,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  labelText: 'Paid Restroom Name',
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
                   ),
-                )),
-            SizedBox(
-              height: 10,
-            ),
-            Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.0),
-                child: TextField(
-                  controller: locationController,
-                  minLines: 1,
-                  maxLines: 3,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    labelText: 'Location',
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
-                    ),
-                    labelStyle: TextStyle(
-                      fontSize: 15,
-                      color: Color.fromARGB(255, 115, 99, 183),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                        fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)
-                        // Change this color to the desired color,
-                        ),
-                    fillColor: Colors.white10,
-                    filled: true,
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
                   ),
-                )),
-            const SizedBox(height: 10),
-            Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.0),
-                child: TextField(
-                  controller: costController,
-                  minLines: 1,
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    labelText: 'Cost',
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
-                    ),
-                    labelStyle: TextStyle(
-                      fontSize: 15,
-                      color: Color.fromARGB(255, 115, 99, 183),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                        fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)
-                        // Change this color to the desired color,
-                        ),
-                    fillColor: Colors.white10,
-                    filled: true,
+                  labelStyle: TextStyle(
+                    fontSize: 15,
+                    color: Color.fromARGB(255, 115, 99, 183),
                   ),
-                )),
-            const SizedBox(height: 15),
-            Column(children: [
-              FullScreenWidget(
-                  disposeLevel: DisposeLevel.High,
-                  child: Center(
-                    child: SizedBox(
-                      height: 250,
-                      width: 300,
-                      child: Stack(
-                        children: [
-                          AnotherCarousel(
-                            borderRadius: true,
-                            boxFit: BoxFit.cover,
-                            radius: Radius.circular(10),
-                            autoplay: false,
-                            images: imageUrls
-                                .map((url) => NetworkImage(url))
-                                .toList(),
-                            showIndicator: false,
-                          ),
-                          Positioned(
-                              bottom: 10,
-                              right: 10,
-                              child: IconButton(
-                                icon: Icon(Icons.delete,
-                                    color: Color.fromARGB(255, 115, 99, 183)),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: const Text(
-                                        "Are you sure you want to delete this image",
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color:
-                                              Color.fromARGB(255, 115, 99, 183),
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.bold,
-                                        ),
-                                      ),
-                                      actions: <Widget>[
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop(false);
-                                          },
-                                          child: const Text("No"),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop(true);
-                                            for (int index = 0;
-                                                index < imageUrls.length;
-                                                index++) {
-                                              _deleteImage(index);
-                                            }
-                                          },
-                                          child: const Text("Yes"),
-                                        )
-                                      ],
-                                    ),
-                                  );
-                                },
-                              )),
-                        ],
-                      ),
-                    ),
-                  ))
-            ]),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '$rating', // Display current rating text
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Color.fromARGB(255, 97, 84, 158),
+                  floatingLabelStyle: TextStyle(
+                    fontSize: 15,
+                    color: Color.fromARGB(255, 115, 99, 183),
                   ),
+                  fillColor: Colors.white10,
+                  filled: true,
                 ),
-                SizedBox(width: 8),
-                RatingBar(
-                  size: 20,
+              ),
+            ),
+            SizedBox(height: 10),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10.0),
+              child: TextField(
+                controller: locationController,
+                minLines: 1,
+                maxLines: 3,
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  labelText: 'Location',
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
+                  ),
+                  labelStyle: TextStyle(
+                    fontSize: 15,
+                    color: Color.fromARGB(255, 115, 99, 183),
+                  ),
+                  floatingLabelStyle: TextStyle(
+                    fontSize: 15,
+                    color: Color.fromARGB(255, 115, 99, 183),
+                  ),
+                  fillColor: Colors.white10,
+                  filled: true,
+                ),
+              ),
+            ),
+            SizedBox(height: 10),
+            Padding(
+              padding: EdgeInsets.symmetric(horizontal: 10.0),
+              child: TextField(
+                controller: costController,
+                minLines: 1,
+                maxLines: 2,
+                textAlign: TextAlign.center,
+                decoration: InputDecoration(
+                  labelText: 'Cost',
+                  enabledBorder: UnderlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
+                  ),
+                  focusedBorder: UnderlineInputBorder(
+                    borderSide:
+                        BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
+                  ),
+                  labelStyle: TextStyle(
+                    fontSize: 15,
+                    color: Color.fromARGB(255, 115, 99, 183),
+                  ),
+                  floatingLabelStyle: TextStyle(
+                    fontSize: 15,
+                    color: Color.fromARGB(255, 115, 99, 183),
+                  ),
+                  fillColor: Colors.white10,
+                  filled: true,
+                ),
+              ),
+            ),
+            SizedBox(height: 10),
+            _buildCarousel(), // to add the carousel under the cost
+            SizedBox(height: 20),
+            Align(
+              alignment: Alignment.center,
+              child: RatingBar(
+                size: 20,
+                alignment: Alignment.center,
+                filledIcon: Icons.star,
+                emptyIcon: Icons.star_border,
+                emptyColor: const Color.fromARGB(255, 153, 149, 149),
+                filledColor: Color.fromARGB(255, 97, 84, 158),
+                halfFilledColor: Color.fromARGB(255, 148, 139, 185),
+                onRatingChanged: (p0) {},
+                initialRating: 3,
+                maxRating: 5,
+              ),
+            ),
+            SizedBox(height: 15),
+            Align(
+              alignment: Alignment.center,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  enableFeedback: false,
+                  backgroundColor: Colors.white,
+                  minimumSize: const Size(100, 40),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  side: BorderSide(
+                    color: Color.fromARGB(255, 149, 134, 225),
+                    width: 2.0,
+                  ),
+                  textStyle: const TextStyle(fontSize: 16),
+                ),
+                onPressed: _uploadImages,
+                icon: Icon(Icons.upload_rounded,
+                    color: Color.fromARGB(255, 149, 134, 225)),
+                label: const Text("Upload"),
+              ),
+            ),
+            SizedBox(height: 10),
+            Align(
+              alignment: Alignment.center,
+              child: ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  enableFeedback: false,
+                  backgroundColor: Colors.white,
+                  minimumSize: const Size(150, 40),
                   alignment: Alignment.center,
-                  filledIcon: Icons.star,
-                  emptyIcon: Icons.star_border,
-                  emptyColor: Colors.grey,
-                  filledColor: Color.fromARGB(255, 97, 84, 158),
-                  halfFilledColor: Color.fromARGB(255, 186, 176, 228),
-                  initialRating: rating,
-                  onRatingChanged: (newRating) {
-                    setState(() {
-                      rating = newRating;
-                    });
-                  },
-                  maxRating: 5,
-                ),
-              ],
-            ),
-            const SizedBox(height: 15),
-            Align(
-                alignment: Alignment.center,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                      enableFeedback: false,
-                      backgroundColor: Colors.white,
-                      minimumSize: const Size(100, 40),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50)),
-                      side: BorderSide(
-                        color: Color.fromARGB(
-                            255, 149, 134, 225), //Set the border color
-                        width: 2.0,
-                      ),
-                      textStyle: const TextStyle(fontSize: 16)),
-                  onPressed: _uploadImages,
-                  icon: Icon(Icons.upload_rounded,
-                      color: Color.fromARGB(255, 149, 134, 225)),
-                  label: const Text("Upload"),
-                )),
-            const SizedBox(height: 10),
-            Align(
-                alignment: Alignment.center,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    enableFeedback: false,
-                    backgroundColor: Colors.white,
-                    minimumSize: const Size(150, 40),
-                    alignment: Alignment.center,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      side: const BorderSide(
-                        color: Color.fromARGB(
-                            255, 149, 134, 225), // Set the border color
-                        width: 2.0, // Set the border width
-                      ),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(30),
+                    side: const BorderSide(
+                      color: Color.fromARGB(255, 149, 134, 225),
+                      width: 2.0,
                     ),
-                    foregroundColor: Color.fromARGB(255, 149, 134, 225),
-                    textStyle: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
                   ),
-                  child: const Text(
-                    "Confirm",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                  foregroundColor: Color.fromARGB(255, 149, 134, 225),
+                  textStyle: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.bold,
                   ),
-                  onPressed: _updateRestroomInfo,
-                ))
-          ]));
+                ),
+                child: const Text(
+                  "Confirm",
+                  style: TextStyle(fontWeight: FontWeight.bold),
+                ),
+                onPressed: _updateRestroomInfo,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
   }
 }

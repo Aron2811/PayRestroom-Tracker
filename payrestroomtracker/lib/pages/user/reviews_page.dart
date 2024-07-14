@@ -68,7 +68,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
           },
         ),
         title: const Text(
-          'Reviews',
+          'Rate & Reviews',
           style: TextStyle(fontSize: 20, color: Colors.white),
         ),
         backgroundColor: const Color.fromARGB(255, 97, 84, 158),
