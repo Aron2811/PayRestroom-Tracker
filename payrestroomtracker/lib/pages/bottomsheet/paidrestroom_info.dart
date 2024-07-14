@@ -108,7 +108,7 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
     if (querySnapshot.docs.isNotEmpty) {
       final doc = querySnapshot.docs.first;
       final data = doc.data();
-     final fetchedRating = data['Rating'] as String? ?? "0.0";
+      final fetchedRating = data['Rating'] as String? ?? "0.0";
       return double.parse(fetchedRating);
     } else {
       return 0.0;
@@ -132,7 +132,6 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
       return [];
     }
   }
-
 
 //this rating should be store in database as string and displayed in the app as double
   void _updateRating(double newRating) async {
@@ -221,12 +220,22 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const CircularProgressIndicator();
               } else if (snapshot.hasError) {
-                return const Text('Error loading rating',style: TextStyle(color: Color.fromARGB(255, 97, 84, 158),),);
+                return const Text(
+                  'Error loading rating',
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 97, 84, 158),
+                  ),
+                );
               } else if (!snapshot.hasData) {
-                return const Text('No rating available',style: TextStyle(color: Color.fromARGB(255, 97, 84, 158),),);
+                return const Text(
+                  'No rating available',
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 97, 84, 158),
+                  ),
+                );
               } else {
-                return  Padding(
-              padding: EdgeInsets.only(left: 120, right: 80),
+                return Padding(
+                    padding: EdgeInsets.only(left: 120, right: 80),
                     child: Row(children: [
                       Text(
                         '${snapshot.data}',
@@ -324,9 +333,19 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return const CircularProgressIndicator();
               } else if (snapshot.hasError) {
-                return const Text('Error loading images',style: TextStyle(color: Color.fromARGB(255, 97, 84, 158),),);
+                return const Text(
+                  'Error loading images',
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 97, 84, 158),
+                  ),
+                );
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Text('No images available',style: TextStyle(color: Color.fromARGB(255, 97, 84, 158),),);
+                return const Text(
+                  'No images available',
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 97, 84, 158),
+                  ),
+                );
               } else {
                 return SizedBox(
                   height: 250,
@@ -347,7 +366,15 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const SizedBox(width: 20),
+              const Text(
+                "Share your experience to help others",
+                textAlign: TextAlign.start,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 10),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   enableFeedback: false,
@@ -361,10 +388,14 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                   ),
                 ),
                 onPressed: () {
-                  Navigator.push(context, _createRoute(const AddReviewPage()));
+                  Navigator.push(
+                      context,
+                      _createRoute(AddReviewPage(
+                        destination: widget.destination,
+                      )));
                 },
                 label: const Text(
-                  'Add a Review',
+                  'Rate and Review',
                   style: TextStyle(
                       fontSize: 17, color: Colors.white, letterSpacing: 3),
                 ),
@@ -385,46 +416,14 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                   ),
                 ),
                 onTap: () {
-                  Navigator.push(context, _createRoute(ReviewsPage()));
+                  Navigator.push(
+                      context,
+                      _createRoute(ReviewsPage(
+                        destination: widget.destination,
+                      )));
                 },
               ),
               const SizedBox(height: 20),
-              const Text(
-                "Share your experience to help others",
-                textAlign: TextAlign.start,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(width: 15),
-                  CircleAvatar(
-                    radius: 20,
-                    backgroundImage: NetworkImage(
-                        FirebaseAuth.instance.currentUser?.photoURL ?? ''),
-                  ),
-                  const SizedBox(width: 10),
-                  RatingBar(
-                    size: 30,
-                    alignment: Alignment.center,
-                    filledIcon: Icons.star,
-                    emptyIcon: Icons.star_border,
-                    emptyColor: Colors.white24,
-                    filledColor: const Color.fromARGB(255, 97, 84, 158),
-                    halfFilledColor: const Color.fromARGB(255, 186, 176, 228),
-                    onRatingChanged: (p0){},
-                    //_updateRating,
-                    initialRating:
-                        0.0, // Update this to snapshot.data if needed
-                    maxRating: 5,
-                  ),
-                ],
-              ),
-              SizedBox(height: 20)
             ],
           ),
         ],

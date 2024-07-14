@@ -28,7 +28,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
   String _name = "Paid Restroom Name";
   String _location = "Location";
   String _cost = "Cost";
-  double rating = 0;// Default rating
+  double rating = 0; // Default rating
   String ratingText = "0.0"; // Default rating text
 
   @override
@@ -98,7 +98,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
     }
   }
 
-  Future<void> _fetchRating() async {
+   Future<void> _fetchRating() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
         .where('position',
@@ -247,7 +247,10 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                     ),
                   ),
                   onTap: () {
-                    Navigator.push(context, _createRoute(AdminReviewsPage()));
+                    Navigator.push(
+                        context,
+                        _createRoute(
+                            AdminReviewsPage(destination: widget.destination)));
                   },
                 )),
             const SizedBox(height: 15),

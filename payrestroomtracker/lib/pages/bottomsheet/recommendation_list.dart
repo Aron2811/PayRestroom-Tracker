@@ -94,6 +94,7 @@ class _PaidRestroomRecommendationListState
     }
   }
 
+ 
   Future<double> fetchRating() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -105,7 +106,7 @@ class _PaidRestroomRecommendationListState
     if (querySnapshot.docs.isNotEmpty) {
       final doc = querySnapshot.docs.first;
       final data = doc.data();
-     final fetchedRating = data['Rating'] as String? ?? "0.0";
+      final fetchedRating = data['Rating'] as String? ?? "0.0";
       return double.parse(fetchedRating);
     } else {
       return 0.0;

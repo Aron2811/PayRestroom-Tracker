@@ -47,7 +47,9 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
           nameController.text = tagSnapshot.get('Name') ?? '';
           locationController.text = tagSnapshot.get('Location') ?? '';
           costController.text = tagSnapshot.get('Cost') ?? '';
-          rating = double.tryParse(tagSnapshot.get('Rating') ?? '0') ?? 0;
+          rating = tagSnapshot.get('Rating') is double
+              ? tagSnapshot.get('Rating')
+              : double.tryParse(tagSnapshot.get('Rating') ?? '0') ?? 0;
           imageUrls = List<String>.from(tagSnapshot.get('ImageUrls') ?? []);
           isLoading = false;
         });

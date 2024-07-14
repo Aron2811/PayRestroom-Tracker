@@ -350,77 +350,76 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             SizedBox(height: 15),
             Visibility(
               visible: isVisible,
-              child: Column(
-                children: [
-                  FullScreenWidget(
-                    disposeLevel: DisposeLevel.High,
-                    child: Center(
-                      child: SizedBox(
-                        height: 250,
-                        width: 300,
-                        child: Stack(
-                          children: [
-                            AnotherCarousel(
-                              autoplay: false,
-                              borderRadius: true,
-                              boxFit: BoxFit.cover,
-                              radius: Radius.circular(10),
-                              images: imageUrls
-                                  .map((url) => NetworkImage(url))
-                                  .toList(),
-                              showIndicator: false,
-                            ),
-                            Positioned(
-                              bottom: 10,
-                              right: 10,
-                              child: IconButton(
-                                icon: Icon(Icons.delete,
-                                    color: Color.fromARGB(255, 115, 99, 183)),
-                                onPressed: () {
-                                  showDialog(
-                                    context: context,
-                                    builder: (context) => AlertDialog(
-                                      title: Text(
-                                        "Are you sure you want to delete this image",
-                                        textAlign: TextAlign.center,
-                                        style: TextStyle(
-                                          color:
-                                              Color.fromARGB(255, 115, 99, 183),
-                                          fontSize: 17,
-                                          fontWeight: FontWeight.bold,
-                                        ),
+              child: Column(children: [
+                Expanded(
+                  child: Padding(
+                      padding: EdgeInsets.all(8.0),
+                      child: GridView.builder(
+                          gridDelegate:
+                              SliverGridDelegateWithFixedCrossAxisCount(
+                                  crossAxisCount: 2),
+                          itemCount: imageUrls.length,
+                          itemBuilder: (BuildContext context, int index) {
+                            return FullScreenWidget(
+                                disposeLevel: DisposeLevel.High,
+                                child: Stack(children: [
+                                  Container(
+                                    color: Colors.black45,
+                                    decoration: BoxDecoration(
+                                      borderRadius: BorderRadius.circular(8.0),
+                                      image: DecorationImage(
+                                        fit: BoxFit.cover,
+                                        image: NetworkImage(imageUrls[index]),
                                       ),
-                                      actions: <Widget>[
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop(false);
-                                          },
-                                          child: Text("No"),
-                                        ),
-                                        TextButton(
-                                          onPressed: () {
-                                            Navigator.of(context).pop(true);
-                                            for (int index = 0;
-                                                index < imageUrls.length;
-                                                index++) {
-                                              _deleteImage(index);
-                                            }
-                                          },
-                                          child: Text("Yes"),
-                                        )
-                                      ],
                                     ),
-                                  );
-                                },
-                              ),
+                                  ),
+                                ]));
+                          })),
+                ),
+                Positioned(
+                  bottom: 10,
+                  right: 10,
+                  child: IconButton(
+                    icon: Icon(Icons.delete,
+                        color: Color.fromARGB(255, 115, 99, 183)),
+                    onPressed: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: Text(
+                            "Are you sure you want to delete this image",
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 115, 99, 183),
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
                             ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(false);
+                              },
+                              child: Text("No"),
+                            ),
+                            TextButton(
+                              onPressed: () {
+                                Navigator.of(context).pop(true);
+                                for (int index = 0;
+                                    index < imageUrls.length;
+                                    index++) {
+                                  _deleteImage(index);
+                                }
+                              },
+                              child: Text("Yes"),
+                            )
                           ],
                         ),
-                      ),
-                    ),
+                      );
+                    },
                   ),
-                ],
-              ),
+                )
+              ]),
             ),
             SizedBox(height: 20),
             Row(
@@ -456,6 +455,27 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
               ],
             ),
             SizedBox(height: 15),
+            Align(
+                alignment: Alignment.center,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                      enableFeedback: false,
+                      backgroundColor: Colors.white,
+                      minimumSize: const Size(100, 40),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50)),
+                      side: BorderSide(
+                        color: Color.fromARGB(
+                            255, 149, 134, 225), //Set the border color
+                        width: 2.0,
+                      ),
+                      textStyle: const TextStyle(fontSize: 16)),
+                  onPressed: _uploadImages,
+                  icon: Icon(Icons.upload_rounded,
+                      color: Color.fromARGB(255, 149, 134, 225)),
+                  label: const Text("Upload"),
+                )),
+            const SizedBox(height: 10),
             Align(
               alignment: Alignment.center,
               child: ElevatedButton(
