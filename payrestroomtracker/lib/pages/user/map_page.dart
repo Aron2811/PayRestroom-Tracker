@@ -80,7 +80,7 @@ AssetImage getBackgroundImage() {
     getLocationUpdates();
     _loadCustomMarkerIcon();
     _loadMarkers();
-    _aStar = AStar('YOUR_GOOGLE_MAPS_API_KEY', _updateDuration);
+    _aStar = AStar('AIzaSyATlFmBj-83JvPniLILsfpyawS8NlKIEDc', _updateDuration);
   }
 
   void _updateDuration(String mode, String duration) {
@@ -268,6 +268,8 @@ AssetImage getBackgroundImage() {
               BitmapDescriptor.defaultMarker, // Set the custom icon here
         ),
       );
+    } else{
+      print('no location');
     }
 
     return WillPopScope(
