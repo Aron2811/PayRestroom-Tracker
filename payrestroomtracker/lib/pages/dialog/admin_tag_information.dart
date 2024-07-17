@@ -28,8 +28,6 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
   String _name = "Paid Restroom Name";
   String _location = "Location";
   String _cost = "Cost";
-  double rating = 0; // Default rating
-  String ratingText = "0.0"; // Default rating text
 
   @override
   void initState() {
@@ -38,7 +36,6 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
     _fetchPaidRestroomName();
     _fetchPaidRestroomLocation();
     _fetchPaidRestroomCost();
-    _fetchRating(); // Fetch rating
   }
 
   Future<void> _fetchPaidRestroomName() async {
@@ -94,26 +91,6 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
 
       setState(() {
         _cost = fetchedCost;
-      });
-    }
-  }
-
-   Future<void> _fetchRating() async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position',
-            isEqualTo: GeoPoint(
-                widget.destination.latitude, widget.destination.longitude))
-        .get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final data = doc.data();
-      final fetchedRating = data['Rating'] as String? ?? "0.0";
-
-      setState(() {
-        rating = double.parse(fetchedRating);
-        ratingText = fetchedRating;
       });
     }
   }
@@ -217,7 +194,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                 padding: EdgeInsets.only(left: 60, right: 30),
                 child: Row(children: [
                   Text(
-                    ratingText,
+                    "3.1",
                     style: TextStyle(
                       fontSize: 17,
                       color: Color.fromARGB(255, 97, 84, 158),
@@ -230,7 +207,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                     emptyColor: const Color.fromARGB(255, 153, 149, 149),
                     filledColor: Color.fromARGB(255, 97, 84, 158),
                     halfFilledColor: Color.fromARGB(255, 148, 139, 185),
-                    initialRating: rating,
+                    initialRating: 3,
                     maxRating: 5,
                   ),
                 ])),
@@ -247,10 +224,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                     ),
                   ),
                   onTap: () {
-                    Navigator.push(
-                        context,
-                        _createRoute(
-                            AdminReviewsPage(destination: widget.destination)));
+                    Navigator.push(context, _createRoute(AdminReviewsPage(destination: widget.destination)));
                   },
                 )),
             const SizedBox(height: 15),

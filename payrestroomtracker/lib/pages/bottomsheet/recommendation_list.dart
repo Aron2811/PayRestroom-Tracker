@@ -94,7 +94,6 @@ class _PaidRestroomRecommendationListState
     }
   }
 
- 
   Future<double> fetchRating() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -136,20 +135,25 @@ class _PaidRestroomRecommendationListState
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rating updated successfully!'),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+          const SnackBar(
+            content: Text('Rating updated successfully!'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
         );
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
-              content: Text('No document found for the specified location'),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+            content: Text('No document found for the specified location'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update rating'),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+        const SnackBar(
+          content: Text('Failed to update rating'),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
       );
     }
   }
@@ -206,9 +210,19 @@ class _PaidRestroomRecommendationListState
                                   ConnectionState.waiting) {
                                 return const CircularProgressIndicator();
                               } else if (snapshot.hasError) {
-                                return const Text('Error loading rating',style: TextStyle(color: Color.fromARGB(255, 97, 84, 158),),);
+                                return const Text(
+                                  'Error loading rating',
+                                  style: TextStyle(
+                                    color: Color.fromARGB(255, 97, 84, 158),
+                                  ),
+                                );
                               } else if (!snapshot.hasData) {
-                                return const Text('No rating available',style: TextStyle(color: Color.fromARGB(255, 97, 84, 158),),);
+                                return const Text(
+                                  'No rating available',
+                                  style: TextStyle(
+                                    color: Color.fromARGB(255, 97, 84, 158),
+                                  ),
+                                );
                               } else {
                                 return Row(
                                   mainAxisAlignment: MainAxisAlignment.center,

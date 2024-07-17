@@ -37,8 +37,13 @@ class Main extends StatelessWidget {
           '/adminloginpage': (context) => const AdminLoginPage(),
           '/mappage': (context) => const MapPage(),
           '/adminmappage' : (context) => const AdminMap(username: '',),
+
         //  '/addreviewpage': (context) => const AddReviewPage(),
         //  '/reviewspage': (context) => ReviewsPage(),
+
+          //'/addreviewpage': (context) => AddReviewPage(destination: null,),
+          //'/reviewspage': (context) => ReviewsPage(),
+
           '/reportpage': (context) => ReportPage(),
           '/othersreportpage': (context) => OthersReportPage(),
           '/privacydialog': (context) => const PrivacyDialog(),
