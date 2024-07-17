@@ -3,7 +3,6 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math';
 import 'package:collection/collection.dart';
-import 'package:flutter_button/pages/user/map_page.dart';
 
 class AStar {
   final String googleMapsApiKey;
@@ -122,57 +121,58 @@ class AStar {
     }
   }
 
-Future<List<LatLng>> _fetchRouteFromGoogleMaps(
-  LatLng start, LatLng goal, String options) async {
-  
-  final String travelMode =
-    (options == 'byFoot' || options == 'commute') ? 'walking' : 'driving';
+  Future<List<LatLng>> _fetchRouteFromGoogleMaps(
+      LatLng start, LatLng goal, String options) async {
+    final String travelMode =
+        (options == 'byFoot' || options == 'commute') ? 'walking' : 'driving';
 
-  final String url =
-    'https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${goal.latitude},${goal.longitude}&mode=$travelMode&key=$googleMapsApiKey';
+    final String url =
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${goal.latitude},${goal.longitude}&mode=$travelMode&key=$googleMapsApiKey';
 
-  final response = await http.get(Uri.parse(url));
-  if (response.statusCode == 200) {
-    final data = json.decode(response.body);
-    if (data['status'] == 'OK') {
-      List<LatLng> pathPoints = _decodeDetailedPolyline(
-        data['routes'][0]['overview_polyline']['points']);
-      print('Path points retrieved from Google Maps:');
-      pathPoints.forEach((point) {
-        print('$point');
-      });
+    final response = await http.get(Uri.parse(url));
+    if (response.statusCode == 200) {
+      final data = json.decode(response.body);
+      if (data['status'] == 'OK') {
+        List<LatLng> pathPoints = _decodeDetailedPolyline(
+            data['routes'][0]['overview_polyline']['points']);
+        print('Path points retrieved from Google Maps:');
+        pathPoints.forEach((point) {
+          print('$point');
+        });
 
-      // Initialize durationString with a default value
-      String durationString = '';
+        // Initialize durationString with a default value
+        String durationString = '';
 
-      // Extract the duration and store it in the appropriate variable
-      int durationSeconds = data['routes'][0]['legs'][0]['duration']['value'];
+        // Extract the duration and store it in the appropriate variable
+        int durationSeconds = data['routes'][0]['legs'][0]['duration']['value'];
 
-      if (options == 'byFoot') {
-        durationString = '${(durationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(durationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}m';
-      } else if (options == 'commute') {
-        // Subtract 11 minutes from the byFoot duration
-        int commuteDurationSeconds = durationSeconds - (8 * 60);
-        durationString = '${(commuteDurationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(commuteDurationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}m';
-      } else if (options == 'private') {
-        // Handle private mode, assuming it's driving
-        durationString = '${(durationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(durationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}m';
+        if (options == 'byFoot') {
+          durationString =
+              '${(durationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(durationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}min';
+        } else if (options == 'commute') {
+          // Subtract 11 minutes from the byFoot duration
+          int commuteDurationSeconds = durationSeconds - (8 * 60);
+          durationString =
+              '${(commuteDurationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(commuteDurationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}min';
+        } else if (options == 'private') {
+          // Handle private mode, assuming it's driving
+          durationString =
+              '${(durationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(durationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}min';
+        }
+
+        // Use the callback to update the state in the parent widget
+        updateDurationCallback(options, durationString);
+
+        return pathPoints;
+      } else {
+        print('Error fetching route: ${data['status']}');
+        return [];
       }
-
-      // Use the callback to update the state in the parent widget
-      updateDurationCallback(options, durationString);
-
-      return pathPoints;
     } else {
-      print('Error fetching route: ${data['status']}');
+      print('Error fetching route: ${response.statusCode}');
       return [];
     }
-  } else {
-    print('Error fetching route: ${response.statusCode}');
-    return [];
   }
-}
-
 
   List<LatLng> _decodeDetailedPolyline(String encoded) {
     List<LatLng> polyline = [];
@@ -281,6 +281,28 @@ Future<List<LatLng>> _fetchRouteFromGoogleMaps(
       totalPath.add(current);
     }
     return totalPath.reversed.toList();
+  }
+
+  // New method to calculate the distance in miles
+  String getDistanceInMiles(LatLng start, LatLng end) {
+    const double earthRadiusMiles = 3958.8; // Earth's radius in miles
+
+    double lat1 = start.latitude * pi / 180.0;
+    double lon1 = start.longitude * pi / 180.0;
+    double lat2 = end.latitude * pi / 180.0;
+    double lon2 = end.longitude * pi / 180.0;
+
+    double dLat = lat2 - lat1;
+    double dLon = lon2 - lon1;
+
+    double havTheta =
+        pow(sin(dLat / 2), 2) + cos(lat1) * cos(lat2) * pow(sin(dLon / 2), 2);
+    double distance = 2 * earthRadiusMiles * asin(sqrt(havTheta));
+
+    // Format the distance to 2 decimal places
+    String formattedDistance = distance.toStringAsFixed(2);
+
+    return '$formattedDistance miles';
   }
 }
 

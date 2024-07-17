@@ -20,10 +20,10 @@ class MapPage extends StatefulWidget {
   const MapPage({super.key});
 
   @override
-  State<MapPage> createState() => _MapPageState();
+  State<MapPage> createState() => MapPageState();
 }
 
-class _MapPageState extends State<MapPage> {
+class MapPageState extends State<MapPage> {
   static const LatLng _pGooglePlex =
       LatLng(14.303142147986497, 121.07613374318477);
   late GoogleMapController mapController;
@@ -44,12 +44,30 @@ class _MapPageState extends State<MapPage> {
   String? _displayLocationGuide;
   String? _displayCost;
   String? estimatedTime;
+  String? distanceInMiles;
 
   bool hasBeenListed = false;
   bool isVisible = false;
   bool isUserLocationVisible = false;
+  bool _isLoading = false;
+  bool isCommute = false;
+  bool isByFoot = false;
+  bool isCar = false;
 
   late AStar _aStar;
+
+  AssetImage getBackgroundImage() {
+    print(isCommute);
+    if (isCommute) {
+      return AssetImage('assets/jeep.png');
+    } else if (isByFoot) {
+      return AssetImage('assets/person.png');
+    } else if (isCar) {
+      return AssetImage('assets/car.png');
+    } else {
+      return AssetImage('assets/jeep.jpg');
+    }
+  }
 
   @override
   void initState() {
@@ -268,6 +286,10 @@ class _MapPageState extends State<MapPage> {
             markers: _markers,
             polylines: _polylines,
           ),
+          if (_isLoading)
+            Center(
+              child: CircularProgressIndicator(),
+            ),
           Row(mainAxisAlignment: MainAxisAlignment.end, children: <Widget>[
             const Padding(
               padding: EdgeInsets.symmetric(horizontal: 20, vertical: 60.0),
@@ -309,130 +331,162 @@ class _MapPageState extends State<MapPage> {
                   maintainSize: true,
                   maintainAnimation: true,
                   maintainState: true,
-                  child: ClipRRect(
-                      borderRadius: BorderRadius.circular(25.0),
-                      child: Container(
-                          color: Color.fromARGB(255, 172, 161, 228),
-                          height: 70,
-                          width: 153,
-                          child: Padding(
-                              padding: EdgeInsets.only(top: 10),
-                              child: Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  Padding(
-                                      padding: EdgeInsets.only(
-                                        right: 10,
-                                        left: 15,
-                                      ),
-                                      child: Column(
-                                        children: [
-                                          GestureDetector(
-                                            child: Container(
-                                                height: 35,
-                                                width: 35,
-                                                child: Image.asset(
-                                                    'assets/car.png')),
-                                            onTap: () {
-                                              _drawRouteToDestination(
-                                                  end!, 'private');
-                                              _markers.add(
-                                                Marker(
-                                                  markerId: const MarkerId(
-                                                      'User Location'),
-                                                  position: _currentP!,
-                                                  icon: _carMarkerIcon ??
-                                                      BitmapDescriptor
-                                                          .defaultMarker, // Set the custom icon here
-                                                ),
-                                              );
-                                            },
-                                          ),
-                                          SizedBox(height: 5),
-                                          Text(
-                                            'Estimated Time: ${estimatedTime ?? '15m'}',
-                                            overflow: TextOverflow.ellipsis,
-                                            style: TextStyle(
-                                              fontSize: 12,
-                                              fontWeight: FontWeight.bold,
-                                              color: Colors.white,
+                  child: Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        ClipRRect(
+                            borderRadius: BorderRadius.circular(25.0),
+                            child: Container(
+                                color: Color.fromARGB(255, 172, 161, 228),
+                                height: 60,
+                                width: 153,
+                                child: Padding(
+                                    padding: EdgeInsets.only(top: 10),
+                                    child: Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.start,
+                                      children: [
+                                        Padding(
+                                            padding: EdgeInsets.only(
+                                              right: 10,
+                                              left: 15,
                                             ),
-                                          ),
-                                        ],
-                                      )),
-                                  Column(children: [
-                                    Padding(
-                                        padding: EdgeInsets.only(right: 7),
-                                        child: GestureDetector(
-                                          child: Container(
-                                            height: 35,
-                                            width: 35,
-                                            child:
-                                                Image.asset('assets/jeep.png'),
-                                          ),
-                                          onTap: () {
-                                            _drawRouteToDestination(
-                                                end!, 'commute');
-                                            _markers.add(
-                                              Marker(
-                                                markerId: const MarkerId(
-                                                    'User Location'),
-                                                position: _currentP!,
-                                                icon: _jeepMarkerIcon ??
-                                                    BitmapDescriptor
-                                                        .defaultMarker, // Set the custom icon here
+                                            child: Column(
+                                              children: [
+                                                GestureDetector(
+                                                  child: Container(
+                                                      height: 35,
+                                                      width: 35,
+                                                      child: Image.asset(
+                                                          'assets/car.png')),
+                                                  onTap: () {
+                                                    _isLoading = false;
+                                                    _drawRouteToDestination(
+                                                        end!, 'private');
+                                                    _markers.add(
+                                                      Marker(
+                                                        markerId: const MarkerId(
+                                                            'User Location'),
+                                                        position: _currentP!,
+                                                        icon: _carMarkerIcon ??
+                                                            BitmapDescriptor
+                                                                .defaultMarker, // Set the custom icon here
+                                                      ),
+                                                    );
+                                                  },
+                                                ),
+                                                SizedBox(height: 5),
+                                              ],
+                                            )),
+                                        Column(children: [
+                                          Padding(
+                                              padding:
+                                                  EdgeInsets.only(right: 7),
+                                              child: GestureDetector(
+                                                child: Container(
+                                                  height: 35,
+                                                  width: 35,
+                                                  child: Image.asset(
+                                                      'assets/jeep.png'),
+                                                ),
+                                                onTap: () {
+                                                  _isLoading = false;
+                                                  _drawRouteToDestination(
+                                                      end!, 'commute');
+                                                  _markers.add(
+                                                    Marker(
+                                                      markerId: const MarkerId(
+                                                          'User Location'),
+                                                      position: _currentP!,
+                                                      icon: _jeepMarkerIcon ??
+                                                          BitmapDescriptor
+                                                              .defaultMarker, // Set the custom icon here
+                                                    ),
+                                                  );
+                                                },
+                                              )),
+                                          SizedBox(height: 5),
+                                        ]),
+                                        Column(children: [
+                                          Padding(
+                                              padding:
+                                                  EdgeInsets.only(right: 5),
+                                              child: GestureDetector(
+                                                child: Container(
+                                                    height: 35,
+                                                    width: 35,
+                                                    child: Image.asset(
+                                                        'assets/person.png')),
+                                                onTap: () {
+                                                  _isLoading = false;
+                                                  _drawRouteToDestination(
+                                                      end!, 'byFoot');
+                                                  _markers.add(
+                                                    Marker(
+                                                      markerId: const MarkerId(
+                                                          'User Location'),
+                                                      position: _currentP!,
+                                                      icon: _personMarkerIcon ??
+                                                          BitmapDescriptor
+                                                              .defaultMarker, // Set the custom icon here
+                                                    ),
+                                                  );
+                                                },
+                                              )),
+                                          SizedBox(height: 5),
+                                        ])
+                                      ],
+                                    )))),
+                        SizedBox(height: 10),
+                        Padding(
+                            padding: EdgeInsets.only(left: 0),
+                            child: ClipRRect(
+                                borderRadius: BorderRadius.only(topLeft: Radius.circular(50),bottomLeft: Radius.circular(50), topRight: Radius.circular(25),bottomRight: Radius.circular(25)),
+                                child: Container(
+                                    color: Colors.white,
+                                    height: 45,
+                                    width: 120,
+                                    child: Row(children: [
+                                      SizedBox(
+                                        width: 5,
+                                      ),
+                                      CircleAvatar(
+                                        radius: 15,
+                                        backgroundImage: getBackgroundImage(),
+                                      ),
+                                      SizedBox(
+                                              width: 5,
+                                            ),
+                                      Align(
+                                          alignment: Alignment.center,
+                                          child: Column(children: [
+                                            SizedBox(
+                                              height: 3,
+                                            ),
+                                            Text(
+                                              '${estimatedTime ?? '15 min'}',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color.fromARGB(
+                                                    255, 97, 84, 158),
                                               ),
-                                            );
-                                          },
-                                        )),
-                                    SizedBox(height: 5),
-                                    // Text(
-                                    //   '15m',
-                                    //   // textAlign: TextAlign.start,
-                                    //   style: TextStyle(
-                                    //     fontSize: 12,
-                                    //     fontWeight: FontWeight.bold,
-                                    //     color: Colors.white,
-                                    //   ),
-                                    // ),
-                                  ]),
-                                  Column(children: [
-                                    Padding(
-                                        padding: EdgeInsets.only(right: 5),
-                                        child: GestureDetector(
-                                          child: Container(
-                                              height: 35,
-                                              width: 35,
-                                              child: Image.asset(
-                                                  'assets/person.png')),
-                                          onTap: () {
-                                            _drawRouteToDestination(
-                                                end!, 'byFoot');
-                                            _markers.add(
-                                              Marker(
-                                                markerId: const MarkerId(
-                                                    'User Location'),
-                                                position: _currentP!,
-                                                icon: _personMarkerIcon ??
-                                                    BitmapDescriptor
-                                                        .defaultMarker, // Set the custom icon here
+                                            ),
+                                            SizedBox(
+                                              height: 3,
+                                            ),
+                                            Text(
+                                              distanceInMiles ?? '',
+                                              style: TextStyle(
+                                                fontSize: 13,
+                                                fontWeight: FontWeight.bold,
+                                                color: Color.fromARGB(
+                                                    255, 97, 84, 158),
                                               ),
-                                            );
-                                          },
-                                        )),
-                                    SizedBox(height: 5),
-                                    // Text(
-                                    //   '15m',
-                                    //   // textAlign: TextAlign.start,
-                                    //   style: TextStyle(
-                                    //     fontSize: 12,
-                                    //     fontWeight: FontWeight.bold,
-                                    //     color: Colors.white,
-                                    //   ),
-                                    // ),
-                                  ])
-                                ],
-                              )))))),
+                                            )
+                                          ]))
+                                    ])))),
+                      ]))),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
@@ -485,7 +539,7 @@ class _MapPageState extends State<MapPage> {
 
   void toggleVisibility() {
     setState(() {
-      isVisible = !isVisible;
+      isVisible = true;
     });
   }
 
@@ -553,7 +607,7 @@ class _MapPageState extends State<MapPage> {
   }
 
   Future<String?> getAddressFromLatLng(double lat, double lng) async {
-    const apiKey = 'AIzaSyATlFmBj-83JvPniLILsfpyawS8NlKIEDc';
+    const apiKey = 'AIzaSyC1Ooxwod2ykAO6R99jhnXoYA3ubvkrB9M';
     final url =
         'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$apiKey';
 
@@ -607,6 +661,19 @@ class _MapPageState extends State<MapPage> {
 
   Future<void> _drawRouteToDestination(
       LatLng destination, String option) async {
+    if (option == 'commute') {
+      isCommute = true;
+      isByFoot = false;
+      isCar = false;
+    } else if (option == 'byFoot') {
+      isCommute = false;
+      isByFoot = true;
+      isCar = false;
+    } else if (option == 'private') {
+      isCommute = false;
+      isByFoot = false;
+      isCar = true;
+    }
     end = destination;
 
     if (_currentP == null) {
@@ -615,7 +682,7 @@ class _MapPageState extends State<MapPage> {
     }
 
     AStar aStar =
-        AStar('AIzaSyATlFmBj-83JvPniLILsfpyawS8NlKIEDc', _updateDuration);
+        AStar('AIzaSyC1Ooxwod2ykAO6R99jhnXoYA3ubvkrB9M', _updateDuration);
 
     // Calculate the path asynchronously
     List<LatLng> path =
@@ -646,6 +713,8 @@ class _MapPageState extends State<MapPage> {
           ),
         );
       }
+
+       distanceInMiles = aStar.getDistanceInMiles(_currentP!, destination);
     });
   }
 
