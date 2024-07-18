@@ -175,45 +175,60 @@ class _AdminPageState extends State<AdminPage> {
 
               Align(
                   alignment: Alignment.center,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      enableFeedback: false,
-                      backgroundColor: Colors.white,
-                      minimumSize: const Size(170, 40),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.only(
-                        topLeft: Radius.circular(10),
-                        topRight: Radius.circular(10),
-                        bottomLeft: Radius.circular(10),
-                        bottomRight: Radius.circular(10),
-                      )),
-                      foregroundColor: Color.fromARGB(255, 97, 84, 158),
-                      textStyle: const TextStyle(
-                        fontSize: 16,
+                  child: Stack(children: [
+                    ElevatedButton.icon(
+                      style: ElevatedButton.styleFrom(
+                        enableFeedback: false,
+                        backgroundColor: Colors.white,
+                        minimumSize: const Size(170, 40),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                          topLeft: Radius.circular(10),
+                          topRight: Radius.circular(10),
+                          bottomLeft: Radius.circular(10),
+                          bottomRight: Radius.circular(10),
+                        )),
+                        foregroundColor: Color.fromARGB(255, 97, 84, 158),
+                        textStyle: const TextStyle(
+                          fontSize: 16,
+                        ),
                       ),
-                    ),
-                    label: const Text(
-                      "View Report",
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
+                      label: const Text(
+                        "View Report",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Color.fromARGB(255, 132, 119, 197),
+                        ),
+                      ),
+                      icon: const Icon(
+                        Icons.report_problem_rounded,
                         color: Color.fromARGB(255, 132, 119, 197),
+                        size: 20,
                       ),
+                      onPressed: () {
+                        Navigator.push(
+                            context,
+                            _createRoute(AdminMap(
+                              username: widget.username,
+                            )));
+                      },
                     ),
-                    icon: const Icon(
-                      Icons.report_problem_rounded,
-                      color: Color.fromARGB(255, 132, 119, 197),
-                      size: 20,
-                    ),
-                    onPressed: () {
-                      Navigator.push(
-                          context,
-                          _createRoute(AdminMap(
-                            username: widget.username,
-                          )));
-                    },
-                  )),
+                    Positioned(
+                      top: -1.0,
+                      right: -1.0,
+                      child: Stack(
+                        children: [
+                          Icon(
+                            Icons.brightness_1_rounded,
+                            color: const Color.fromARGB(255, 255, 90, 90),
+                            size: 17.0,
+                          )
+                        ],
+                      ),
+                    )
+                  ])),
             ],
           )
         ]))));
