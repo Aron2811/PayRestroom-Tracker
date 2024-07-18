@@ -154,7 +154,7 @@ class MapPageState extends State<MapPage> {
       if (querySnapshot.docs.isNotEmpty) {
         final doc = querySnapshot.docs.first;
         final data = doc.data();
-        final fetchedRating = data?['rating'] as double? ?? 0.0;
+        final fetchedRating = data?['averageRating'] as double? ?? 0.0;
         markerRatings[marker] = fetchedRating;
       } else {
         markerRatings[marker] = 0.0;

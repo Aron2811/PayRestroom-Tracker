@@ -137,42 +137,44 @@ class AdminMapState extends State<AdminMap> {
             markerId: const MarkerId('User Location'),
             position: _currentP!,
             icon: _personMarkerIcon ?? BitmapDescriptor.defaultMarker,
-            onTap: () => showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                      title: const Text(
-                        "Are you sure you want to add a tag",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                            color: Color.fromARGB(255, 115, 99, 183),
-                            fontSize: 17,
-                            fontWeight: FontWeight.bold),
-                      ),
-                      actions: <Widget>[
-                        TextButton(
-                          onPressed: () {
-                            Navigator.of(context).pop(false);
-                          },
-                          child: const Text("No"),
+            onTap: () {
+              showDialog(
+                  context: context,
+                  builder: (context) => AlertDialog(
+                        title: const Text(
+                          "Are you sure you want to add a tag",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              color: Color.fromARGB(255, 115, 99, 183),
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold),
                         ),
-                        TextButton(
-                          
-                          onPressed: () {
-                            Navigator.of(context).pop(true);
-                            showDialog(
-                              context: context,
-                              builder: (context) => AddInfoDialog(markerId: markerId_, ),
-                            ).then((confirmed) {
-                              print(confirmed);
-                              if (confirmed == true) {
-                                _addMarker(_currentP!, markerId_);
-                              }
-                            });
-                          },
-                          child: const Text("Yes"),
-                        ),
-                      ],
-                    ))),
+                        actions: <Widget>[
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(false);
+                            },
+                            child: const Text("No"),
+                          ),
+                          TextButton(
+                            onPressed: () {
+                              Navigator.of(context).pop(true);
+                              showDialog(
+                                context: context,
+                                builder: (context) => AddInfoDialog(
+                                    destination: _currentP!,
+                                    markerId: markerId_),
+                              ).then((confirmed) {
+                                if (confirmed == true) {
+                                  _addMarker(_currentP!, markerId_);
+                                }
+                              });
+                            },
+                            child: const Text("Yes"),
+                          ),
+                        ],
+                      ));
+            }),
       );
     }
 
@@ -222,7 +224,8 @@ class AdminMapState extends State<AdminMap> {
                                 Navigator.of(context).pop(true);
                                 showDialog(
                                   context: context,
-                                  builder: (context) => AddInfoDialog(markerId: markerId_),
+                                  builder: (context) => AddInfoDialog(
+                                      destination: latLng, markerId: markerId_),
                                 ).then((confirmed) {
                                   print(confirmed);
                                   if (confirmed == true) {
@@ -354,7 +357,7 @@ class AdminMapState extends State<AdminMap> {
           builder: (context) => AdminTagInformation(
             markerId: markerId_,
             deleteMarker: _deleteMarker,
-            destination:latLng,
+            destination: latLng,
           ),
         );
       },
