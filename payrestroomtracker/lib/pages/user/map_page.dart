@@ -44,6 +44,7 @@ class MapPageState extends State<MapPage> {
   String? _displayLocationGuide;
   String? _displayCost;
   String? estimatedTime;
+  String? distanceInMiles;
 
   bool hasBeenListed = false;
   bool isVisible = false;
@@ -475,7 +476,7 @@ class MapPageState extends State<MapPage> {
                                               height: 3,
                                             ),
                                             Text(
-                                              'miles',
+                                              distanceInMiles ?? '',
                                               style: TextStyle(
                                                 fontSize: 13,
                                                 fontWeight: FontWeight.bold,
@@ -712,6 +713,8 @@ class MapPageState extends State<MapPage> {
           ),
         );
       }
+
+       distanceInMiles = aStar.getDistanceInMiles(_currentP!, destination);
     });
   }
 
