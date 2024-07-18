@@ -172,37 +172,37 @@ class _AddReviewPageState extends State<AddReviewPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    const SizedBox(height: 30),
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        CircleAvatar(
-                          radius: 20,
-                          backgroundImage: NetworkImage(
-                              FirebaseAuth.instance.currentUser?.photoURL ??
-                                  ''),
-                        ),
-                        const SizedBox(width: 10),
-                        RatingBar(
-                          size: 30,
-                          alignment: Alignment.center,
-                          filledIcon: Icons.star,
-                          emptyIcon: Icons.star_border,
-                          emptyColor: const Color.fromARGB(255, 123, 120, 120),
-                          filledColor: const Color.fromARGB(255, 97, 84, 158),
-                          halfFilledColor:
-                              const Color.fromARGB(255, 186, 176, 228),
-                          onRatingChanged: (rating) {
-                            setState(() {
-                              userRating = rating;
-                            });
-                          },
-                          initialRating:
-                              0.0, // Update this to snapshot.data if needed
-                          maxRating: 5,
-                        ),
-                      ],
-                    ),
+                    // const SizedBox(height: 30),
+                    // Row(
+                    //   mainAxisAlignment: MainAxisAlignment.center,
+                    //   children: [
+                    //     CircleAvatar(
+                    //       radius: 20,
+                    //       backgroundImage: NetworkImage(
+                    //           FirebaseAuth.instance.currentUser?.photoURL ??
+                    //               ''),
+                    //     ),
+                    //     const SizedBox(width: 10),
+                    //     RatingBar(
+                    //       size: 30,
+                    //       alignment: Alignment.center,
+                    //       filledIcon: Icons.star,
+                    //       emptyIcon: Icons.star_border,
+                    //       emptyColor: const Color.fromARGB(255, 123, 120, 120),
+                    //       filledColor: const Color.fromARGB(255, 97, 84, 158),
+                    //       halfFilledColor:
+                    //           const Color.fromARGB(255, 186, 176, 228),
+                    //       onRatingChanged: (rating) {
+                    //         setState(() {
+                    //           userRating = rating;
+                    //         });
+                    //       },
+                    //       initialRating:
+                    //           0.0, // Update this to snapshot.data if needed
+                    //       maxRating: 5,
+                    //     ),
+                    //   ],
+                    // ),
                     const SizedBox(height: 3),
                     Padding(
                       padding: const EdgeInsets.all(30),
