@@ -39,51 +39,82 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
   }
 
   void _confirmedPressed() async {
-    confirmPressed = true; // Set confirmation status
-    Navigator.of(context).pop(confirmPressed);
+    if (_validateInputs()) {
+      confirmPressed = true; // Set confirmation status
+      Navigator.of(context).pop(confirmPressed);
 
-    try {
-      DocumentReference tagRef = FirebaseFirestore.instance
-          .collection('Tags')
-          .doc(widget.markerId.value);
-      DocumentSnapshot tagSnapshot = await tagRef.get();
-      Map<String, dynamic>? tagData =
-          tagSnapshot.data() as Map<String, dynamic>?;
+      try {
+        DocumentReference tagRef = FirebaseFirestore.instance
+            .collection('Tags')
+            .doc(widget.markerId.value);
+        DocumentSnapshot tagSnapshot = await tagRef.get();
+        Map<String, dynamic>? tagData =
+            tagSnapshot.data() as Map<String, dynamic>?;
 
-      List<dynamic> existingImageUrls = tagData?['ImageUrls'] ?? [];
+        List<dynamic> existingImageUrls = tagData?['ImageUrls'] ?? [];
 
-      List<String> updatedImageUrls = [...existingImageUrls, ...imageUrls];
+        List<String> updatedImageUrls = [...existingImageUrls, ...imageUrls];
 
-      await tagRef.set(
-        {
-          'TagId': widget.markerId.value,
-          'ImageUrls': updatedImageUrls,
-          'Name': nameController.text,
-          'Location': locationController.text,
-          'Cost': costController.text,
-          'Rating': rating.toString(), // Store rating in Firestore
-        },
-        SetOptions(merge: true),
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Paid restroom information added successfully'),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          ),
+        await tagRef.set(
+          {
+            'TagId': widget.markerId.value,
+            'ImageUrls': updatedImageUrls,
+            'Name': nameController.text,
+            'Location': locationController.text,
+            'Cost': costController.text,
+            'Rating': rating.toString(), // Store rating in Firestore
+          },
+          SetOptions(merge: true),
         );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Paid restroom information added successfully'),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to save paid restroom information'),
+              backgroundColor: Color.fromARGB(255, 240, 148, 142),
+            ),
+          );
+        }
       }
-    } catch (e) {
+    } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to save paid restroom information'),
-            backgroundColor: Color.fromARGB(255, 240, 148, 142),
-          ),
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Incomplete Information'),
+              content: Text(
+                  'Please fill in all fields, upload an image and provide a rating.'),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
         );
       }
     }
+  }
+
+  bool _validateInputs() {
+    return nameController.text.isNotEmpty &&
+        locationController.text.isNotEmpty &&
+        costController.text.isNotEmpty &&
+        imageUrls.isNotEmpty &&
+        rating > 0.0;
   }
 
   Future<void> _uploadImages() async {
@@ -249,7 +280,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
     }
   }
 
-   Widget _buildCarousel() {
+  Widget _buildCarousel() {
     return FullScreenWidget(
       disposeLevel: DisposeLevel.High,
       child: Center(
@@ -341,7 +372,6 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
       ),
     );
   }
-
 
   @override
   Widget build(BuildContext context) {
@@ -448,7 +478,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
               ),
             ),
             SizedBox(height: 15),
-            _buildCarousel(), 
+            _buildCarousel(),
             SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -483,7 +513,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
               ],
             ),
             SizedBox(height: 15),
-              Align(
+            Align(
               alignment: Alignment.center,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(

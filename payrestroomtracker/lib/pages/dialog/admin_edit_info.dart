@@ -28,6 +28,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
   TextEditingController costController = TextEditingController();
   double rating = 0;
   bool isLoading = true;
+  bool confirmPressed = false;
 
   @override
   void initState() {
@@ -253,6 +254,9 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
   }
 
   Future<void> _updateRestroomInfo() async {
+    if (_validateInputs()) {
+      confirmPressed = true; // Set confirmation status
+      Navigator.of(context).pop(confirmPressed);
     try {
       DocumentReference tagRef = FirebaseFirestore.instance
           .collection('Tags')
@@ -283,7 +287,6 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
         },
         SetOptions(merge: true),
       );
-
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(
@@ -303,6 +306,36 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
         );
       }
     }
+    } else {
+      if (mounted) {
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Incomplete Information'),
+              content: Text(
+                  'Please fill in all fields, upload an image and provide a rating.'),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
+        );
+      }
+    }
+  }
+
+    bool _validateInputs() {
+    return nameController.text.isNotEmpty &&
+        locationController.text.isNotEmpty &&
+        costController.text.isNotEmpty &&
+        imageUrls.isNotEmpty &&
+        rating > 0.0;
   }
 
   Widget _buildCarousel() {
