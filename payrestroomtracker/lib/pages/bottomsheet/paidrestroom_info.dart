@@ -267,6 +267,25 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
     }
   }
 
+  Stream<double> averageRatingStream() {
+    return FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .snapshots()
+        .map((querySnapshot) {
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final data = doc.data();
+        final averageRating = data['averageRating'] as double? ?? 0.0;
+        return averageRating;
+      } else {
+        return 0.0;
+      }
+    });
+  }
+
   Widget build(BuildContext context) {
     return MyDraggableSheet(
       child: Column(
@@ -308,8 +327,8 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
             ),
           ),
           const SizedBox(height: 10),
-          FutureBuilder<double>(
-            future: _avarageRatingFuture,
+          StreamBuilder<double>(
+            stream: averageRatingStream(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
                 return CircularProgressIndicator();
