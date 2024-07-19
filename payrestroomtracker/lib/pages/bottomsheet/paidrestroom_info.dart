@@ -27,9 +27,7 @@ class PaidRestroomInfo extends StatefulWidget {
 }
 
 class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
-  late Future<double> _avarageRatingFuture;
   late Future<double> _userRatingFuture;
-  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String _name = "Paid Restroom Name";
   String _location = "Location";
   String _cost = "Cost";
@@ -37,7 +35,6 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
   @override
   void initState() {
     super.initState();
-    _avarageRatingFuture = fetchAverageRating();
     _userRatingFuture = fetchUserRating();
     _fetchPaidRestroomName();
     _fetchPaidRestroomLocation();
@@ -142,24 +139,6 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
           backgroundColor: Color.fromARGB(255, 115, 99, 183),
         ),
       );
-    }
-  }
-
-  Future<double> fetchAverageRating() async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position',
-            isEqualTo: GeoPoint(
-                widget.destination.latitude, widget.destination.longitude))
-        .get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final data = doc.data();
-      final averageRating = data['averageRating'] as double? ?? 0.0;
-      return averageRating;
-    } else {
-      return 0.0;
     }
   }
 
