@@ -13,11 +13,11 @@ class AdminTagInformation extends StatefulWidget {
   final LatLng destination;
 
   const AdminTagInformation({
-    Key? key,
+    super.key,
     required this.markerId,
     required this.deleteMarker,
     required this.destination,
-  }) : super(key: key);
+  });
 
   @override
   _AdminTagInformationState createState() => _AdminTagInformationState();
@@ -138,7 +138,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
     } catch (e) {
       // Display error message as a snackbar
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Error fetching image URLs: Add Image'),
           duration: Duration(seconds: 3),
           backgroundColor: Color.fromARGB(
@@ -153,18 +153,18 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
     return Center(
         child: SingleChildScrollView(
             child: AlertDialog(
-      contentPadding: EdgeInsets.symmetric(horizontal: 10.0),
+      contentPadding: const EdgeInsets.symmetric(horizontal: 10.0),
       actions: [
-        SizedBox(height: 30),
+        const SizedBox(height: 30),
         Padding(
-            padding: EdgeInsets.only(left: 10, right: 10),
+            padding: const EdgeInsets.only(left: 10, right: 10),
             child: Align(
                 alignment: Alignment.center,
                 child: Text(
                   _name,
                   maxLines: 3,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 18,
                     color: Color.fromARGB(255, 97, 84, 158),
                     fontWeight: FontWeight.bold,
@@ -172,13 +172,13 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                 ))),
         const SizedBox(height: 10),
         Padding(
-            padding: EdgeInsets.only(left: 20, right: 20),
+            padding: const EdgeInsets.only(left: 20, right: 20),
             child: Align(
                 alignment: Alignment.center,
                 child: Text(
                   _location,
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 17,
                     color: Color.fromARGB(255, 97, 84, 158),
                   ),
@@ -189,7 +189,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
             child: Text(
               _cost,
               textAlign: TextAlign.start,
-              style: TextStyle(
+              style: const TextStyle(
                 fontSize: 18,
                 color: Color.fromARGB(255, 97, 84, 158),
               ),
@@ -207,18 +207,18 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                     autoplay: false,
                     borderRadius: true,
                     boxFit: BoxFit.cover,
-                    radius: Radius.circular(10),
+                    radius: const Radius.circular(10),
                     images: imageUrls.map((url) => NetworkImage(url)).toList(),
                     showIndicator: false,
                   ),
                 ))),
             const SizedBox(height: 30),
             Padding(
-                padding: EdgeInsets.only(left: 60, right: 30),
+                padding: const EdgeInsets.only(left: 60, right: 30),
                 child: Row(children: [
                   Text(
                     ratingText,
-                    style: TextStyle(
+                    style: const TextStyle(
                       fontSize: 17,
                       color: Color.fromARGB(255, 97, 84, 158),
                     ),
@@ -228,13 +228,13 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                     filledIcon: Icons.star,
                     emptyIcon: Icons.star_border,
                     emptyColor: const Color.fromARGB(255, 153, 149, 149),
-                    filledColor: Color.fromARGB(255, 97, 84, 158),
-                    halfFilledColor: Color.fromARGB(255, 148, 139, 185),
+                    filledColor: const Color.fromARGB(255, 97, 84, 158),
+                    halfFilledColor: const Color.fromARGB(255, 148, 139, 185),
                     initialRating: rating,
                     maxRating: 5,
                   ),
                 ])),
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Align(
                 alignment: Alignment.center,
                 child: GestureDetector(
@@ -267,8 +267,8 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                             builder: (context) =>
                                 ChangeInfoDialog(markerId: widget.markerId));
                       },
-                      icon: Icon(Icons.edit_location_alt_outlined),
-                      color: Color.fromARGB(255, 115, 99, 183),
+                      icon: const Icon(Icons.edit_location_alt_outlined),
+                      color: const Color.fromARGB(255, 115, 99, 183),
                       iconSize: 30,
                     ),
                     IconButton(
@@ -304,8 +304,8 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                                   ],
                                 ));
                       },
-                      icon: Icon(Icons.remove_circle_outline_rounded),
-                      color: Color.fromARGB(255, 115, 99, 183),
+                      icon: const Icon(Icons.remove_circle_outline_rounded),
+                      color: const Color.fromARGB(255, 115, 99, 183),
                       iconSize: 30,
                     ),
                   ],

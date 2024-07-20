@@ -7,6 +7,8 @@ import 'package:flutter_button/pages/dialog/taglocation_report.dart';
 import 'package:flutter_button/pages/user/others_report_page.dart';
 
 class ReportPage extends StatelessWidget {
+  const ReportPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -14,7 +16,7 @@ class ReportPage extends StatelessWidget {
         appBar: AppBar(
           leading: BackButton(
             onPressed: () {
-              Navigator.push(context, _createRoute(MapPage()));
+              Navigator.push(context, _createRoute(const MapPage()));
             },
           ),
           title: const Text(
@@ -34,13 +36,13 @@ class ReportPage extends StatelessWidget {
                   onTap: () {
                     showDialog(
                         context: context,
-                        builder: (context) => FacilitiesDialog());
+                        builder: (context) => const FacilitiesDialog());
                   },
                   child: Container(
                     color: Colors.deepPurple[100],
                     width: 343,
                     height: 60,
-                    child: Row(children: [
+                    child: const Row(children: [
                       SizedBox(
                         width: 20,
                       ),
@@ -63,7 +65,7 @@ class ReportPage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               ClipRRect(
@@ -72,13 +74,13 @@ class ReportPage extends StatelessWidget {
                   onTap: () {
                     showDialog(
                         context: context,
-                        builder: (context) => TagLocationDialog());
+                        builder: (context) => const TagLocationDialog());
                   },
                   child: Container(
                     color: Colors.deepPurple[100],
                     width: 343,
                     height: 60,
-                    child: Row(children: [
+                    child: const Row(children: [
                       SizedBox(
                         width: 20,
                       ),
@@ -101,7 +103,7 @@ class ReportPage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               ClipRRect(
@@ -110,13 +112,13 @@ class ReportPage extends StatelessWidget {
                   onTap: () {
                     showDialog(
                         context: context,
-                        builder: (context) => LackDetailsDialog());
+                        builder: (context) => const LackDetailsDialog());
                   },
                   child: Container(
                     color: Colors.deepPurple[100],
                     width: 343,
                     height: 60,
-                    child: Row(children: [
+                    child: const Row(children: [
                       SizedBox(
                         width: 20,
                       ),
@@ -139,7 +141,7 @@ class ReportPage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               ClipRRect(
@@ -148,13 +150,13 @@ class ReportPage extends StatelessWidget {
                   onTap: () {
                     showDialog(
                         context: context,
-                        builder: (context) => DirectionDialog());
+                        builder: (context) => const DirectionDialog());
                   },
                   child: Container(
                     color: Colors.deepPurple[100],
                     width: 343,
                     height: 60,
-                    child: Row(children: [
+                    child: const Row(children: [
                       SizedBox(
                         width: 20,
                       ),
@@ -177,7 +179,7 @@ class ReportPage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 20,
               ),
               ClipRRect(
@@ -190,7 +192,7 @@ class ReportPage extends StatelessWidget {
                     color: Colors.deepPurple[100],
                     width: 343,
                     height: 60,
-                    child: Row(children: [
+                    child: const Row(children: [
                       SizedBox(
                         width: 20,
                       ),
@@ -213,7 +215,7 @@ class ReportPage extends StatelessWidget {
                   ),
                 ),
               ),
-              SizedBox(
+              const SizedBox(
                 height: 250,
               ),
             ],

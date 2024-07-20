@@ -33,7 +33,7 @@ class PrivacyDialog extends StatelessWidget {
                     width: 2.0, // Set the border width
                   ),
                 ),
-                foregroundColor: Color.fromARGB(255, 135, 125, 186),
+                foregroundColor: const Color.fromARGB(255, 135, 125, 186),
                 textStyle: const TextStyle(
                   fontSize: 16,
                 ),

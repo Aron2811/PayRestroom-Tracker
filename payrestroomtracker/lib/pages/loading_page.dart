@@ -11,7 +11,7 @@ class LoadingPage extends StatelessWidget {
             body: Stack(children: [
       // Background Image
       Container(
-        decoration: BoxDecoration(
+        decoration: const BoxDecoration(
           image: DecorationImage(
             image: AssetImage('assets/background.jpg'),
             fit: BoxFit.cover,
@@ -28,7 +28,7 @@ class LoadingPage extends StatelessWidget {
             GestureDetector(
               child: Image.asset('assets/Loading.gif'),
               onTap: () {
-                Navigator.push(context, _createRoute(IntroPage()));
+                Navigator.push(context, _createRoute(const IntroPage()));
               },
             ),
           ]))

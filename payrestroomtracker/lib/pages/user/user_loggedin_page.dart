@@ -67,7 +67,7 @@ class UserLoggedInPage extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-                    Navigator.push(context, _createRoute(MapPage()));
+                    Navigator.push(context, _createRoute(const MapPage()));
                   },
                   label: const Text("View Map"),
                   icon: const Icon(

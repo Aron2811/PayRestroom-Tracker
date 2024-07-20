@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:custom_rating_bar/custom_rating_bar.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_button/pages/bottomsheet/paidrestroom_info.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class PaidRestroomRecommendationList extends StatefulWidget {
   final Function(LatLng, String) drawRouteToDestination;
@@ -10,11 +10,11 @@ class PaidRestroomRecommendationList extends StatefulWidget {
   final Function toggleVisibility;
 
   const PaidRestroomRecommendationList({
-    Key? key,
+    super.key,
     required this.drawRouteToDestination,
     required this.destination,
     required this.toggleVisibility,
-  }) : super(key: key);
+  });
 
   @override
   _PaidRestroomRecommendationListState createState() =>
@@ -23,7 +23,7 @@ class PaidRestroomRecommendationList extends StatefulWidget {
 
 class _PaidRestroomRecommendationListState
     extends State<PaidRestroomRecommendationList> {
-  late Future<double> _currentRatingFuture;
+  late Future<double> _avarageRatingFuture;
   String _name = "Paid Restroom Name";
   String _location = "Location";
   String _cost = "Cost";
@@ -31,7 +31,7 @@ class _PaidRestroomRecommendationListState
   @override
   void initState() {
     super.initState();
-    _currentRatingFuture = fetchRating();
+    _avarageRatingFuture = fetchAverageRating();
     _fetchPaidRestroomName();
     _fetchPaidRestroomLocation();
     _fetchPaidRestroomCost();
@@ -48,7 +48,8 @@ class _PaidRestroomRecommendationListState
     if (querySnapshot.docs.isNotEmpty) {
       final doc = querySnapshot.docs.first;
       final data = doc.data();
-      final fetchedName = data['Name'] as String? ?? "Paid Restroom Name";
+      final fetchedName =
+          data['PaidRestroomName'] as String? ?? "Paid Restroom Name";
 
       setState(() {
         _name = fetchedName;
@@ -94,8 +95,7 @@ class _PaidRestroomRecommendationListState
     }
   }
 
- 
-  Future<double> fetchRating() async {
+  Future<double> fetchAverageRating() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
         .where('position',
@@ -106,51 +106,10 @@ class _PaidRestroomRecommendationListState
     if (querySnapshot.docs.isNotEmpty) {
       final doc = querySnapshot.docs.first;
       final data = doc.data();
-      final fetchedRating = data['Rating'] as String? ?? "0.0";
-      return double.parse(fetchedRating);
+      final averageRating = data['averageRating'] as double? ?? 0.0;
+      return averageRating;
     } else {
       return 0.0;
-    }
-  }
-
-  void _updateRating(double newRating) async {
-    try {
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('Tags')
-          .where('position',
-              isEqualTo: GeoPoint(
-                  widget.destination.latitude, widget.destination.longitude))
-          .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        final doc = querySnapshot.docs.first;
-        final docRef =
-            FirebaseFirestore.instance.collection('Tags').doc(doc.id);
-
-        await docRef.update({
-          'Rating': newRating,
-        });
-
-        setState(() {
-          _currentRatingFuture = Future.value(newRating);
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Rating updated successfully!'),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
-        );
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-              content: Text('No document found for the specified location'),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Failed to update rating'),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
-      );
     }
   }
 
@@ -174,7 +133,7 @@ class _PaidRestroomRecommendationListState
                         textAlign: TextAlign.start,
                         style: TextStyle(
                           fontSize: 20,
-                          color: Color.fromARGB(255, 85, 70, 152),
+                          color: Colors.white,
                         ),
                       ),
                       const SizedBox(height: 5),
@@ -200,15 +159,15 @@ class _PaidRestroomRecommendationListState
                       Row(
                         children: [
                           FutureBuilder<double>(
-                            future: _currentRatingFuture,
+                            future: _avarageRatingFuture,
                             builder: (context, snapshot) {
                               if (snapshot.connectionState ==
                                   ConnectionState.waiting) {
                                 return const CircularProgressIndicator();
                               } else if (snapshot.hasError) {
-                                return const Text('Error loading rating',style: TextStyle(color: Color.fromARGB(255, 97, 84, 158),),);
+                                return const Text('Error loading rating');
                               } else if (!snapshot.hasData) {
-                                return const Text('No rating available',style: TextStyle(color: Color.fromARGB(255, 97, 84, 158),),);
+                                return const Text('No rating available');
                               } else {
                                 return Row(
                                   mainAxisAlignment: MainAxisAlignment.center,
@@ -221,19 +180,17 @@ class _PaidRestroomRecommendationListState
                                         color: Colors.white,
                                       ),
                                     ),
-                                    SizedBox(width: 8),
-                                    RatingBar.readOnly(
-                                      size: 20,
-                                      alignment: Alignment.center,
-                                      filledIcon: Icons.star,
-                                      emptyIcon: Icons.star_border,
-                                      emptyColor: Colors.white24,
-                                      filledColor: const Color.fromARGB(
-                                          255, 97, 84, 158),
-                                      halfFilledColor: const Color.fromARGB(
-                                          255, 186, 176, 228),
-                                      initialRating: snapshot.data!,
-                                      maxRating: 5,
+                                    RatingBarIndicator(
+                                      rating: snapshot.data!,
+                                      itemBuilder: (context, index) => Icon(
+                                        Icons.star,
+                                        color: const Color.fromARGB(
+                                            255, 97, 84, 158),
+                                      ),
+                                      itemCount: 5,
+                                      itemSize: 20.0,
+                                      unratedColor: Colors.white24,
+                                      direction: Axis.horizontal,
                                     ),
                                   ],
                                 );
@@ -283,11 +240,7 @@ class _PaidRestroomRecommendationListState
                   drawRouteToDestination: widget.drawRouteToDestination,
                   destination: widget.destination,
                   toggleVisibility: widget.toggleVisibility,
-                )).whenComplete(() {
-          setState(() {
-            _currentRatingFuture = fetchRating();
-          });
-        });
+                ));
       },
     );
   }

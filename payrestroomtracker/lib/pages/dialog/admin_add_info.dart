@@ -13,10 +13,10 @@ class AddInfoDialog extends StatefulWidget {
   final LatLng destination;
 
   const AddInfoDialog({
-    Key? key,
+    super.key,
     required this.markerId,
     required this.destination,
-  }) : super(key: key);
+  });
 
   @override
   _AddInfoDialogState createState() => _AddInfoDialogState();
@@ -88,7 +88,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
 
   Future<void> _uploadImages() async {
     final pickedFiles = await ImagePicker().pickMultiImage();
-    if (pickedFiles == null || pickedFiles.isEmpty) return;
+    if (pickedFiles.isEmpty) return;
 
     if (pickedFiles.length > 3) {
       if (mounted) {
@@ -106,7 +106,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
     showDialog(
       context: context,
       builder: (context) {
-        return Center(child: CircularProgressIndicator());
+        return const Center(child: CircularProgressIndicator());
       },
     );
 
@@ -179,7 +179,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
+        const SnackBar(
           content: Text('Error fetching image URLs: Add Image'),
           duration: Duration(seconds: 3),
           backgroundColor: Color.fromARGB(255, 115, 99, 183),
@@ -257,7 +257,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
           height: 250,
           width: 350,
           child: imageUrls.isEmpty
-              ? Column(
+              ? const Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
@@ -289,7 +289,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                             bottom: 10,
                             right: 10,
                             child: IconButton(
-                              icon: Icon(
+                              icon: const Icon(
                                 Icons.delete,
                                 color: Color.fromARGB(255, 164, 152, 219),
                               ),
@@ -297,7 +297,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
-                                    title: Text(
+                                    title: const Text(
                                       "Are you sure you want to delete this image",
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
@@ -312,7 +312,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                                         onPressed: () {
                                           Navigator.of(context).pop(false);
                                         },
-                                        child: Text("No"),
+                                        child: const Text("No"),
                                       ),
                                       TextButton(
                                         onPressed: () {
@@ -322,7 +322,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                                             imageUrls.removeAt(index);
                                           });
                                         },
-                                        child: Text("Yes"),
+                                        child: const Text("Yes"),
                                       )
                                     ],
                                   ),
@@ -349,8 +349,8 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
       child: SingleChildScrollView(
         child: AlertDialog(
           actions: [
-            SizedBox(height: 30),
-            Padding(
+            const SizedBox(height: 30),
+            const Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.0),
               child: Text(
                 "Paid Restroom Information",
@@ -362,15 +362,15 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10.0),
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
               child: TextField(
                 controller: nameController,
                 minLines: 1,
                 maxLines: 2,
                 textAlign: TextAlign.center,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Paid Restroom Name',
                   enabledBorder: UnderlineInputBorder(
                     borderSide:
@@ -391,15 +391,15 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10.0),
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
               child: TextField(
                 controller: locationController,
                 minLines: 1,
                 maxLines: 2,
                 textAlign: TextAlign.center,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Paid Restroom Location',
                   enabledBorder: UnderlineInputBorder(
                     borderSide:
@@ -420,15 +420,15 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10.0),
+              padding: const EdgeInsets.symmetric(horizontal: 10.0),
               child: TextField(
                 controller: costController,
                 minLines: 1,
                 maxLines: 2,
                 textAlign: TextAlign.center,
-                decoration: InputDecoration(
+                decoration: const InputDecoration(
                   labelText: 'Cost',
                   enabledBorder: UnderlineInputBorder(
                     borderSide:
@@ -447,29 +447,29 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 ),
               ),
             ),
-            SizedBox(height: 15),
+            const SizedBox(height: 15),
             _buildCarousel(), 
-            SizedBox(height: 20),
+            const SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  '$ratingText', // Display current rating text
+                  ratingText, // Display current rating text
                   textAlign: TextAlign.center,
-                  style: TextStyle(
+                  style: const TextStyle(
                     fontSize: 17,
                     color: Color.fromARGB(255, 97, 84, 158),
                   ),
                 ),
-                SizedBox(width: 8),
+                const SizedBox(width: 8),
                 RatingBar(
                   size: 20,
                   alignment: Alignment.center,
                   filledIcon: Icons.star,
                   emptyIcon: Icons.star_border,
                   emptyColor: Colors.grey,
-                  filledColor: Color.fromARGB(255, 97, 84, 158),
-                  halfFilledColor: Color.fromARGB(255, 186, 176, 228),
+                  filledColor: const Color.fromARGB(255, 97, 84, 158),
+                  halfFilledColor: const Color.fromARGB(255, 186, 176, 228),
                   initialRating: rating,
                   onRatingChanged: (newRating) {
                     setState(() {
@@ -482,7 +482,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 ),
               ],
             ),
-            SizedBox(height: 15),
+            const SizedBox(height: 15),
               Align(
               alignment: Alignment.center,
               child: ElevatedButton.icon(
@@ -493,39 +493,39 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(50),
                   ),
-                  side: BorderSide(
+                  side: const BorderSide(
                     color: Color.fromARGB(255, 149, 134, 225),
                     width: 2.0,
                   ),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
                 onPressed: _uploadImages,
-                icon: Icon(Icons.upload_rounded,
+                icon: const Icon(Icons.upload_rounded,
                     color: Color.fromARGB(255, 149, 134, 225)),
                 label: const Text("Upload"),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Align(
               alignment: Alignment.center,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   enableFeedback: false,
                   backgroundColor: Colors.white,
-                  minimumSize: Size(150, 40),
+                  minimumSize: const Size(150, 40),
                   alignment: Alignment.center,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
-                    side: BorderSide(
+                    side: const BorderSide(
                       color: Color.fromARGB(255, 149, 134, 225),
                       width: 2.0,
                     ),
                   ),
-                  foregroundColor: Color.fromARGB(255, 149, 134, 225),
+                  foregroundColor: const Color.fromARGB(255, 149, 134, 225),
                   textStyle:
-                      TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                child: Text(
+                child: const Text(
                   "Confirm",
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),

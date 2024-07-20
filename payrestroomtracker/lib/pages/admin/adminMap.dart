@@ -12,7 +12,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_button/pages/dialog/admin_add_info.dart';
 
 class AdminMap extends StatefulWidget {
-  const AdminMap({Key? key, required this.username}) : super(key: key);
+  const AdminMap({super.key, required this.username});
   final String username;
 
   @override
@@ -26,11 +26,11 @@ class AdminMapState extends State<AdminMap> {
   LatLng? _currentP;
   String? _currentAddress;
   Set<Marker> _markers = {};
-  Location _locationController = Location();
+  final Location _locationController = Location();
   BitmapDescriptor? _customMarkerIcon;
   BitmapDescriptor? _personMarkerIcon;
   late String _mapStyleString;
-  Set<Polyline> _polylines = {};
+  final Set<Polyline> _polylines = {};
 
   @override
   void initState() {
@@ -51,11 +51,11 @@ class AdminMapState extends State<AdminMap> {
 
   Future<void> _loadCustomMarkerIcon() async {
     _customMarkerIcon = await BitmapDescriptor.fromAssetImage(
-      ImageConfiguration(size: Size(1, 1)),
+      const ImageConfiguration(size: Size(1, 1)),
       'assets/paid_CR_Tag.png',
     );
     _personMarkerIcon = await BitmapDescriptor.fromAssetImage(
-      ImageConfiguration(size: Size(1, 1)),
+      const ImageConfiguration(size: Size(1, 1)),
       'assets/person_Tag.png',
     );
   }
@@ -72,7 +72,7 @@ class AdminMapState extends State<AdminMap> {
       if (position != null) {
         latLng = LatLng(position.latitude, position.longitude);
       } else {
-        latLng = LatLng(0.0, 0.0); // Default value if position is null
+        latLng = const LatLng(0.0, 0.0); // Default value if position is null
       }
 
       return Marker(
@@ -238,7 +238,7 @@ class AdminMapState extends State<AdminMap> {
                           ],
                         ));
               },
-              initialCameraPosition: CameraPosition(
+              initialCameraPosition: const CameraPosition(
                 target: _pGooglePlex,
                 zoom: 13,
               ),
@@ -312,22 +312,22 @@ class AdminMapState extends State<AdminMap> {
   }
 
   Future<void> getLocationUpdates() async {
-    bool _serviceEnabled;
-    PermissionStatus _permissionGranted;
+    bool serviceEnabled;
+    PermissionStatus permissionGranted;
 
-    _serviceEnabled = await _locationController.serviceEnabled();
-    if (!_serviceEnabled) {
-      _serviceEnabled = await _locationController.requestService();
-      if (!_serviceEnabled) {
+    serviceEnabled = await _locationController.serviceEnabled();
+    if (!serviceEnabled) {
+      serviceEnabled = await _locationController.requestService();
+      if (!serviceEnabled) {
         print('Location services disabled.');
         return;
       }
     }
 
-    _permissionGranted = await _locationController.hasPermission();
-    if (_permissionGranted == PermissionStatus.denied) {
-      _permissionGranted = await _locationController.requestPermission();
-      if (_permissionGranted != PermissionStatus.granted) {
+    permissionGranted = await _locationController.hasPermission();
+    if (permissionGranted == PermissionStatus.denied) {
+      permissionGranted = await _locationController.requestPermission();
+      if (permissionGranted != PermissionStatus.granted) {
         print('Location permission denied.');
         return;
       }

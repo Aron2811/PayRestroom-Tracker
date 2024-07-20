@@ -14,7 +14,7 @@ class AdminReport extends StatelessWidget {
     'report 8',
   ];
   final String username;
-  AdminReport({required this.username});
+  AdminReport({super.key, required this.username});
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +51,7 @@ class AdminReport extends StatelessWidget {
 }
 
 class AllReviews extends StatelessWidget {
-  AllReviews({required this.child});
+  const AllReviews({super.key, required this.child});
 
   final String child;
 
@@ -68,21 +68,21 @@ class AllReviews extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(70),
               child: Container(
+                color: Colors.white,
+                height: 40,
+                width: 40,
                 child: const Icon(
                   Icons.person_2_rounded,
                   color: Color.fromARGB(255, 97, 84, 158),
                   size: 30,
                 ),
-                color: Colors.white,
-                height: 40,
-                width: 40,
               ),
             ),
             const SizedBox(width: 20),
-            Column(
+            const Column(
               children: [
-                const SizedBox(height: 50),
-                const Text(
+                SizedBox(height: 50),
+                Text(
                   "Username",
                   textAlign: TextAlign.start,
                   style: TextStyle(
@@ -90,8 +90,8 @@ class AllReviews extends StatelessWidget {
                     color: Color.fromARGB(255, 97, 84, 158),
                   ),
                 ),
-                const SizedBox(height: 3),
-                const Text(
+                SizedBox(height: 3),
+                Text(
                   "Report",
                   textAlign: TextAlign.start,
                   style: TextStyle(
@@ -99,8 +99,8 @@ class AllReviews extends StatelessWidget {
                     color: Color.fromARGB(255, 97, 84, 158),
                   ),
                 ),
-                const SizedBox(height: 3),
-                const Text(
+                SizedBox(height: 3),
+                Text(
                   "Report",
                   textAlign: TextAlign.start,
                   style: TextStyle(

@@ -67,7 +67,7 @@ class IntroPage extends StatelessWidget {
                         textStyle: const TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold)),
                     onPressed: () {
-                       Navigator.push(context, _createRoute(AdminLoginPage()));
+                       Navigator.push(context, _createRoute(const AdminLoginPage()));
                     },
                     label: const Text("ADMIN"),
                     icon: const Icon(
@@ -94,7 +94,7 @@ class IntroPage extends StatelessWidget {
                         textStyle: const TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold)),
                     onPressed: () {
-                      Navigator.push(context, _createRoute(UserLoginPage()));
+                      Navigator.push(context, _createRoute(const UserLoginPage()));
                     },
                     label: const Text("USER"),
                     icon: const Icon(

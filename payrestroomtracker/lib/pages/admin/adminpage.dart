@@ -50,7 +50,7 @@ class _AdminPageState extends State<AdminPage> {
               Navigator.of(context).pop(true);
               Navigator.push(
                 context,
-                _createRoute(IntroPage()),
+                _createRoute(const IntroPage()),
               );
             },
             child: const Text("Yes"),
@@ -89,9 +89,9 @@ class _AdminPageState extends State<AdminPage> {
                   child: GestureDetector(
                     onTap: () {
                       Navigator.of(context).pop(true);
-                      Navigator.push(context, _createRoute(IntroPage()));
+                      Navigator.push(context, _createRoute(const IntroPage()));
                     },
-                    child: Icon(Icons.logout_rounded, color: Colors.white),
+                    child: const Icon(Icons.logout_rounded, color: Colors.white),
                   )),
             ),
           ]),
@@ -108,8 +108,8 @@ class _AdminPageState extends State<AdminPage> {
                 height: 230,
               ),
 
-              SizedBox(height: 30),
-              Text(
+              const SizedBox(height: 30),
+              const Text(
                 'Hello',
                 textAlign: TextAlign.center,
                 style: TextStyle(
@@ -119,17 +119,17 @@ class _AdminPageState extends State<AdminPage> {
                   letterSpacing: 3,
                 ),
               ),
-              SizedBox(height: 5),
+              const SizedBox(height: 5),
               Text(
-                '${widget.username}',
+                widget.username,
                 textAlign: TextAlign.center,
-                style: TextStyle(
+                style: const TextStyle(
                   fontSize: 17,
                   color: Colors.white,
                   letterSpacing: 2,
                 ),
               ),
-              SizedBox(height: 25),
+              const SizedBox(height: 25),
               Align(
                   alignment: Alignment.center,
                   child: ElevatedButton.icon(
@@ -137,14 +137,14 @@ class _AdminPageState extends State<AdminPage> {
                       enableFeedback: false,
                       backgroundColor: Colors.white,
                       minimumSize: const Size(170, 40),
-                      shape: RoundedRectangleBorder(
+                      shape: const RoundedRectangleBorder(
                           borderRadius: BorderRadius.only(
                         topLeft: Radius.circular(10),
                         topRight: Radius.circular(10),
                         bottomLeft: Radius.circular(10),
                         bottomRight: Radius.circular(10),
                       )),
-                      foregroundColor: Color.fromARGB(255, 97, 84, 158),
+                      foregroundColor: const Color.fromARGB(255, 97, 84, 158),
                       textStyle: const TextStyle(
                         fontSize: 18,
                       ),
@@ -171,7 +171,7 @@ class _AdminPageState extends State<AdminPage> {
                           )));
                     },
                   )),
-              SizedBox(height: 8),
+              const SizedBox(height: 8),
 
               Align(
                   alignment: Alignment.center,
@@ -181,14 +181,14 @@ class _AdminPageState extends State<AdminPage> {
                         enableFeedback: false,
                         backgroundColor: Colors.white,
                         minimumSize: const Size(170, 40),
-                        shape: RoundedRectangleBorder(
+                        shape: const RoundedRectangleBorder(
                             borderRadius: BorderRadius.only(
                           topLeft: Radius.circular(10),
                           topRight: Radius.circular(10),
                           bottomLeft: Radius.circular(10),
                           bottomRight: Radius.circular(10),
                         )),
-                        foregroundColor: Color.fromARGB(255, 97, 84, 158),
+                        foregroundColor: const Color.fromARGB(255, 97, 84, 158),
                         textStyle: const TextStyle(
                           fontSize: 16,
                         ),
@@ -215,14 +215,14 @@ class _AdminPageState extends State<AdminPage> {
                             )));
                       },
                     ),
-                    Positioned(
+                    const Positioned(
                       top: -1.0,
                       right: -1.0,
                       child: Stack(
                         children: [
                           Icon(
                             Icons.brightness_1_rounded,
-                            color: const Color.fromARGB(255, 255, 90, 90),
+                            color: Color.fromARGB(255, 255, 90, 90),
                             size: 17.0,
                           )
                         ],

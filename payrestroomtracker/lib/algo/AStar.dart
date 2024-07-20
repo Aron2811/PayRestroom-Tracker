@@ -17,9 +17,9 @@ class AStar {
 
     var pathPoints = await _fetchRouteFromGoogleMaps(start, goal, options);
     print('Path points from Google Maps Directions API:');
-    pathPoints.forEach((point) {
+    for (var point in pathPoints) {
       print('$point');
-    });
+    }
     if (pathPoints.isEmpty) {
       print('No valid route found from Google Maps Directions API.');
       return [start, goal]; // or handle the case appropriately
@@ -40,9 +40,9 @@ class AStar {
       print('${node.position}');
     });
     print('Initial closed set:');
-    closedSet.forEach((position) {
+    for (var position in closedSet) {
       print('$position');
-    });
+    }
 
     while (openSet.isNotEmpty) {
       // Step a: Find the Node with the Lowest f Value
@@ -136,9 +136,9 @@ class AStar {
         List<LatLng> pathPoints = _decodeDetailedPolyline(
             data['routes'][0]['overview_polyline']['points']);
         print('Path points retrieved from Google Maps:');
-        pathPoints.forEach((point) {
+        for (var point in pathPoints) {
           print('$point');
-        });
+        }
 
         // Initialize durationString with a default value
         String durationString = '';

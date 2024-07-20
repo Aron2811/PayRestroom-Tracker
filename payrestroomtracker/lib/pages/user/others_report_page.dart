@@ -2,10 +2,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/dialog/others_report.dart';
 
 class OthersReportPage extends StatelessWidget {
+  const OthersReportPage({super.key});
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 193, 184, 236),
+      backgroundColor: const Color.fromARGB(255, 193, 184, 236),
       appBar: AppBar(
         title: const Text(
           'Report',
@@ -16,13 +18,13 @@ class OthersReportPage extends StatelessWidget {
         actions: <Widget>[
           const SizedBox(width: 10),
           IconButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.send_rounded,
               color: Colors.white,
             ),
             onPressed: () {
               showDialog(
-                  context: context, builder: (context) => OthersReportDialog());
+                  context: context, builder: (context) => const OthersReportDialog());
             },
           ),
           const SizedBox(width: 20),
@@ -36,7 +38,7 @@ class OthersReportPage extends StatelessWidget {
               const SizedBox(height: 30),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 80),
-                child: const Text(
+                child: Text(
                   'Others',
                   style: TextStyle(
                       fontSize: 20,
@@ -47,7 +49,7 @@ class OthersReportPage extends StatelessWidget {
               const SizedBox(height: 5),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 80),
-                child: const Text(
+                child: Text(
                   'Report Description',
                   style: TextStyle(
                       fontSize: 20,
@@ -77,7 +79,7 @@ class OthersReportPage extends StatelessWidget {
                     minimumSize: const Size(100, 40),
                     shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(50)),
-                    side: BorderSide(
+                    side: const BorderSide(
                       color: Color.fromARGB(
                           255, 115, 99, 183), //Set the border color
                       width: 2.0,
@@ -85,7 +87,7 @@ class OthersReportPage extends StatelessWidget {
                     textStyle: const TextStyle(
                         fontSize: 20, fontWeight: FontWeight.bold)),
                 onPressed: () {},
-                icon: Icon(Icons.upload_rounded,
+                icon: const Icon(Icons.upload_rounded,
                     color: Color.fromARGB(255, 115, 99, 183)),
                 label: const Text("Upload"),
               ),

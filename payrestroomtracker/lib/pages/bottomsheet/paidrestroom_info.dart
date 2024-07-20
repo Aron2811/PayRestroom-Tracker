@@ -1,6 +1,6 @@
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:custom_rating_bar/custom_rating_bar.dart';
+import 'package:custom_rating_bar/custom_rating_bar.dart' as custom_rating_bar;
 import 'package:another_carousel_pro/another_carousel_pro.dart';
 import 'package:flutter_button/pages/user/add_review_page.dart';
 import 'package:flutter_button/pages/user/report_page.dart';
@@ -8,6 +8,7 @@ import 'package:flutter_button/pages/user/reviews_page.dart';
 import 'package:flutter_button/pages/bottomsheet/draggablesheet.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class PaidRestroomInfo extends StatefulWidget {
   final Function(LatLng, String) drawRouteToDestination;
@@ -26,7 +27,9 @@ class PaidRestroomInfo extends StatefulWidget {
 }
 
 class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
-  late Future<double> _currentRatingFuture;
+  late Future<double> _avarageRatingFuture;
+  late Future<double> _userRatingFuture;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String _name = "Paid Restroom Name";
   String _location = "Location";
   String _cost = "Cost";
@@ -34,10 +37,130 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
   @override
   void initState() {
     super.initState();
-    _currentRatingFuture = fetchRating();
+    _avarageRatingFuture = fetchAverageRating();
+    _userRatingFuture = fetchUserRating();
     _fetchPaidRestroomName();
     _fetchPaidRestroomLocation();
     _fetchPaidRestroomCost();
+  }
+
+  double calculateAverageRating(List<dynamic> ratings, double stringRating) {
+    if (ratings.isEmpty) return stringRating;
+    double total =
+        ratings.fold(stringRating, (sum, rating) => sum + rating['rating']);
+    double average =
+        total / (ratings.length + 1); // Include the stringRating in the count
+    return double.parse(
+        average.toStringAsFixed(1)); // Format to 1 decimal place
+  }
+
+// Updated _updateRating method
+  void _updateRating(double newRating) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('You need to be logged in to rate'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+        return;
+      }
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .where('position',
+              isEqualTo: GeoPoint(
+                  widget.destination.latitude, widget.destination.longitude))
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final ratings = doc.data().containsKey('ratings')
+            ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
+            : [];
+
+        // Check if the user has already rated this location
+        final userRatingIndex =
+            ratings.indexWhere((rating) => rating['userId'] == user.uid);
+
+        if (userRatingIndex != -1) {
+          // Update existing rating
+          ratings[userRatingIndex]['rating'] = newRating;
+          ratings[userRatingIndex]['timestamp'] = Timestamp.now();
+        } else {
+          // Add new rating
+          ratings.add({
+            'userId': user.uid,
+            'rating': newRating,
+            'timestamp': Timestamp.now(),
+          });
+        }
+
+        // Convert string Rating to double and add to ratings list for average calculation
+        double stringRating = doc.data().containsKey('Rating')
+            ? double.parse(doc['Rating'].toString())
+            : 0;
+
+        // Calculate average rating
+        double averageRatingValue =
+            calculateAverageRating(ratings, stringRating);
+
+        await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
+          'ratings': ratings,
+          'averageRating': averageRatingValue,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Rating updated successfully")),
+        );
+      } else {
+        // Create a new marker document with the rating
+        await FirebaseFirestore.instance.collection('Tags').add({
+          'position': GeoPoint(
+              widget.destination.latitude, widget.destination.longitude),
+          'ratings': [
+            {
+              'userId': user.uid,
+              'rating': newRating,
+              'timestamp': Timestamp.now(),
+            }
+          ],
+          'averageRating': newRating, // Initial average rating
+          'Rating': newRating.toString(), // Store the rating as a string
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Rating added successfully")),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update rating: $e'),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
+      );
+    }
+  }
+
+  Future<double> fetchAverageRating() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final averageRating = data['averageRating'] as double? ?? 0.0;
+      return averageRating;
+    } else {
+      return 0.0;
+    }
   }
 
   Future<void> _fetchPaidRestroomName() async {
@@ -97,24 +220,6 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
     }
   }
 
-  Future<double> fetchRating() async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position',
-            isEqualTo: GeoPoint(
-                widget.destination.latitude, widget.destination.longitude))
-        .get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final data = doc.data();
-      final fetchedRating = data['Rating'] as String? ?? "0.0";
-      return double.parse(fetchedRating);
-    } else {
-      return 0.0;
-    }
-  }
-
   Future<List<String>> _fetchImageUrls() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -133,48 +238,35 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
     }
   }
 
-//this rating should be store in database as string and displayed in the app as double
-  void _updateRating(double newRating) async {
-    try {
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('Tags')
-          .where('position',
-              isEqualTo: GeoPoint(
-                  widget.destination.latitude, widget.destination.longitude))
-          .get();
+  Future<double> fetchUserRating() async {
+    final user = FirebaseAuth.instance.currentUser;
+    if (user == null) {
+      return 0.0; // Default rating if the user is not logged in
+    }
 
-      if (querySnapshot.docs.isNotEmpty) {
-        final doc = querySnapshot.docs.first;
-        final docRef =
-            FirebaseFirestore.instance.collection('Tags').doc(doc.id);
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
 
-        await docRef.update({
-          'Rating': newRating,
-        });
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final ratings = doc.data().containsKey('ratings')
+          ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
+          : [];
 
-        setState(() {
-          _currentRatingFuture = Future.value(newRating);
-        });
+      final userRating = ratings.firstWhere(
+          (rating) => rating['userId'] == user.uid,
+          orElse: () => {'rating': 0.0}); // Default rating if not found
 
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('Rating updated successfully!'),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),
-        ));
-      } else {
-        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-          content: Text('No document found for the specified location'),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),
-        ));
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-        content: Text('Failed to update rating'),
-        backgroundColor: Color.fromARGB(255, 115, 99, 183),
-      ));
+      return userRating['rating'] as double? ?? 0.0;
+    } else {
+      return 0.0;
     }
   }
 
-  @override
   Widget build(BuildContext context) {
     return MyDraggableSheet(
       child: Column(
@@ -182,28 +274,30 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
         children: [
           const SizedBox(height: 10),
           Padding(
-              padding: EdgeInsets.only(left: 10, right: 10),
-              child: Text(
-                _name,
-                maxLines: 3,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 20,
-                  color: Color.fromARGB(255, 64, 55, 107),
-                  fontWeight: FontWeight.bold,
-                ),
-              )),
+            padding: EdgeInsets.only(left: 10, right: 10),
+            child: Text(
+              _name,
+              maxLines: 3,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 20,
+                color: Color.fromARGB(255, 64, 55, 107),
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
           const SizedBox(height: 10),
           Padding(
-              padding: EdgeInsets.only(left: 20, right: 20),
-              child: Text(
-                _location,
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 17,
-                  color: Colors.white,
-                ),
-              )),
+            padding: EdgeInsets.only(left: 20, right: 20),
+            child: Text(
+              _location,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: 17,
+                color: Colors.white,
+              ),
+            ),
+          ),
           const SizedBox(height: 10),
           Text(
             _cost,
@@ -215,137 +309,116 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
           ),
           const SizedBox(height: 10),
           FutureBuilder<double>(
-            future: _currentRatingFuture,
+            future: _avarageRatingFuture,
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
+                return CircularProgressIndicator();
               } else if (snapshot.hasError) {
-                return const Text(
-                  'Error loading rating',
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 97, 84, 158),
-                  ),
-                );
+                return Text('Error loading rating: ${snapshot.error}');
               } else if (!snapshot.hasData) {
-                return const Text(
-                  'No rating available',
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 97, 84, 158),
-                  ),
-                );
+                return Text('No rating available');
               } else {
-                return Padding(
-                    padding: EdgeInsets.only(left: 120, right: 80),
-                    child: Row(children: [
-                      Text(
-                        '${snapshot.data}',
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 17,
-                          color: Color.fromARGB(255, 97, 84, 158),
-                        ),
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${snapshot.data}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 17,
+                        color: Colors.white,
                       ),
-                      SizedBox(width: 8),
-                      RatingBar.readOnly(
-                        size: 20,
-                        alignment: Alignment.center,
-                        filledIcon: Icons.star,
-                        emptyIcon: Icons.star_border,
-                        emptyColor: Colors.white24,
-                        filledColor: const Color.fromARGB(255, 97, 84, 158),
-                        halfFilledColor:
-                            const Color.fromARGB(255, 186, 176, 228),
-                        initialRating: snapshot.data!,
-                        maxRating: 5,
+                    ),
+                    SizedBox(width: 5),
+                    RatingBarIndicator(
+                      rating: snapshot.data!,
+                      itemBuilder: (context, index) => Icon(
+                        Icons.star,
+                        color: const Color.fromARGB(255, 97, 84, 158),
                       ),
-                    ]));
+                      itemCount: 5,
+                      itemSize: 20.0,
+                      unratedColor: Colors.white24,
+                      direction: Axis.horizontal,
+                    ),
+                  ],
+                );
               }
             },
           ),
           const SizedBox(height: 20),
           Align(
-              alignment: Alignment.center,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      enableFeedback: false,
-                      backgroundColor: const Color.fromARGB(255, 226, 223, 229),
-                      minimumSize: const Size(150, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                      side: const BorderSide(
-                        color: Color.fromARGB(255, 97, 84, 158),
-                        width: 2.0,
-                      ),
+            alignment: Alignment.center,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    enableFeedback: false,
+                    backgroundColor: const Color.fromARGB(255, 226, 223, 229),
+                    minimumSize: const Size(150, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50),
                     ),
-                    onPressed: () {
-                      Navigator.pop(context); // Close bottom sheet
-                      widget.toggleVisibility();
-                      widget.drawRouteToDestination(
-                          widget.destination, 'commute');
-                    },
-                    label: const Text(
-                      'Directions',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    icon: const Icon(
-                      Icons.directions,
+                    side: const BorderSide(
                       color: Color.fromARGB(255, 97, 84, 158),
+                      width: 2.0,
                     ),
                   ),
-                  const SizedBox(width: 20),
-                  ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                      enableFeedback: false,
-                      backgroundColor: const Color.fromARGB(255, 226, 223, 229),
-                      minimumSize: const Size(130, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50),
-                      ),
-                      side: const BorderSide(
-                        color: Color.fromARGB(255, 97, 84, 158),
-                        width: 2.0,
-                      ),
+                  onPressed: () {
+                    Navigator.pop(context); // Close bottom sheet
+                    widget.toggleVisibility();
+                    widget.drawRouteToDestination(
+                        widget.destination, 'commute');
+                  },
+                  label: const Text(
+                    'Directions',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  icon: const Icon(
+                    Icons.directions,
+                    color: Color.fromARGB(255, 97, 84, 158),
+                  ),
+                ),
+                const SizedBox(width: 20),
+                ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    enableFeedback: false,
+                    backgroundColor: const Color.fromARGB(255, 226, 223, 229),
+                    minimumSize: const Size(130, 50),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50),
                     ),
-                    onPressed: () {
-                      Navigator.push(context, _createRoute(ReportPage()));
-                    },
-                    label: const Text(
-                      'Report',
-                      style:
-                          TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-                    ),
-                    icon: const Icon(
-                      Icons.report_problem_outlined,
+                    side: const BorderSide(
                       color: Color.fromARGB(255, 97, 84, 158),
+                      width: 2.0,
                     ),
                   ),
-                ],
-              )),
+                  onPressed: () {
+                    Navigator.push(context, _createRoute(ReportPage()));
+                  },
+                  label: const Text(
+                    'Report',
+                    style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                  ),
+                  icon: const Icon(
+                    Icons.report_problem_outlined,
+                    color: Color.fromARGB(255, 97, 84, 158),
+                  ),
+                ),
+              ],
+            ),
+          ),
           const SizedBox(height: 30),
           FutureBuilder<List<String>>(
             future: _fetchImageUrls(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
-                return const CircularProgressIndicator();
+                return CircularProgressIndicator();
               } else if (snapshot.hasError) {
-                return const Text(
-                  'Error loading images',
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 97, 84, 158),
-                  ),
-                );
+                return Text('Error loading images: ${snapshot.error}');
               } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                return const Text(
-                  'No images available',
-                  style: TextStyle(
-                    color: Color.fromARGB(255, 97, 84, 158),
-                  ),
-                );
+                return Text('No images available');
               } else {
                 return SizedBox(
                   height: 250,
@@ -366,15 +439,7 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
           Column(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              const Text(
-                "Share your experience to help others",
-                textAlign: TextAlign.start,
-                style: TextStyle(
-                  fontSize: 15,
-                  color: Colors.white,
-                ),
-              ),
-              const SizedBox(height: 10),
+              const SizedBox(width: 20),
               ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
                   enableFeedback: false,
@@ -390,12 +455,11 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                 onPressed: () {
                   Navigator.push(
                       context,
-                      _createRoute(AddReviewPage(
-                        destination: widget.destination,
-                      )));
+                      _createRoute(
+                          AddReviewPage(destination: widget.destination)));
                 },
                 label: const Text(
-                  'Rate and Review',
+                  'Add a Review',
                   style: TextStyle(
                       fontSize: 17, color: Colors.white, letterSpacing: 3),
                 ),
@@ -418,12 +482,61 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                 onTap: () {
                   Navigator.push(
                       context,
-                      _createRoute(ReviewsPage(
-                        destination: widget.destination,
-                      )));
+                      _createRoute(
+                          ReviewsPage(destination: widget.destination)));
                 },
               ),
               const SizedBox(height: 20),
+              const Text(
+                "Share your experience to help others",
+                textAlign: TextAlign.start,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(width: 15),
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundImage: NetworkImage(
+                      FirebaseAuth.instance.currentUser?.photoURL ?? '',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  FutureBuilder<double>(
+                    future: _userRatingFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return Text(
+                            'Error loading user rating: ${snapshot.error}');
+                      } else {
+                        double userRating = snapshot.data ??
+                            0.0; // Default to 0.0 if snapshot.data is null
+                        return custom_rating_bar.RatingBar(
+                          size: 30,
+                          alignment: Alignment.center,
+                          filledIcon: Icons.star,
+                          emptyIcon: Icons.star_border,
+                          emptyColor: Colors.white24,
+                          filledColor: const Color.fromARGB(255, 97, 84, 158),
+                          halfFilledColor:
+                              const Color.fromARGB(255, 186, 176, 228),
+                          onRatingChanged: _updateRating,
+                          initialRating: userRating,
+                          maxRating: 5,
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
             ],
           ),
         ],

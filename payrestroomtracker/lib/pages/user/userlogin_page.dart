@@ -56,11 +56,11 @@ class UserLoginPage extends StatelessWidget {
 
                   // Google Sign-In Button
                   FloatingActionButton(
-                    child: Image.asset('assets/Google_flutter.png'),
                     backgroundColor: Colors.white,
                     onPressed: () async {
                       await signInWithGoogle(context);
                     },
+                    child: Image.asset('assets/Google_flutter.png'),
                   ),
 
                   const SizedBox(height: 50),
@@ -144,7 +144,7 @@ Future<void> signInWithGoogle(BuildContext context) async {
     showDialog(
         context: context,
         builder: (context) {
-          return Center(child: CircularProgressIndicator());
+          return const Center(child: CircularProgressIndicator());
         });
 
     // Sign in with Google
@@ -182,7 +182,7 @@ Future<void> signInWithGoogle(BuildContext context) async {
 
       Navigator.of(context).pop();
       // Navigate to UserLoggedInPage upon successful sign-in
-      Navigator.push(context, _createRoute(UserLoggedInPage()));
+      Navigator.push(context, _createRoute(const UserLoggedInPage()));
 
       print('Navigated to UserLoggedInPage');
     } else {
