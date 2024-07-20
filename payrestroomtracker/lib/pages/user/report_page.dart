@@ -17,7 +17,7 @@ class ReportPage extends StatelessWidget {
     User? user = _auth.currentUser;
     if (user != null) {
       await _firestore.collection('reports').add({
-        'username': user.displayName, // Use displayName to get the username
+        'username': user.displayName, 
         'photo': user.photoURL,
         'report': reportType,
         'timestamp': FieldValue.serverTimestamp(),
