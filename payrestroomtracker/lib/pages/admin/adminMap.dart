@@ -12,8 +12,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_button/pages/dialog/admin_add_info.dart';
 
 class AdminMap extends StatefulWidget {
-  const AdminMap({Key? key, required this.username}) : super(key: key);
+  const AdminMap({Key? key, required this.username, required this.report}) : super(key: key);
   final String username;
+  final String report;
 
   @override
   State<AdminMap> createState() => AdminMapState();
@@ -156,12 +157,13 @@ class AdminMapState extends State<AdminMap> {
                           child: const Text("No"),
                         ),
                         TextButton(
-                          
                           onPressed: () {
                             Navigator.of(context).pop(true);
                             showDialog(
                               context: context,
-                              builder: (context) => AddInfoDialog(markerId: markerId_, ),
+                              builder: (context) => AddInfoDialog(
+                                markerId: markerId_,
+                              ),
                             ).then((confirmed) {
                               print(confirmed);
                               if (confirmed == true) {
@@ -222,7 +224,8 @@ class AdminMapState extends State<AdminMap> {
                                 Navigator.of(context).pop(true);
                                 showDialog(
                                   context: context,
-                                  builder: (context) => AddInfoDialog(markerId: markerId_),
+                                  builder: (context) =>
+                                      AddInfoDialog(markerId: markerId_),
                                 ).then((confirmed) {
                                   print(confirmed);
                                   if (confirmed == true) {
@@ -269,7 +272,7 @@ class AdminMapState extends State<AdminMap> {
               Navigator.of(context).pop(true);
               Navigator.push(
                 context,
-                _createRoute(AdminPage(username: widget.username)),
+                _createRoute(AdminPage(username: widget.username, report: widget.report,)),
               );
             },
             child: const Text("Yes"),
@@ -354,7 +357,7 @@ class AdminMapState extends State<AdminMap> {
           builder: (context) => AdminTagInformation(
             markerId: markerId_,
             deleteMarker: _deleteMarker,
-            destination:latLng,
+            destination: latLng,
           ),
         );
       },

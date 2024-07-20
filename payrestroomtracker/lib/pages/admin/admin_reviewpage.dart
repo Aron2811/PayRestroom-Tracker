@@ -13,7 +13,7 @@ class AdminReviewsPage extends StatefulWidget {
 
   const AdminReviewsPage({
     Key? key,
-    required this.destination,
+    required this.destination, 
   }) : super(key: key);
 
   @override
@@ -29,45 +29,45 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
     _fetchReviews(); // Fetch reviews when page initializes
   }
 
- Future<void> _fetchReviews() async {
-  final user = FirebaseAuth.instance.currentUser;
+  Future<void> _fetchReviews() async {
+    final user = FirebaseAuth.instance.currentUser;
 
-  final querySnapshot = await FirebaseFirestore.instance
-      .collection('Tags')
-      .where('position',
-          isEqualTo: GeoPoint(
-              widget.destination.latitude, widget.destination.longitude))
-      .get();
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
 
-  if (querySnapshot.docs.isNotEmpty) {
-    final doc = querySnapshot.docs.first;
-    final ratings = doc.data().containsKey('ratings')
-        ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
-        : [];
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final ratings = doc.data().containsKey('ratings')
+          ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
+          : [];
 
-    setState(() {
-      reviews = List<Map<String, dynamic>>.from(doc.data()['comments'] ?? []);
+      setState(() {
+        reviews = List<Map<String, dynamic>>.from(doc.data()['comments'] ?? []);
 
-      // Find the user's rating and update the initialRating
-      if (user != null) {
-        final userRating = ratings.firstWhere(
-          (rating) => rating['userId'] == user.uid,
-          orElse: () => {'rating': 0}, // Set default rating to 0 if not found
-        );
+        // Find the user's rating and update the initialRating
+        if (user != null) {
+          final userRating = ratings.firstWhere(
+            (rating) => rating['userId'] == user.uid,
+            orElse: () => {'rating': 0}, // Set default rating to 0 if not found
+          );
 
-        reviews.forEach((review) {
-          if (review['userId'] == user.uid) {
-            review['rating'] = userRating['rating'];
-          }
-        });
-      }
-    });
-  } else {
-    setState(() {
-      reviews = [];
-    });
+          reviews.forEach((review) {
+            if (review['userId'] == user.uid) {
+              review['rating'] = userRating['rating'];
+            }
+          });
+        }
+      });
+    } else {
+      setState(() {
+        reviews = [];
+      });
+    }
   }
-}
 
   String _formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
@@ -81,7 +81,8 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
         .where('position',
-            isEqualTo: GeoPoint(widget.destination.latitude, widget.destination.longitude))
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
         .get();
 
     if (querySnapshot.docs.isNotEmpty) {
@@ -114,7 +115,11 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
         leading: BackButton(
           color: Colors.white,
           onPressed: () {
-            Navigator.push(context, _createRoute(AdminMap(username: "")));
+            Navigator.push(
+                context,
+                _createRoute(AdminMap(
+                  username: "", report: '', 
+                )));
           },
         ),
         title: const Text(
@@ -157,15 +162,16 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
                         child: Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start, // Align children to the start (left)
+                            crossAxisAlignment: CrossAxisAlignment
+                                .start, // Align children to the start (left)
                             children: [
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   CircleAvatar(
                                     radius: 20,
-                                    backgroundImage: NetworkImage(
-                                        review['photoURL'] ?? ''),
+                                    backgroundImage:
+                                        NetworkImage(review['photoURL'] ?? ''),
                                   ),
                                   const SizedBox(width: 20),
                                   Text(
@@ -191,7 +197,8 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
                                         const Color.fromARGB(255, 97, 84, 158),
                                     halfFilledColor: const Color.fromARGB(
                                         255, 186, 176, 228),
-                                    initialRating: review['rating'] ?? 0.0, // Update with review's actual rating
+                                    initialRating: review['rating'] ??
+                                        0.0, // Update with review's actual rating
                                     maxRating: 5,
                                   ),
                                   const SizedBox(width: 10),
@@ -200,16 +207,16 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
                                         ? _formatTimestamp(
                                             review['timestamp'] as Timestamp)
                                         : '',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
                                   ),
                                 ],
                               ),
                               SizedBox(height: 10),
                               ReadMoreText(
                                 review['comment'] ?? '',
-                                textAlign: TextAlign.left, // Align text to the left
+                                textAlign:
+                                    TextAlign.left, // Align text to the left
                                 trimLines: 2,
                                 trimMode: TrimMode.Line,
                                 trimExpandedText: ' Show less',

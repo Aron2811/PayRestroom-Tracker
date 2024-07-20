@@ -651,7 +651,7 @@ class MapPageState extends State<MapPage> {
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop(true);
-                    Navigator.push(context, _createRoute(IntroPage()));
+                    Navigator.push(context, _createRoute(IntroPage(report: '',)));
                   },
                   child: const Text("Yes"),
                 ),

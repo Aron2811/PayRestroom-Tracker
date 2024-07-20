@@ -3,8 +3,8 @@ import 'package:flutter_button/pages/admin/adminlogin_page.dart';
 import 'package:flutter_button/pages/user/userlogin_page.dart';
 
 class IntroPage extends StatelessWidget {
-  const IntroPage({super.key});
-
+  const IntroPage({Key? key, required this.report}) : super(key: key);
+  final String report;
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
@@ -67,7 +67,7 @@ class IntroPage extends StatelessWidget {
                         textStyle: const TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold)),
                     onPressed: () {
-                       Navigator.push(context, _createRoute(AdminLoginPage()));
+                       Navigator.push(context, _createRoute(AdminLoginPage(report: report ,)));
                     },
                     label: const Text("ADMIN"),
                     icon: const Icon(
