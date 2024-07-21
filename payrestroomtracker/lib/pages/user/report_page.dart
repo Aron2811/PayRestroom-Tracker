@@ -8,25 +8,69 @@ import 'package:flutter_button/pages/user/others_report_page.dart';
 import 'package:flutter_button/pages/admin/admin_report.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class ReportPage extends StatefulWidget {
+  final LatLng? selectedMarkerPosition;
+  final LatLng destination;
+
+  const ReportPage({Key? key, this.selectedMarkerPosition, required this.destination,}) : super(key: key);
+
   @override
   State<ReportPage> createState() => _ReportPageState();
 }
 
 class _ReportPageState extends State<ReportPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
-
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  String _restroomName = "";
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.selectedMarkerPosition != null) {
+      _fetchPaidRestroomName();
+    }
+  }
+
+  Future<void> _fetchPaidRestroomName() async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .where('position', isEqualTo: GeoPoint(widget.destination.latitude, widget.destination.longitude))
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final data = doc.data();
+        final fetchedName = data['Name'] as String? ?? "No name available";
+
+        setState(() {
+          _restroomName = fetchedName;
+        });
+      } else {
+        setState(() {
+          _restroomName = "No restroom found at this location";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _restroomName = "Error fetching data";
+      });
+    }
+  }
 
   Future<void> storeReport(String reportType) async {
     User? user = _auth.currentUser;
     if (user != null) {
       await _firestore.collection('reports').add({
-        'username': user.displayName, 
+        'username': user.displayName,
         'photo': user.photoURL,
         'report': reportType,
         'timestamp': FieldValue.serverTimestamp(),
+        'read': false,
+        'restroomName': _restroomName,
+        
         
       });
     }

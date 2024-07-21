@@ -5,6 +5,50 @@ import 'package:flutter_button/pages/intro_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart'; // Import to use GeoPoint
 
+// Custom Badge Widget
+class Badge extends StatelessWidget {
+  final Widget child;
+  final int badgeCount;
+
+  Badge({required this.child, required this.badgeCount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        child,
+        if (badgeCount > 0)
+          Positioned(
+            right: 0,
+            top: -5,
+            child: Container(
+              padding: EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 226, 99, 90),
+                shape: BoxShape.circle,
+              ),
+              constraints: BoxConstraints(
+                minWidth: 20,
+                minHeight: 20,
+              ),
+              child: Center(
+                child: Text(
+                  '$badgeCount',
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
+}
+
 class AdminPage extends StatefulWidget {
   const AdminPage({Key? key, required this.username, required this.report}) : super(key: key);
   final String username;
@@ -16,6 +60,28 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
   LatLng destination = LatLng(14.303142147986497, 121.07613374318477); // Default destination
+  int unreadCount = 0; // Counter for unread reports
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchUnreadCount();
+  }
+
+  Future<void> _fetchUnreadCount() async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('reports')
+          .where('read', isEqualTo: false)
+          .get();
+
+      setState(() {
+        unreadCount = querySnapshot.docs.length;
+      });
+    } catch (e) {
+      print("Error fetching unread count: $e");
+    }
+  }
 
   Route _createRoute(Widget child) {
     return PageRouteBuilder(
@@ -43,8 +109,8 @@ class _AdminPageState extends State<AdminPage> {
     return await showDialog(
       context: context,
       builder: (context) => AlertDialog(
-        title: const Text("Exit"),
-        content: const Text("Do you want to exit this page?"),
+        title: const Text("Logout"),
+        content: const Text("Do you want to logout?"),
         actions: <Widget>[
           TextButton(
             onPressed: () {
@@ -192,65 +258,51 @@ class _AdminPageState extends State<AdminPage> {
                   SizedBox(height: 8),
                   Align(
                     alignment: Alignment.center,
-                    child: Stack(
-                      children: [
-                        ElevatedButton.icon(
-                          style: ElevatedButton.styleFrom(
-                            enableFeedback: false,
-                            backgroundColor: Colors.white,
-                            minimumSize: const Size(170, 40),
-                            shape: RoundedRectangleBorder(
-                              borderRadius: BorderRadius.only(
-                                topLeft: Radius.circular(10),
-                                topRight: Radius.circular(10),
-                                bottomLeft: Radius.circular(10),
-                                bottomRight: Radius.circular(10),
-                              ),
-                            ),
-                            foregroundColor: Color.fromARGB(255, 97, 84, 158),
-                            textStyle: const TextStyle(
-                              fontSize: 16,
+                    child: Badge(
+                      badgeCount: unreadCount,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          enableFeedback: false,
+                          backgroundColor: Colors.white,
+                          minimumSize: const Size(170, 40),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(10),
+                              topRight: Radius.circular(10),
+                              bottomLeft: Radius.circular(10),
+                              bottomRight: Radius.circular(10),
                             ),
                           ),
-                          label: const Text(
-                            "View Report",
-                            textAlign: TextAlign.center,
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.bold,
-                              color: Color.fromARGB(255, 132, 119, 197),
-                            ),
+                          foregroundColor: Color.fromARGB(255, 97, 84, 158),
+                          textStyle: const TextStyle(
+                            fontSize: 16,
                           ),
-                          icon: const Icon(
-                            Icons.report_problem_rounded,
+                        ),
+                        label: const Text(
+                          "View Report",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.bold,
                             color: Color.fromARGB(255, 132, 119, 197),
-                            size: 20,
-                          ),
-                          onPressed: () {
-                            Navigator.push(
-                              context,
-                              _createRoute(AdminReport(
-                                username: widget.username,
-                                report: widget.report,
-                                destination: geoPoint, // Pass the GeoPoint
-                              )),
-                            );
-                          },
-                        ),
-                        Positioned(
-                          top: -1.0,
-                          right: -1.0,
-                          child: Stack(
-                            children: [
-                              Icon(
-                                Icons.brightness_1_rounded,
-                                color: const Color.fromARGB(255, 255, 90, 90),
-                                size: 17.0,
-                              ),
-                            ],
                           ),
                         ),
-                      ],
+                        icon: const Icon(
+                          Icons.report_problem_rounded,
+                          color: Color.fromARGB(255, 132, 119, 197),
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            _createRoute(AdminReport(
+                              username: widget.username,
+                              report: widget.report,
+                              destination: geoPoint, // Pass the GeoPoint
+                            )),
+                          );
+                        },
+                      ),
                     ),
                   ),
                 ],

@@ -24,7 +24,8 @@ class OthersReportPage extends StatelessWidget {
             ),
             onPressed: () {
               showDialog(
-                  context: context, builder: (context) => const OthersReportDialog());
+                  context: context,
+                  builder: (context) => const OthersReportDialog());
             },
           ),
           const SizedBox(width: 20),
@@ -72,25 +73,6 @@ class OthersReportPage extends StatelessWidget {
                     )),
               ),
               const SizedBox(height: 15),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                    enableFeedback: false,
-                    backgroundColor: Colors.white,
-                    minimumSize: const Size(100, 40),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50)),
-                    side: const BorderSide(
-                      color: Color.fromARGB(
-                          255, 115, 99, 183), //Set the border color
-                      width: 2.0,
-                    ),
-                    textStyle: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold)),
-                onPressed: () {},
-                icon: const Icon(Icons.upload_rounded,
-                    color: Color.fromARGB(255, 115, 99, 183)),
-                label: const Text("Upload"),
-              ),
             ],
           ),
         ],

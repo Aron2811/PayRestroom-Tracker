@@ -93,7 +93,7 @@ class OthersReportDialog extends StatelessWidget {
                 ),
                 onPressed: () {
                   Navigator.of(context).pop();
-                  Navigator.push(context, _createRoute(ReportPage()));
+                  //Navigator.push(context, _createRoute(ReportPage(destination: widget.destination,)));
                 },
               ))
         ],

@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_button/pages/admin/admin_detail_report.dart';
 import 'package:flutter_button/pages/admin/adminpage.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
@@ -6,7 +7,7 @@ import 'package:intl/intl.dart';
 class AdminReport extends StatefulWidget {
   final String username;
   final String report;
-      final GeoPoint destination;
+  final GeoPoint destination;
 
   AdminReport({
     required this.username,
@@ -38,7 +39,10 @@ class _AdminReportState extends State<AdminReport> {
 
     setState(() {
       reports = querySnapshot.docs
-          .map((doc) => doc.data() as Map<String, dynamic>)
+          .map((doc) => {
+                ...doc.data() as Map<String, dynamic>,
+                'id': doc.id,
+              })
           .toList();
     });
   }
@@ -46,7 +50,8 @@ class _AdminReportState extends State<AdminReport> {
   Future<void> _fetchPaidRestroomName() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
-        .where('position', isEqualTo: GeoPoint(
+        .where('position',
+            isEqualTo: GeoPoint(
                 widget.destination.latitude, widget.destination.longitude))
         .get();
 
@@ -61,9 +66,15 @@ class _AdminReportState extends State<AdminReport> {
     }
   }
 
+  Future<void> _updateReadStatus(String reportId) async {
+    await _firestore.collection('reports').doc(reportId).update({'read': true});
+    // Optionally, you could refresh the list after updating
+    _fetchReports();
+  }
+
   String _formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
-    return DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
+    return DateFormat('MMM dd').format(dateTime);
   }
 
   @override
@@ -101,62 +112,55 @@ class _AdminReportState extends State<AdminReport> {
                     itemBuilder: (context, index) {
                       final report = reports[index];
 
-                      return Padding(
-                        padding: const EdgeInsets.all(20.0),
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Row(
-                              mainAxisAlignment: MainAxisAlignment.start,
-                              children: [
-                                CircleAvatar(
-                                  radius: 20,
-                                  backgroundImage:
-                                      NetworkImage(report['photo'] ?? ''),
-                                ),
-                                const SizedBox(width: 20),
-                                Text(
-                                  report['username'] ?? 'Anonymous',
-                                  textAlign: TextAlign.start,
-                                  style: const TextStyle(
-                                    fontSize: 17,
-                                    color: Color.fromARGB(255, 97, 84, 158),
-                                  ),
-                                ),
-                              ],
-                            ),
-                            const SizedBox(height: 5),
-                            Row(
-                              children: [
-                                Text(
-                                  report['timestamp'] != null
-                                      ? _formatTimestamp(
-                                          report['timestamp'] as Timestamp)
-                                      : '',
-                                  style: Theme.of(context).textTheme.bodyMedium,
-                                ),
-                              ],
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              '$paidRestroomName',
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                color: Color.fromARGB(255, 97, 84, 158),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            SizedBox(height: 5),
-                            Text(
-                              report['report'] ?? '',
-                              textAlign: TextAlign.left,
-                              style: TextStyle(
-                                color: Color.fromARGB(255, 97, 84, 158),
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                          ],
+                      return ListTile(
+                        tileColor: report['read']
+                            ? const Color.fromARGB(0, 255, 255, 255)
+                            : Color.fromARGB(209, 181, 167, 243),
+                        title: Text(
+                          "Paid Restroom Name",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: report['read']
+                                ? Color.fromARGB(255, 97, 84, 158)
+                                : const Color.fromARGB(230, 80, 77, 81),
+                            fontWeight: FontWeight.bold,
+                          ),
                         ),
+                        subtitle: Text(
+                          report['report'] ?? '',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            color: report['read']
+                                ? Color.fromARGB(255, 97, 84, 158)
+                                : const Color.fromARGB(230, 80, 77, 81),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        onTap: () {
+                          _updateReadStatus(report['id']);
+                          Navigator.push(
+                            context,
+                            _createRoute(ReportDetailPage(report: report)),
+                          );
+                        },
+                        leading: Container(
+                          width: 50, // Adjust the width as needed
+                          child: Text(
+                            report['username'] ?? 'Anonymous',
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            textAlign: TextAlign.start,
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        ),
+                        trailing: Text(
+                          report['timestamp'] != null
+                              ? _formatTimestamp(
+                                  report['timestamp'] as Timestamp)
+                              : '',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                        
                       );
                     },
                   ),

@@ -399,7 +399,7 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                     ),
                   ),
                   onPressed: () {
-                    Navigator.push(context, _createRoute(ReportPage()));
+                    Navigator.push(context, _createRoute(ReportPage(destination: widget.destination,)));
                   },
                   label: const Text(
                     'Report',
