@@ -14,7 +14,7 @@ class ReportPage extends StatefulWidget {
   final LatLng? selectedMarkerPosition;
   final LatLng destination;
 
-  const ReportPage({Key? key, this.selectedMarkerPosition, required this.destination,}) : super(key: key);
+  const ReportPage({Key? key, this.selectedMarkerPosition, required this.destination}) : super(key: key);
 
   @override
   State<ReportPage> createState() => _ReportPageState();
@@ -60,7 +60,7 @@ class _ReportPageState extends State<ReportPage> {
     }
   }
 
-  Future<void> storeReport(String reportType) async {
+  Future<void> storeReport(String reportType, String reportContent) async {
     User? user = _auth.currentUser;
     if (user != null) {
       await _firestore.collection('reports').add({
@@ -70,8 +70,7 @@ class _ReportPageState extends State<ReportPage> {
         'timestamp': FieldValue.serverTimestamp(),
         'read': false,
         'restroomName': _restroomName,
-        
-        
+        'reportContent' : reportContent,
       });
     }
   }
@@ -97,16 +96,39 @@ class _ReportPageState extends State<ReportPage> {
         child: Column(
           children: [
             reportOption(
-                context, 'Facilities and amenities report', FacilitiesDialog()),
+                context, 
+                'Facilities and amenities report',
+                "The restroom lacks necessary facilities and amenities according to the user's concern. The user is concerned about these deficiencies and hopes for a prompt response to address and rectify these issues. Your attention to this matter would be greatly appreciated to ensure that the restroom meets the necessary standards of comfort and hygiene.", 
+                FacilitiesDialog()
+            ),
             SizedBox(height: 20),
-            reportOption(context, 'Tag Location report', TagLocationDialog()),
+            reportOption(
+                context, 
+                'Tag Location report', 
+                "The restroom tag location is not accurate according to the user's concern. The user is concerned about these deficiencies and hopes for a prompt response to address and rectify these issues. Your attention to this matter would be greatly appreciated to ensure that the restroom meets the necessary accuracy of the location.", 
+                TagLocationDialog()
+            ),
             SizedBox(height: 20),
-            reportOption(context, 'Lack of location details report',
-                LackDetailsDialog()),
+            reportOption(
+                context, 
+                'Lack of location details report',
+                "The restroom lacks of location details according to the user's concern. The user is concerned about these deficiencies and hopes for a prompt response to address and rectify these issues. Your attention to this matter would be greatly appreciated to ensure that the restroom meets the accuracy of location details", 
+                LackDetailsDialog()
+            ),
             SizedBox(height: 20),
-            reportOption(context, 'Direction report', DirectionDialog()),
+            reportOption(
+                context, 
+                'Direction report', 
+                "The restroom direction is not accurate according to the user's concern. The user is concerned about these deficiencies and hopes for a prompt response to address and rectify these issues. Your attention to this matter would be greatly appreciated to ensure that the restroom meets the accuracy of the direction.", 
+                DirectionDialog()
+            ),
             SizedBox(height: 20),
-            reportOption(context, 'Others', OthersReportPage()),
+            reportOption(
+                context, 
+                'Others', 
+                "", 
+                OthersReportPage(destination: widget.destination,)
+            ),
             SizedBox(height: 250),
           ],
         ),
@@ -114,12 +136,14 @@ class _ReportPageState extends State<ReportPage> {
     );
   }
 
-  Widget reportOption(BuildContext context, String reportType, Widget dialog) {
+  Widget reportOption(BuildContext context, String reportType, String reportContent, Widget dialog) {
     return ClipRRect(
       borderRadius: BorderRadius.circular(10),
       child: GestureDetector(
         onTap: () async {
-          await storeReport(reportType);
+          if (reportType != 'Others') {
+            await storeReport(reportType, reportContent);
+          }
           showDialog(
             context: context,
             builder: (context) => dialog,

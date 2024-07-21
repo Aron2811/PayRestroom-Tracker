@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/user/report_page.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class OthersReportDialog extends StatelessWidget {
-  const OthersReportDialog({super.key});
+  final String reportContent;
+  final LatLng destination;
+
+  const OthersReportDialog({super.key, required this.reportContent, required this.destination});
 
   @override
   Widget build(BuildContext context) {
@@ -11,12 +15,12 @@ class OthersReportDialog extends StatelessWidget {
           child: Column(
         children: [
           const SizedBox(
-            height: 20,
+            height: 30,
           ),
           const Icon(Icons.check_circle_rounded,
               color: Color.fromARGB(255, 97, 84, 158), size: 50),
           const SizedBox(
-            height: 30,
+            height: 20,
           ),
           const Text(
             "You Selected",
@@ -26,16 +30,16 @@ class OthersReportDialog extends StatelessWidget {
                 fontWeight: FontWeight.bold),
           ),
           const SizedBox(
-            height: 10,
+            height: 20,
           ),
-          const Text("Others report",
-              style: TextStyle(
-                  color: Color.fromARGB(255, 97, 84, 158),
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold),
-              textAlign: TextAlign.justify),
+          Text(
+            reportContent,
+            style: const TextStyle(
+                color: Color.fromARGB(255, 97, 84, 158), fontSize: 17),
+            textAlign: TextAlign.justify,
+          ),
           const SizedBox(
-            height: 10,
+            height: 20,
           ),
           const Text(
             "We use your feedback to help our systems learn when something isn't right",
@@ -92,8 +96,10 @@ class OthersReportDialog extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onPressed: () {
-                  Navigator.of(context).pop();
-                  //Navigator.push(context, _createRoute(ReportPage(destination: widget.destination,)));
+                  Navigator.push(
+                    context,
+                    _createRoute(ReportPage(destination: destination)),
+                  );
                 },
               ))
         ],

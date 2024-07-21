@@ -1,8 +1,38 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_button/pages/dialog/others_report.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-class OthersReportPage extends StatelessWidget {
-  const OthersReportPage({super.key});
+class OthersReportPage extends StatefulWidget {
+  final LatLng destination;
+
+  const OthersReportPage({super.key, required this.destination});
+
+  @override
+  State<OthersReportPage> createState() => _OthersReportPageState();
+}
+
+class _OthersReportPageState extends State<OthersReportPage> {
+  final TextEditingController _textController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  final String _restroomName = ""; // replace with your logic to get the restroom name
+
+  Future<void> storeReport(String reportType, String reportContent) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      await _firestore.collection('reports').add({
+        'username': user.displayName,
+        'photo': user.photoURL,
+        'report': reportType,
+        'timestamp': FieldValue.serverTimestamp(),
+        'read': false,
+        'restroomName': _restroomName,
+        'reportContent': reportContent,
+      });
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -22,10 +52,15 @@ class OthersReportPage extends StatelessWidget {
               Icons.send_rounded,
               color: Colors.white,
             ),
-            onPressed: () {
+            onPressed: () async {
+              await storeReport('Others', _textController.text);
               showDialog(
-                  context: context,
-                  builder: (context) => const OthersReportDialog());
+                context: context,
+                builder: (context) => OthersReportDialog(
+                  reportContent: _textController.text,
+                  destination: widget.destination,
+                ),
+              );
             },
           ),
           const SizedBox(width: 20),
@@ -59,18 +94,21 @@ class OthersReportPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
-              const Padding(
-                padding: EdgeInsets.all(30),
+              Padding(
+                padding: const EdgeInsets.all(30),
                 child: TextField(
-                    minLines: 1,
-                    maxLines: 4,
-                    style: TextStyle(fontSize: 17),
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Color.fromARGB(255, 115, 99, 183)),
+                  controller: _textController,
+                  minLines: 1,
+                  maxLines: 4,
+                  style: const TextStyle(fontSize: 17),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Color.fromARGB(255, 115, 99, 183),
                       ),
-                    )),
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 15),
             ],

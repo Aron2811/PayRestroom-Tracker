@@ -22,6 +22,7 @@ class ReportDetailPage extends StatelessWidget {
           style: TextStyle(
             fontSize: 18,
             color: Colors.white,
+            letterSpacing: 2,
           ),
         ),
         backgroundColor: const Color.fromARGB(255, 97, 84, 158),
@@ -68,7 +69,7 @@ class ReportDetailPage extends StatelessWidget {
                         ))
                   ],
                 ),
-                const SizedBox(height: 30),
+                const SizedBox(height: 70),
                 Column(mainAxisAlignment: MainAxisAlignment.center, children: [
                   Text(
                     report['report'] ?? '',
@@ -82,13 +83,33 @@ class ReportDetailPage extends StatelessWidget {
                 ]),
                 const SizedBox(height: 20),
                 Text(
-                  'If theres another universe Please make some noise noise Give me a sign sign This cant be life If theres a point to losing love Repeating pain why? Its all the same I hate this place Stuck in this paradigm Dont believe in paradise This must be what Hell is like Theres got to be more got to be more Sick of this head of mine Intrusive thoughts they paralyze Nirvanas not as advertised Theres got to be more been here before',
+                  report['reportContent'] ?? '',
                   textAlign: TextAlign.justify,
                   style: TextStyle(
                       color: Color.fromARGB(255, 97, 84, 158),
                       fontSize: 15,
                       wordSpacing: 5),
                 ),
+                const SizedBox(height: 150),
+                Text(
+                  'Thank you for your attention to this matter. We appreciate your prompt action in addressing the issues reported. Your efforts are greatly valued.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 97, 84, 158),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),  
+                ),
+                const SizedBox(height: 35),
+                Text(
+                  'If you require any further information or assistance, please do not hesitate to reach out. Thank you once again for your cooperation.',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 97, 84, 158),
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                  ),
+                )
               ],
             ),
           ),
