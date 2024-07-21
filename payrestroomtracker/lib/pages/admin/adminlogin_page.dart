@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/admin/adminpage.dart';
 
 class AdminLoginPage extends StatefulWidget {
-  const AdminLoginPage({super.key});
-
+  const AdminLoginPage({
+    Key? key, required this.report
+  }) : super(key: key);
+  final String report;
   @override
   State<StatefulWidget> createState() => _AdminLoginPageState();
 }
@@ -26,7 +28,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     showDialog(
         context: context,
         builder: (context) {
-          return const Center(child: CircularProgressIndicator());
+          return Center(child: CircularProgressIndicator());
         });
     String username = _usernameController.text.trim();
     String password = _passwordController.text.trim();
@@ -46,19 +48,22 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         if (storedPassword == password) {
           Navigator.push(
             context,
-            _createRoute(AdminPage(username: username)),
+            _createRoute(AdminPage(
+              username: username,
+              report: widget.report,
+            )),
           );
           return;
         } else {
-          passwordValid = false; 
+          passwordValid = false;
           // Password is incorrect
-         Navigator.of(context).pop(false);
+          Navigator.of(context).pop(false);
         }
         usernameValid = true; // Username is valid (found in database)
       } else {
-        usernameValid = false; 
+        usernameValid = false;
         // Username is incorrect (not found in database)
-         Navigator.of(context).pop(false);
+        Navigator.of(context).pop(false);
       }
     } catch (e) {
       debugPrint('Error: $e');
@@ -97,14 +102,14 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
               ),
               const SizedBox(height: 10),
               // Text
-              const Padding(
-                padding: EdgeInsets.symmetric(
+              Padding(
+                padding: const EdgeInsets.symmetric(
                   horizontal: 25.0,
                   vertical: 20.0,
                 ),
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
+                  children: const [
                     Text(
                       'Login as Admin',
                       style: TextStyle(
@@ -122,7 +127,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 child: TextField(
                   controller: _usernameController,
                   decoration: InputDecoration(
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.person_2_rounded,
                       color: Color.fromARGB(255, 211, 203, 252),
                     ),
@@ -143,7 +148,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                       fontSize: 15,
                       color: Colors.white,
                     ),
-                    fillColor: const Color.fromARGB(255, 115, 99, 183),
+                    fillColor: Color.fromARGB(255, 115, 99, 183),
                     filled: true,
                   ),
                 ),
@@ -174,7 +179,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                   controller: _passwordController,
                   obscureText: _isObscured,
                   decoration: InputDecoration(
-                    prefixIcon: const Icon(
+                    prefixIcon: Icon(
                       Icons.lock_outline_rounded,
                       color: Color.fromARGB(255, 211, 203, 252),
                     ),
@@ -189,7 +194,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                         });
                       },
                     ),
-                    suffixIconColor: const Color.fromARGB(255, 211, 203, 252),
+                    suffixIconColor: Color.fromARGB(255, 211, 203, 252),
                     labelText: 'Password',
                     enabledBorder: OutlineInputBorder(
                       borderSide: const BorderSide(color: Colors.white),
@@ -207,7 +212,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                       fontSize: 15,
                       color: Colors.white,
                     ),
-                    fillColor: const Color.fromARGB(255, 115, 99, 183),
+                    fillColor: Color.fromARGB(255, 115, 99, 183),
                     filled: true,
                   ),
                 ),

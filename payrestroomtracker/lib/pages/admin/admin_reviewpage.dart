@@ -114,7 +114,7 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
         leading: BackButton(
           color: Colors.white,
           onPressed: () {
-            Navigator.push(context, _createRoute(AdminMap(username: "")));
+            Navigator.push(context, _createRoute(AdminMap(username: "", report: "",)));
           },
         ),
         title: const Text(

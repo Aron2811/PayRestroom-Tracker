@@ -441,7 +441,11 @@ class MapPageState extends State<MapPage> {
                         Padding(
                             padding: EdgeInsets.only(left: 0),
                             child: ClipRRect(
-                                borderRadius: BorderRadius.only(topLeft: Radius.circular(50),bottomLeft: Radius.circular(50), topRight: Radius.circular(25),bottomRight: Radius.circular(25)),
+                                borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(50),
+                                    bottomLeft: Radius.circular(50),
+                                    topRight: Radius.circular(25),
+                                    bottomRight: Radius.circular(25)),
                                 child: Container(
                                     color: Colors.white,
                                     height: 45,
@@ -455,8 +459,8 @@ class MapPageState extends State<MapPage> {
                                         backgroundImage: getBackgroundImage(),
                                       ),
                                       SizedBox(
-                                              width: 5,
-                                            ),
+                                        width: 5,
+                                      ),
                                       Align(
                                           alignment: Alignment.center,
                                           child: Column(children: [
@@ -651,7 +655,11 @@ class MapPageState extends State<MapPage> {
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop(true);
-                    Navigator.push(context, _createRoute(IntroPage()));
+                    Navigator.push(
+                        context,
+                        _createRoute(IntroPage(
+                          report: '',
+                        )));
                   },
                   child: const Text("Yes"),
                 ),
@@ -714,7 +722,7 @@ class MapPageState extends State<MapPage> {
         );
       }
 
-       distanceInMiles = aStar.getDistanceInMiles(_currentP!, destination);
+      distanceInMiles = aStar.getDistanceInMiles(_currentP!, destination);
     });
   }
 

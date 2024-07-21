@@ -1,20 +1,70 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_button/pages/admin/adminMap.dart';
 import 'package:flutter_button/pages/admin/adminpage.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:intl/intl.dart';
 
-class AdminReport extends StatelessWidget {
-  final List _reviews = [
-    'report 1',
-    'report 2',
-    'report 3',
-    'report 4',
-    'report 5',
-    'report 6',
-    'report 7',
-    'report 8',
-  ];
+class AdminReport extends StatefulWidget {
   final String username;
-  AdminReport({super.key, required this.username});
+  final String report;
+      final GeoPoint destination;
+
+  AdminReport({
+    required this.username,
+    required this.report,
+    required this.destination,
+  });
+
+  @override
+  _AdminReportState createState() => _AdminReportState();
+}
+
+class _AdminReportState extends State<AdminReport> {
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  List<Map<String, dynamic>> reports = [];
+  String paidRestroomName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _fetchReports();
+    _fetchPaidRestroomName();
+  }
+
+  Future<void> _fetchReports() async {
+    final querySnapshot = await _firestore
+        .collection('reports')
+        .orderBy('timestamp', descending: true)
+        .get();
+
+    setState(() {
+      reports = querySnapshot.docs
+          .map((doc) => doc.data() as Map<String, dynamic>)
+          .toList();
+    });
+  }
+
+  Future<void> _fetchPaidRestroomName() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position', isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedName = data['Name'] as String? ?? "Paid Restroom Name";
+
+      setState(() {
+        paidRestroomName = fetchedName;
+      });
+    }
+  }
+
+  String _formatTimestamp(Timestamp timestamp) {
+    DateTime dateTime = timestamp.toDate();
+    return DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -24,7 +74,8 @@ class AdminReport extends StatelessWidget {
           onPressed: () {
             Navigator.push(
               context,
-              _createRoute(AdminPage(username: username)),
+              _createRoute(
+                  AdminPage(username: widget.username, report: widget.report)),
             );
           },
         ),
@@ -38,87 +89,85 @@ class AdminReport extends StatelessWidget {
       body: Column(
         children: [
           Expanded(
-            child: ListView.builder(
-                itemCount: _reviews.length,
-                itemBuilder: (context, index) {
-                  return AllReviews(child: _reviews[index]);
-                }),
+            child: reports.isEmpty
+                ? Center(
+                    child: Text(
+                      'No reports found.',
+                      style: TextStyle(fontSize: 18, color: Colors.grey),
+                    ),
+                  )
+                : ListView.builder(
+                    itemCount: reports.length,
+                    itemBuilder: (context, index) {
+                      final report = reports[index];
+
+                      return Padding(
+                        padding: const EdgeInsets.all(20.0),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Row(
+                              mainAxisAlignment: MainAxisAlignment.start,
+                              children: [
+                                CircleAvatar(
+                                  radius: 20,
+                                  backgroundImage:
+                                      NetworkImage(report['photo'] ?? ''),
+                                ),
+                                const SizedBox(width: 20),
+                                Text(
+                                  report['username'] ?? 'Anonymous',
+                                  textAlign: TextAlign.start,
+                                  style: const TextStyle(
+                                    fontSize: 17,
+                                    color: Color.fromARGB(255, 97, 84, 158),
+                                  ),
+                                ),
+                              ],
+                            ),
+                            const SizedBox(height: 5),
+                            Row(
+                              children: [
+                                Text(
+                                  report['timestamp'] != null
+                                      ? _formatTimestamp(
+                                          report['timestamp'] as Timestamp)
+                                      : '',
+                                  style: Theme.of(context).textTheme.bodyMedium,
+                                ),
+                              ],
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              '$paidRestroomName',
+                              textAlign: TextAlign.left,
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 97, 84, 158),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                            SizedBox(height: 5),
+                            Text(
+                              report['report'] ?? '',
+                              textAlign: TextAlign.left,
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 97, 84, 158),
+                                fontWeight: FontWeight.bold,
+                              ),
+                            ),
+                          ],
+                        ),
+                      );
+                    },
+                  ),
           ),
         ],
       ),
     );
   }
-}
 
-class AllReviews extends StatelessWidget {
-  const AllReviews({super.key, required this.child});
-
-  final String child;
-
-  @override
-  Widget build(BuildContext context) {
-    return Padding(
-      padding: const EdgeInsets.symmetric(vertical: 8.0),
-      child: Container(
-        height: 150,
-        color: Colors.deepPurple[100],
-        child: Row(children: [
-          Row(mainAxisAlignment: MainAxisAlignment.center, children: [
-            const SizedBox(width: 20),
-            ClipRRect(
-              borderRadius: BorderRadius.circular(70),
-              child: Container(
-                color: Colors.white,
-                height: 40,
-                width: 40,
-                child: const Icon(
-                  Icons.person_2_rounded,
-                  color: Color.fromARGB(255, 97, 84, 158),
-                  size: 30,
-                ),
-              ),
-            ),
-            const SizedBox(width: 20),
-            const Column(
-              children: [
-                SizedBox(height: 50),
-                Text(
-                  "Username",
-                  textAlign: TextAlign.start,
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Color.fromARGB(255, 97, 84, 158),
-                  ),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  "Report",
-                  textAlign: TextAlign.start,
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Color.fromARGB(255, 97, 84, 158),
-                  ),
-                ),
-                SizedBox(height: 3),
-                Text(
-                  "Report",
-                  textAlign: TextAlign.start,
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Color.fromARGB(255, 97, 84, 158),
-                  ),
-                ),
-              ],
-            ),
-          ]),
-        ]),
-      ),
-    );
-  }
-}
-
-Route _createRoute(Widget child) {
-  return PageRouteBuilder(
+  Route _createRoute(Widget child) {
+    return PageRouteBuilder(
       pageBuilder: (BuildContext context, Animation<double> animation,
               Animation<double> secondaryAnimation) =>
           child,
@@ -126,13 +175,13 @@ Route _createRoute(Widget child) {
         const begin = Offset(0.0, 1.0);
         const end = Offset.zero;
         const curve = Curves.easeInOut;
-
         var tween =
             Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
-
         return SlideTransition(
           position: animation.drive(tween),
           child: child,
         );
-      });
+      },
+    );
+  }
 }

@@ -49,7 +49,7 @@ class _PaidRestroomRecommendationListState
       final doc = querySnapshot.docs.first;
       final data = doc.data();
       final fetchedName =
-          data['PaidRestroomName'] as String? ?? "Paid Restroom Name";
+          data['Name'] as String? ?? "Paid Restroom Name";
 
       setState(() {
         _name = fetchedName;
@@ -95,7 +95,7 @@ class _PaidRestroomRecommendationListState
     }
   }
 
-  Future<double> fetchAverageRating() async {
+Future<double> fetchAverageRating() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
         .where('position',
@@ -107,6 +107,13 @@ class _PaidRestroomRecommendationListState
       final doc = querySnapshot.docs.first;
       final data = doc.data();
       final averageRating = data['averageRating'] as double? ?? 0.0;
+
+      if (averageRating == 0.0 && data.containsKey('Rating')) {
+          final stringRating = double.parse(data['Rating'].toString());
+          return stringRating;
+        }
+
+        
       return averageRating;
     } else {
       return 0.0;
@@ -132,8 +139,8 @@ class _PaidRestroomRecommendationListState
                         maxLines: 3,
                         textAlign: TextAlign.start,
                         style: TextStyle(
-                          fontSize: 20,
-                          color: Colors.white,
+                          fontSize: 18,
+                          color: Color.fromARGB(255, 64, 55, 107),
                         ),
                       ),
                       const SizedBox(height: 5),
@@ -142,7 +149,7 @@ class _PaidRestroomRecommendationListState
                         maxLines: 3,
                         textAlign: TextAlign.start,
                         style: TextStyle(
-                          fontSize: 17,
+                          fontSize: 16,
                           color: Colors.white,
                         ),
                       ),
@@ -151,7 +158,7 @@ class _PaidRestroomRecommendationListState
                         _cost,
                         textAlign: TextAlign.start,
                         style: TextStyle(
-                          fontSize: 18,
+                          fontSize: 16,
                           color: Colors.white,
                         ),
                       ),
@@ -176,7 +183,7 @@ class _PaidRestroomRecommendationListState
                                       '${snapshot.data}',
                                       textAlign: TextAlign.center,
                                       style: const TextStyle(
-                                        fontSize: 17,
+                                        fontSize: 16,
                                         color: Colors.white,
                                       ),
                                     ),
@@ -188,7 +195,7 @@ class _PaidRestroomRecommendationListState
                                             255, 97, 84, 158),
                                       ),
                                       itemCount: 5,
-                                      itemSize: 20.0,
+                                      itemSize: 18.0,
                                       unratedColor: Colors.white24,
                                       direction: Axis.horizontal,
                                     ),
@@ -202,24 +209,27 @@ class _PaidRestroomRecommendationListState
                     ],
                   ),
                 ),
-                ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    enableFeedback: false,
-                    backgroundColor: Colors.white,
-                    minimumSize: const Size(60, 60),
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(100),
+                Padding(
+                  padding: EdgeInsets.all(2.0),
+                  child: ElevatedButton(
+                    style: ElevatedButton.styleFrom(
+                      enableFeedback: false,
+                      backgroundColor: Colors.white,
+                      minimumSize: const Size(60, 60),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(100),
+                      ),
                     ),
-                  ),
-                  onPressed: () {
-                    widget.toggleVisibility();
-                    widget.drawRouteToDestination(
-                        widget.destination, 'commute');
-                    Navigator.pop(context);
-                  },
-                  child: const Icon(
-                    Icons.directions,
-                    color: Color.fromARGB(255, 85, 70, 152),
+                    onPressed: () {
+                      widget.toggleVisibility();
+                      widget.drawRouteToDestination(
+                          widget.destination, 'commute');
+                      Navigator.pop(context);
+                    },
+                    child: const Icon(
+                      Icons.directions,
+                      color: Color.fromARGB(255, 85, 70, 152),
+                    ),
                   ),
                 ),
               ],

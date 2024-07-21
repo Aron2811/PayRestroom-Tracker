@@ -93,8 +93,7 @@ class OthersReportDialog extends StatelessWidget {
                 ),
                 onPressed: () {
                   Navigator.of(context).pop();
-                   Navigator.push(context, _createRoute(ReportPage()));
-
+                  Navigator.push(context, _createRoute(ReportPage()));
                 },
               ))
         ],
@@ -102,6 +101,7 @@ class OthersReportDialog extends StatelessWidget {
     ]);
   }
 }
+
 Route _createRoute(Widget child) {
   return PageRouteBuilder(
       pageBuilder: (BuildContext context, Animation<double> animation,

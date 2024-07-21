@@ -13,10 +13,10 @@ class AddInfoDialog extends StatefulWidget {
   final LatLng destination;
 
   const AddInfoDialog({
-    super.key,
+    Key? key,
     required this.markerId,
     required this.destination,
-  });
+  }) : super(key: key);
 
   @override
   _AddInfoDialogState createState() => _AddInfoDialogState();
@@ -39,56 +39,87 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
   }
 
   void _confirmedPressed() async {
-    confirmPressed = true; // Set confirmation status
-    Navigator.of(context).pop(confirmPressed);
+    if (_validateInputs()) {
+      confirmPressed = true; // Set confirmation status
+      Navigator.of(context).pop(confirmPressed);
 
-    try {
-      DocumentReference tagRef = FirebaseFirestore.instance
-          .collection('Tags')
-          .doc(widget.markerId.value);
-      DocumentSnapshot tagSnapshot = await tagRef.get();
-      Map<String, dynamic>? tagData =
-          tagSnapshot.data() as Map<String, dynamic>?;
+      try {
+        DocumentReference tagRef = FirebaseFirestore.instance
+            .collection('Tags')
+            .doc(widget.markerId.value);
+        DocumentSnapshot tagSnapshot = await tagRef.get();
+        Map<String, dynamic>? tagData =
+            tagSnapshot.data() as Map<String, dynamic>?;
 
-      List<dynamic> existingImageUrls = tagData?['ImageUrls'] ?? [];
+        List<dynamic> existingImageUrls = tagData?['ImageUrls'] ?? [];
 
-      List<String> updatedImageUrls = [...existingImageUrls, ...imageUrls];
+        List<String> updatedImageUrls = [...existingImageUrls, ...imageUrls];
 
-      await tagRef.set(
-        {
-          'TagId': widget.markerId.value,
-          'ImageUrls': updatedImageUrls,
-          'Name': nameController.text,
-          'Location': locationController.text,
-          'Cost': costController.text,
-          'Rating': rating.toString(), // Store rating in Firestore
-        },
-        SetOptions(merge: true),
-      );
-
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Paid restroom information added successfully'),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          ),
+        await tagRef.set(
+          {
+            'TagId': widget.markerId.value,
+            'ImageUrls': updatedImageUrls,
+            'Name': nameController.text,
+            'Location': locationController.text,
+            'Cost': costController.text,
+            'Rating': rating.toString(), // Store rating in Firestore
+          },
+          SetOptions(merge: true),
         );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Paid restroom information added successfully'),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
+          );
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to save paid restroom information'),
+              backgroundColor: Color.fromARGB(255, 240, 148, 142),
+            ),
+          );
+        }
       }
-    } catch (e) {
+    } else {
       if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to save paid restroom information'),
-            backgroundColor: Color.fromARGB(255, 240, 148, 142),
-          ),
+        showDialog(
+          context: context,
+          builder: (BuildContext context) {
+            return AlertDialog(
+              title: Text('Incomplete Information'),
+              content: Text(
+                  'Please fill in all fields, upload an image and provide a rating.'),
+              actions: <Widget>[
+                TextButton(
+                  child: Text('OK'),
+                  onPressed: () {
+                    Navigator.of(context).pop();
+                  },
+                ),
+              ],
+            );
+          },
         );
       }
     }
   }
 
+  bool _validateInputs() {
+    return nameController.text.isNotEmpty &&
+        locationController.text.isNotEmpty &&
+        costController.text.isNotEmpty &&
+        imageUrls.isNotEmpty &&
+        rating > 0.0;
+  }
+
   Future<void> _uploadImages() async {
     final pickedFiles = await ImagePicker().pickMultiImage();
-    if (pickedFiles.isEmpty) return;
+    if (pickedFiles == null || pickedFiles.isEmpty) return;
 
     if (pickedFiles.length > 3) {
       if (mounted) {
@@ -106,7 +137,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
     showDialog(
       context: context,
       builder: (context) {
-        return const Center(child: CircularProgressIndicator());
+        return Center(child: CircularProgressIndicator());
       },
     );
 
@@ -179,7 +210,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
+        SnackBar(
           content: Text('Error fetching image URLs: Add Image'),
           duration: Duration(seconds: 3),
           backgroundColor: Color.fromARGB(255, 115, 99, 183),
@@ -249,7 +280,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
     }
   }
 
-   Widget _buildCarousel() {
+  Widget _buildCarousel() {
     return FullScreenWidget(
       disposeLevel: DisposeLevel.High,
       child: Center(
@@ -257,7 +288,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
           height: 250,
           width: 350,
           child: imageUrls.isEmpty
-              ? const Column(
+              ? Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Icon(
@@ -289,7 +320,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                             bottom: 10,
                             right: 10,
                             child: IconButton(
-                              icon: const Icon(
+                              icon: Icon(
                                 Icons.delete,
                                 color: Color.fromARGB(255, 164, 152, 219),
                               ),
@@ -297,7 +328,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                                 showDialog(
                                   context: context,
                                   builder: (context) => AlertDialog(
-                                    title: const Text(
+                                    title: Text(
                                       "Are you sure you want to delete this image",
                                       textAlign: TextAlign.center,
                                       style: TextStyle(
@@ -312,7 +343,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                                         onPressed: () {
                                           Navigator.of(context).pop(false);
                                         },
-                                        child: const Text("No"),
+                                        child: Text("No"),
                                       ),
                                       TextButton(
                                         onPressed: () {
@@ -322,7 +353,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                                             imageUrls.removeAt(index);
                                           });
                                         },
-                                        child: const Text("Yes"),
+                                        child: Text("Yes"),
                                       )
                                     ],
                                   ),
@@ -342,15 +373,14 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
     );
   }
 
-
   @override
   Widget build(BuildContext context) {
     return Center(
       child: SingleChildScrollView(
         child: AlertDialog(
           actions: [
-            const SizedBox(height: 30),
-            const Padding(
+            SizedBox(height: 30),
+            Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.0),
               child: Text(
                 "Paid Restroom Information",
@@ -362,15 +392,15 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 ),
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              padding: EdgeInsets.symmetric(horizontal: 10.0),
               child: TextField(
                 controller: nameController,
                 minLines: 1,
                 maxLines: 2,
                 textAlign: TextAlign.center,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Paid Restroom Name',
                   enabledBorder: UnderlineInputBorder(
                     borderSide:
@@ -391,15 +421,15 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 ),
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              padding: EdgeInsets.symmetric(horizontal: 10.0),
               child: TextField(
                 controller: locationController,
                 minLines: 1,
                 maxLines: 2,
                 textAlign: TextAlign.center,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Paid Restroom Location',
                   enabledBorder: UnderlineInputBorder(
                     borderSide:
@@ -420,15 +450,15 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 ),
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10.0),
+              padding: EdgeInsets.symmetric(horizontal: 10.0),
               child: TextField(
                 controller: costController,
                 minLines: 1,
                 maxLines: 2,
                 textAlign: TextAlign.center,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                   labelText: 'Cost',
                   enabledBorder: UnderlineInputBorder(
                     borderSide:
@@ -447,29 +477,29 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 ),
               ),
             ),
-            const SizedBox(height: 15),
-            _buildCarousel(), 
-            const SizedBox(height: 20),
+            SizedBox(height: 15),
+            _buildCarousel(),
+            SizedBox(height: 20),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Text(
-                  ratingText, // Display current rating text
+                  '$ratingText', // Display current rating text
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 17,
                     color: Color.fromARGB(255, 97, 84, 158),
                   ),
                 ),
-                const SizedBox(width: 8),
+                SizedBox(width: 8),
                 RatingBar(
                   size: 20,
                   alignment: Alignment.center,
                   filledIcon: Icons.star,
                   emptyIcon: Icons.star_border,
                   emptyColor: Colors.grey,
-                  filledColor: const Color.fromARGB(255, 97, 84, 158),
-                  halfFilledColor: const Color.fromARGB(255, 186, 176, 228),
+                  filledColor: Color.fromARGB(255, 97, 84, 158),
+                  halfFilledColor: Color.fromARGB(255, 186, 176, 228),
                   initialRating: rating,
                   onRatingChanged: (newRating) {
                     setState(() {
@@ -482,8 +512,8 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 ),
               ],
             ),
-            const SizedBox(height: 15),
-              Align(
+            SizedBox(height: 15),
+            Align(
               alignment: Alignment.center,
               child: ElevatedButton.icon(
                 style: ElevatedButton.styleFrom(
@@ -493,39 +523,39 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(50),
                   ),
-                  side: const BorderSide(
+                  side: BorderSide(
                     color: Color.fromARGB(255, 149, 134, 225),
                     width: 2.0,
                   ),
                   textStyle: const TextStyle(fontSize: 16),
                 ),
                 onPressed: _uploadImages,
-                icon: const Icon(Icons.upload_rounded,
+                icon: Icon(Icons.upload_rounded,
                     color: Color.fromARGB(255, 149, 134, 225)),
                 label: const Text("Upload"),
               ),
             ),
-            const SizedBox(height: 10),
+            SizedBox(height: 10),
             Align(
               alignment: Alignment.center,
               child: ElevatedButton(
                 style: ElevatedButton.styleFrom(
                   enableFeedback: false,
                   backgroundColor: Colors.white,
-                  minimumSize: const Size(150, 40),
+                  minimumSize: Size(150, 40),
                   alignment: Alignment.center,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),
-                    side: const BorderSide(
+                    side: BorderSide(
                       color: Color.fromARGB(255, 149, 134, 225),
                       width: 2.0,
                     ),
                   ),
-                  foregroundColor: const Color.fromARGB(255, 149, 134, 225),
+                  foregroundColor: Color.fromARGB(255, 149, 134, 225),
                   textStyle:
-                      const TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                      TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
                 ),
-                child: const Text(
+                child: Text(
                   "Confirm",
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),

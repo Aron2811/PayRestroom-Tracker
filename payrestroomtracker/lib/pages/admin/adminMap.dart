@@ -12,8 +12,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_button/pages/dialog/admin_add_info.dart';
 
 class AdminMap extends StatefulWidget {
-  const AdminMap({super.key, required this.username});
+  const AdminMap({Key? key, required this.username, required this.report}) : super(key: key);
   final String username;
+  final String report;
 
   @override
   State<AdminMap> createState() => AdminMapState();
@@ -26,11 +27,11 @@ class AdminMapState extends State<AdminMap> {
   LatLng? _currentP;
   String? _currentAddress;
   Set<Marker> _markers = {};
-  final Location _locationController = Location();
+  Location _locationController = Location();
   BitmapDescriptor? _customMarkerIcon;
   BitmapDescriptor? _personMarkerIcon;
   late String _mapStyleString;
-  final Set<Polyline> _polylines = {};
+  Set<Polyline> _polylines = {};
 
   @override
   void initState() {
@@ -51,11 +52,11 @@ class AdminMapState extends State<AdminMap> {
 
   Future<void> _loadCustomMarkerIcon() async {
     _customMarkerIcon = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(1, 1)),
+      ImageConfiguration(size: Size(1, 1)),
       'assets/paid_CR_Tag.png',
     );
     _personMarkerIcon = await BitmapDescriptor.fromAssetImage(
-      const ImageConfiguration(size: Size(1, 1)),
+      ImageConfiguration(size: Size(1, 1)),
       'assets/person_Tag.png',
     );
   }
@@ -72,7 +73,7 @@ class AdminMapState extends State<AdminMap> {
       if (position != null) {
         latLng = LatLng(position.latitude, position.longitude);
       } else {
-        latLng = const LatLng(0.0, 0.0); // Default value if position is null
+        latLng = LatLng(0.0, 0.0); // Default value if position is null
       }
 
       return Marker(
@@ -137,44 +138,43 @@ class AdminMapState extends State<AdminMap> {
             markerId: const MarkerId('User Location'),
             position: _currentP!,
             icon: _personMarkerIcon ?? BitmapDescriptor.defaultMarker,
-            onTap: () {
-              showDialog(
-                  context: context,
-                  builder: (context) => AlertDialog(
-                        title: const Text(
-                          "Are you sure you want to add a tag",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                              color: Color.fromARGB(255, 115, 99, 183),
-                              fontSize: 17,
-                              fontWeight: FontWeight.bold),
+            onTap: () => showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                      title: const Text(
+                        "Are you sure you want to add a tag",
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                            color: Color.fromARGB(255, 115, 99, 183),
+                            fontSize: 17,
+                            fontWeight: FontWeight.bold),
+                      ),
+                      actions: <Widget>[
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(false);
+                          },
+                          child: const Text("No"),
                         ),
-                        actions: <Widget>[
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop(false);
-                            },
-                            child: const Text("No"),
-                          ),
-                          TextButton(
-                            onPressed: () {
-                              Navigator.of(context).pop(true);
-                              showDialog(
-                                context: context,
-                                builder: (context) => AddInfoDialog(
-                                    destination: _currentP!,
-                                    markerId: markerId_),
-                              ).then((confirmed) {
-                                if (confirmed == true) {
-                                  _addMarker(_currentP!, markerId_);
-                                }
-                              });
-                            },
-                            child: const Text("Yes"),
-                          ),
-                        ],
-                      ));
-            }),
+                        TextButton(
+                          onPressed: () {
+                            Navigator.of(context).pop(true);
+                            showDialog(
+                              context: context,
+                              builder: (context) => AddInfoDialog(
+                                markerId: markerId_,  destination: _currentP!,
+                              ),
+                            ).then((confirmed) {
+                              print(confirmed);
+                              if (confirmed == true) {
+                                _addMarker(_currentP!, markerId_);
+                              }
+                            });
+                          },
+                          child: const Text("Yes"),
+                        ),
+                      ],
+                    ))),
       );
     }
 
@@ -224,8 +224,8 @@ class AdminMapState extends State<AdminMap> {
                                 Navigator.of(context).pop(true);
                                 showDialog(
                                   context: context,
-                                  builder: (context) => AddInfoDialog(
-                                      destination: latLng, markerId: markerId_),
+                                  builder: (context) =>
+                                      AddInfoDialog(markerId: markerId_, destination: latLng,),
                                 ).then((confirmed) {
                                   print(confirmed);
                                   if (confirmed == true) {
@@ -238,7 +238,7 @@ class AdminMapState extends State<AdminMap> {
                           ],
                         ));
               },
-              initialCameraPosition: const CameraPosition(
+              initialCameraPosition: CameraPosition(
                 target: _pGooglePlex,
                 zoom: 13,
               ),
@@ -272,7 +272,7 @@ class AdminMapState extends State<AdminMap> {
               Navigator.of(context).pop(true);
               Navigator.push(
                 context,
-                _createRoute(AdminPage(username: widget.username)),
+                _createRoute(AdminPage(username: widget.username, report: widget.report,)),
               );
             },
             child: const Text("Yes"),
@@ -312,22 +312,22 @@ class AdminMapState extends State<AdminMap> {
   }
 
   Future<void> getLocationUpdates() async {
-    bool serviceEnabled;
-    PermissionStatus permissionGranted;
+    bool _serviceEnabled;
+    PermissionStatus _permissionGranted;
 
-    serviceEnabled = await _locationController.serviceEnabled();
-    if (!serviceEnabled) {
-      serviceEnabled = await _locationController.requestService();
-      if (!serviceEnabled) {
+    _serviceEnabled = await _locationController.serviceEnabled();
+    if (!_serviceEnabled) {
+      _serviceEnabled = await _locationController.requestService();
+      if (!_serviceEnabled) {
         print('Location services disabled.');
         return;
       }
     }
 
-    permissionGranted = await _locationController.hasPermission();
-    if (permissionGranted == PermissionStatus.denied) {
-      permissionGranted = await _locationController.requestPermission();
-      if (permissionGranted != PermissionStatus.granted) {
+    _permissionGranted = await _locationController.hasPermission();
+    if (_permissionGranted == PermissionStatus.denied) {
+      _permissionGranted = await _locationController.requestPermission();
+      if (_permissionGranted != PermissionStatus.granted) {
         print('Location permission denied.');
         return;
       }
