@@ -60,28 +60,6 @@ class AdminPage extends StatefulWidget {
 
 class _AdminPageState extends State<AdminPage> {
   LatLng destination = LatLng(14.303142147986497, 121.07613374318477); // Default destination
-  int unreadCount = 0; // Counter for unread reports
-
-  @override
-  void initState() {
-    super.initState();
-    _fetchUnreadCount();
-  }
-
-  Future<void> _fetchUnreadCount() async {
-    try {
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('reports')
-          .where('read', isEqualTo: false)
-          .get();
-
-      setState(() {
-        unreadCount = querySnapshot.docs.length;
-      });
-    } catch (e) {
-      print("Error fetching unread count: $e");
-    }
-  }
 
   Route _createRoute(Widget child) {
     return PageRouteBuilder(
@@ -258,51 +236,66 @@ class _AdminPageState extends State<AdminPage> {
                   SizedBox(height: 8),
                   Align(
                     alignment: Alignment.center,
-                    child: Badge(
-                      badgeCount: unreadCount,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          enableFeedback: false,
-                          backgroundColor: Colors.white,
-                          minimumSize: const Size(170, 40),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.only(
-                              topLeft: Radius.circular(10),
-                              topRight: Radius.circular(10),
-                              bottomLeft: Radius.circular(10),
-                              bottomRight: Radius.circular(10),
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('reports')
+                          .where('read', isEqualTo: false)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          int unreadCount = snapshot.data!.docs.length;
+                          return Badge(
+                            badgeCount: unreadCount,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                enableFeedback: false,
+                                backgroundColor: Colors.white,
+                                minimumSize: const Size(170, 40),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(10),
+                                    topRight: Radius.circular(10),
+                                    bottomLeft: Radius.circular(10),
+                                    bottomRight: Radius.circular(10),
+                                  ),
+                                ),
+                                foregroundColor: Color.fromARGB(255, 97, 84, 158),
+                                textStyle: const TextStyle(
+                                  fontSize: 16,
+                                ),
+                              ),
+                              label: const Text(
+                                "View Report",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 132, 119, 197),
+                                ),
+                              ),
+                              icon: const Icon(
+                                Icons.report_problem_rounded,
+                                color: Color.fromARGB(255, 132, 119, 197),
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  _createRoute(AdminReport(
+                                    username: widget.username,
+                                    report: widget.report,
+                                    destination: geoPoint, // Pass the GeoPoint
+                                  )),
+                                );
+                              },
                             ),
-                          ),
-                          foregroundColor: Color.fromARGB(255, 97, 84, 158),
-                          textStyle: const TextStyle(
-                            fontSize: 16,
-                          ),
-                        ),
-                        label: const Text(
-                          "View Report",
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
-                            color: Color.fromARGB(255, 132, 119, 197),
-                          ),
-                        ),
-                        icon: const Icon(
-                          Icons.report_problem_rounded,
-                          color: Color.fromARGB(255, 132, 119, 197),
-                          size: 20,
-                        ),
-                        onPressed: () {
-                          Navigator.push(
-                            context,
-                            _createRoute(AdminReport(
-                              username: widget.username,
-                              report: widget.report,
-                              destination: geoPoint, // Pass the GeoPoint
-                            )),
                           );
-                        },
-                      ),
+                        } else if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        } else {
+                          return CircularProgressIndicator();
+                        }
+                      },
                     ),
                   ),
                 ],
