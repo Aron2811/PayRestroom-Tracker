@@ -20,17 +20,18 @@ class ReportPage extends StatefulWidget {
   State<ReportPage> createState() => _ReportPageState();
 }
 
+
+
 class _ReportPageState extends State<ReportPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  String _restroomName = "";
+  String _restroomName = "Paid Restroom Name";
 
   @override
   void initState() {
     super.initState();
-    if (widget.selectedMarkerPosition != null) {
-      _fetchPaidRestroomName();
-    }
+    _fetchPaidRestroomName();
+    
   }
 
   Future<void> _fetchPaidRestroomName() async {

@@ -17,7 +17,41 @@ class _OthersReportPageState extends State<OthersReportPage> {
   final TextEditingController _textController = TextEditingController();
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
-  final String _restroomName = ""; // replace with your logic to get the restroom name
+  String _restroomName = ""; 
+
+    @override
+  void initState() {
+    super.initState();
+    _fetchPaidRestroomName();
+    
+  }
+
+    Future<void> _fetchPaidRestroomName() async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .where('position', isEqualTo: GeoPoint(widget.destination.latitude, widget.destination.longitude))
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final data = doc.data();
+        final fetchedName = data['Name'] as String? ?? "No name available";
+
+        setState(() {
+          _restroomName = fetchedName;
+        });
+      } else {
+        setState(() {
+          _restroomName = "No restroom found at this location";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _restroomName = "Error fetching data";
+      });
+    }
+  }
 
   Future<void> storeReport(String reportType, String reportContent) async {
     User? user = _auth.currentUser;

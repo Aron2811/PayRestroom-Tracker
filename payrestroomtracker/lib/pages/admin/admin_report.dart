@@ -22,13 +22,11 @@ class AdminReport extends StatefulWidget {
 class _AdminReportState extends State<AdminReport> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Map<String, dynamic>> reports = [];
-  String paidRestroomName = '';
 
   @override
   void initState() {
     super.initState();
     _fetchReports();
-    _fetchPaidRestroomName();
   }
 
   Future<void> _fetchReports() async {
@@ -47,28 +45,8 @@ class _AdminReportState extends State<AdminReport> {
     });
   }
 
-  Future<void> _fetchPaidRestroomName() async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position',
-            isEqualTo: GeoPoint(
-                widget.destination.latitude, widget.destination.longitude))
-        .get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final data = doc.data();
-      final fetchedName = data['Name'] as String? ?? "Paid Restroom Name";
-
-      setState(() {
-        paidRestroomName = fetchedName;
-      });
-    }
-  }
-
   Future<void> _updateReadStatus(String reportId) async {
     await _firestore.collection('reports').doc(reportId).update({'read': true});
-    // Optionally, you could refresh the list after updating
     _fetchReports();
   }
 
@@ -113,12 +91,15 @@ class _AdminReportState extends State<AdminReport> {
                       final report = reports[index];
 
                       return ListTile(
+                        contentPadding: EdgeInsets.all(15),
                         tileColor: report['read']
                             ? const Color.fromARGB(0, 255, 255, 255)
                             : Color.fromARGB(209, 181, 167, 243),
                         title: Text(
-                          "Paid Restroom Name",
-                          textAlign: TextAlign.center,
+                          report['username'] ?? 'Anonymous',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          textAlign: TextAlign.start,
                           style: TextStyle(
                             color: report['read']
                                 ? Color.fromARGB(255, 97, 84, 158)
@@ -126,16 +107,26 @@ class _AdminReportState extends State<AdminReport> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        subtitle: Text(
-                          report['report'] ?? '',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: report['read']
-                                ? Color.fromARGB(255, 97, 84, 158)
-                                : const Color.fromARGB(230, 80, 77, 81),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                report['restroomName'] ?? 'Unknown Restroom',
+                                style: TextStyle(
+                                  color: report['read']
+                                      ? Color.fromARGB(255, 97, 84, 158)
+                                      : const Color.fromARGB(230, 80, 77, 81),
+                                ),
+                              ),
+                              Text(
+                                report['report'] ?? '',
+                                style: TextStyle(
+                                  color: report['read']
+                                      ? Color.fromARGB(255, 97, 84, 158)
+                                      : const Color.fromARGB(230, 80, 77, 81),
+                                ),
+                              ),
+                            ]),
                         onTap: () {
                           _updateReadStatus(report['id']);
                           Navigator.push(
@@ -145,12 +136,10 @@ class _AdminReportState extends State<AdminReport> {
                         },
                         leading: Container(
                           width: 50, // Adjust the width as needed
-                          child: Text(
-                            report['username'] ?? 'Anonymous',
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            textAlign: TextAlign.start,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundImage:
+                                NetworkImage(report['photo'] ?? ''),
                           ),
                         ),
                         trailing: Text(
@@ -160,7 +149,6 @@ class _AdminReportState extends State<AdminReport> {
                               : '',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        
                       );
                     },
                   ),
