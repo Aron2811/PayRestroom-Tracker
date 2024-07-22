@@ -91,12 +91,15 @@ class _AdminReportState extends State<AdminReport> {
                       final report = reports[index];
 
                       return ListTile(
+                        contentPadding: EdgeInsets.all(15),
                         tileColor: report['read']
                             ? const Color.fromARGB(0, 255, 255, 255)
-                            : Color.fromARGB(209, 181, 167, 243),
+                            : Color.fromARGB(209, 221, 214, 255),
                         title: Text(
-                          report['restroomName'] ?? 'Unknown Restroom',
-                          textAlign: TextAlign.center,
+                          report['username'] ?? 'Anonymous',
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          textAlign: TextAlign.start,
                           style: TextStyle(
                             color: report['read']
                                 ? Color.fromARGB(255, 97, 84, 158)
@@ -104,16 +107,26 @@ class _AdminReportState extends State<AdminReport> {
                             fontWeight: FontWeight.bold,
                           ),
                         ),
-                        subtitle: Text(
-                          report['report'] ?? '',
-                          textAlign: TextAlign.center,
-                          style: TextStyle(
-                            color: report['read']
-                                ? Color.fromARGB(255, 97, 84, 158)
-                                : const Color.fromARGB(230, 80, 77, 81),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
+                        subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                report['restroomName'] ?? 'Unknown Restroom',
+                                style: TextStyle(
+                                  color: report['read']
+                                      ? Color.fromARGB(255, 97, 84, 158)
+                                      : const Color.fromARGB(230, 80, 77, 81),
+                                ),
+                              ),
+                              Text(
+                                report['report'] ?? '',
+                                style: TextStyle(
+                                  color: report['read']
+                                      ? Color.fromARGB(255, 97, 84, 158)
+                                      : const Color.fromARGB(230, 80, 77, 81),
+                                ),
+                              ),
+                            ]),
                         onTap: () {
                           _updateReadStatus(report['id']);
                           Navigator.push(
@@ -123,12 +136,10 @@ class _AdminReportState extends State<AdminReport> {
                         },
                         leading: Container(
                           width: 50, // Adjust the width as needed
-                          child: Text(
-                            report['username'] ?? 'Anonymous',
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            textAlign: TextAlign.start,
-                            style: Theme.of(context).textTheme.bodyMedium,
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundImage:
+                                NetworkImage(report['photo'] ?? ''),
                           ),
                         ),
                         trailing: Text(
