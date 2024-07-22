@@ -94,7 +94,7 @@ class _AdminReportState extends State<AdminReport> {
                         contentPadding: EdgeInsets.all(15),
                         tileColor: report['read']
                             ? const Color.fromARGB(0, 255, 255, 255)
-                            : Color.fromARGB(209, 181, 167, 243),
+                            : Color.fromARGB(209, 221, 214, 255),
                         title: Text(
                           report['username'] ?? 'Anonymous',
                           overflow: TextOverflow.ellipsis,
