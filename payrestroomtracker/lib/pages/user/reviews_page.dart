@@ -1,5 +1,4 @@
 import 'package:custom_rating_bar/custom_rating_bar.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:readmore/readmore.dart';
@@ -27,46 +26,38 @@ class _ReviewsPageState extends State<ReviewsPage> {
     _fetchReviews(); // Fetch reviews when page initializes
   }
 
- Future<void> _fetchReviews() async {
-  final user = FirebaseAuth.instance.currentUser;
+  Future<void> _fetchReviews() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
 
-  final querySnapshot = await FirebaseFirestore.instance
-      .collection('Tags')
-      .where('position',
-          isEqualTo: GeoPoint(
-              widget.destination.latitude, widget.destination.longitude))
-      .get();
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final ratings = doc.data().containsKey('ratings')
+          ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
+          : [];
 
-  if (querySnapshot.docs.isNotEmpty) {
-    final doc = querySnapshot.docs.first;
-    final ratings = doc.data().containsKey('ratings')
-        ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
-        : [];
-
-    setState(() {
-      reviews = List<Map<String, dynamic>>.from(doc.data()['comments'] ?? []);
-
-      // Find the user's rating and update the initialRating
-      if (user != null) {
-        final userRating = ratings.firstWhere(
-          (rating) => rating['userId'] == user.uid,
-          orElse: () => {'rating': 0}, // Set default rating to 0 if not found
-        );
+      setState(() {
+        reviews = List<Map<String, dynamic>>.from(doc.data()['comments'] ?? []);
 
         reviews.forEach((review) {
-          if (review['userId'] == user.uid) {
-            review['rating'] = userRating['rating'];
-          }
-        });
-      }
-    });
-  } else {
-    setState(() {
-      reviews = [];
-    });
-  }
-}
+          final userRating = ratings.firstWhere(
+            (rating) => rating['userId'] == review['userId'],
+            orElse: () => {'rating': 0}, // Set default rating to 0 if not found
+          );
 
+          review['rating'] = userRating['rating'];
+        });
+      });
+    } else {
+      setState(() {
+        reviews = [];
+      });
+    }
+  }
 
   String _formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
@@ -104,8 +95,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
                     itemCount: reviews.length,
                     itemBuilder: (context, index) {
                       final review = reviews[index];
-                      double rating = review['rating'] ??
-                          0.0; // Use user's rating if available
+                      double rating = review['rating'] ?? 0.0; // Use user's rating if available
 
                       // Print the value of rating before displaying it
                       print('Rating for review ${index + 1}: $rating');
@@ -147,15 +137,13 @@ class _ReviewsPageState extends State<ReviewsPage> {
                                       const Color.fromARGB(255, 97, 84, 158),
                                   halfFilledColor:
                                       const Color.fromARGB(255, 186, 176, 228),
-                                  initialRating:
-                                      rating, // Display user's rating if available
+                                  initialRating: rating, // Display user's rating if available
                                   maxRating: 5,
                                 ),
                                 const SizedBox(width: 10),
                                 Text(
                                   review['timestamp'] != null
-                                      ? _formatTimestamp(
-                                          review['timestamp'] as Timestamp)
+                                      ? _formatTimestamp(review['timestamp'] as Timestamp)
                                       : '',
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
