@@ -1,5 +1,4 @@
 import 'package:custom_rating_bar/custom_rating_bar.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/admin/adminMap.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
@@ -29,83 +28,83 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
     _fetchReviews(); // Fetch reviews when page initializes
   }
 
- Future<void> _fetchReviews() async {
-  final user = FirebaseAuth.instance.currentUser;
+  Future<void> _fetchReviews() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
 
-  final querySnapshot = await FirebaseFirestore.instance
-      .collection('Tags')
-      .where('position',
-          isEqualTo: GeoPoint(
-              widget.destination.latitude, widget.destination.longitude))
-      .get();
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final ratings = doc.data().containsKey('ratings')
+          ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
+          : [];
 
-  if (querySnapshot.docs.isNotEmpty) {
-    final doc = querySnapshot.docs.first;
-    final ratings = doc.data().containsKey('ratings')
-        ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
-        : [];
-
-    setState(() {
-      reviews = List<Map<String, dynamic>>.from(doc.data()['comments'] ?? []);
-
-      // Find the user's rating and update the initialRating
-      if (user != null) {
-        final userRating = ratings.firstWhere(
-          (rating) => rating['userId'] == user.uid,
-          orElse: () => {'rating': 0}, // Set default rating to 0 if not found
-        );
+      setState(() {
+        reviews = List<Map<String, dynamic>>.from(doc.data()['comments'] ?? []);
 
         reviews.forEach((review) {
-          if (review['userId'] == user.uid) {
-            review['rating'] = userRating['rating'];
-          }
+          final userRating = ratings.firstWhere(
+            (rating) => rating['userId'] == review['userId'],
+            orElse: () => {'rating': 0.0}, // Set default rating to 0 if not found
+          );
+
+          review['rating'] = userRating['rating'];
         });
-      }
-    });
-  } else {
-    setState(() {
-      reviews = [];
-    });
+      });
+    } else {
+      setState(() {
+        reviews = [];
+      });
+    }
   }
-}
 
   String _formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
     return DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
   }
 
-  Future<void> _deleteReview(int index) async {
-    final reviewToDelete = reviews[index];
+  void _deleteReview(int index) async {
+  // Fetch the document for the given position
+  final querySnapshot = await FirebaseFirestore.instance
+      .collection('Tags')
+      .where('position',
+          isEqualTo: GeoPoint(widget.destination.latitude, widget.destination.longitude))
+      .get();
 
-    // Find the document in Firestore to update
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position',
-            isEqualTo: GeoPoint(widget.destination.latitude, widget.destination.longitude))
-        .get();
+  if (querySnapshot.docs.isNotEmpty) {
+    final doc = querySnapshot.docs.first;
+    final docRef = doc.reference;
 
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final docRef = doc.reference;
+    // Remove the comment from the list of comments
+    List<Map<String, dynamic>> updatedComments = List<Map<String, dynamic>>.from(doc.data()['comments']);
+    updatedComments.removeAt(index);
 
-      // Remove the review from the Firestore document
-      await docRef.update({
-        'comments': FieldValue.arrayRemove([reviewToDelete])
-      });
+    // Update the document with the new list of comments
+    await docRef.update({'comments': updatedComments});
 
-      // Update the local state
-      setState(() {
-        reviews.removeAt(index);
-      });
+    setState(() {
+      reviews.removeAt(index); // Update the local state
+    });
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Review has been deleted'),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),
-        ),
-      );
-    }
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Review deleted successfully'),
+        backgroundColor: Color.fromARGB(255, 115, 99, 183),
+      ),
+    );
+  } else {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error: Document not found'),
+        backgroundColor: Color.fromARGB(255, 115, 99, 183),
+      ),
+    );
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -114,7 +113,7 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
         leading: BackButton(
           color: Colors.white,
           onPressed: () {
-            Navigator.push(context, _createRoute(AdminMap(username: "", report: "",)));
+            Navigator.push(context, _createRoute(AdminMap(username: "", report: "")));
           },
         ),
         title: const Text(
