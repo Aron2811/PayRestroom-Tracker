@@ -22,13 +22,11 @@ class AdminReport extends StatefulWidget {
 class _AdminReportState extends State<AdminReport> {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   List<Map<String, dynamic>> reports = [];
-  String paidRestroomName = '';
 
   @override
   void initState() {
     super.initState();
     _fetchReports();
-    _fetchPaidRestroomName();
   }
 
   Future<void> _fetchReports() async {
@@ -47,28 +45,8 @@ class _AdminReportState extends State<AdminReport> {
     });
   }
 
-  Future<void> _fetchPaidRestroomName() async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position',
-            isEqualTo: GeoPoint(
-                widget.destination.latitude, widget.destination.longitude))
-        .get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final data = doc.data();
-      final fetchedName = data['Name'] as String? ?? "Paid Restroom Name";
-
-      setState(() {
-        paidRestroomName = fetchedName;
-      });
-    }
-  }
-
   Future<void> _updateReadStatus(String reportId) async {
     await _firestore.collection('reports').doc(reportId).update({'read': true});
-    // Optionally, you could refresh the list after updating
     _fetchReports();
   }
 
@@ -117,7 +95,7 @@ class _AdminReportState extends State<AdminReport> {
                             ? const Color.fromARGB(0, 255, 255, 255)
                             : Color.fromARGB(209, 181, 167, 243),
                         title: Text(
-                          "Paid Restroom Name",
+                          report['restroomName'] ?? 'Unknown Restroom',
                           textAlign: TextAlign.center,
                           style: TextStyle(
                             color: report['read']
@@ -160,7 +138,6 @@ class _AdminReportState extends State<AdminReport> {
                               : '',
                           style: Theme.of(context).textTheme.bodyMedium,
                         ),
-                        
                       );
                     },
                   ),
