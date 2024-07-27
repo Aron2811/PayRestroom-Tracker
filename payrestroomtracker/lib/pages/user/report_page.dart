@@ -26,7 +26,7 @@ class _ReportPageState extends State<ReportPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String _restroomName = "Paid Restroom Name";
-  bool isloading = false;
+  bool isLoading = false;
 
   @override
   void initState() {
@@ -119,11 +119,6 @@ class _ReportPageState extends State<ReportPage> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 97, 84, 158),
       appBar: AppBar(
-        leading: BackButton(
-          onPressed: () {
-            Navigator.push(context, _createRoute(MapPage()));
-          },
-        ),
         title: const Text(
           'Report',
           style: TextStyle(fontSize: 20, color: Colors.white, letterSpacing: 3),
@@ -179,7 +174,7 @@ class _ReportPageState extends State<ReportPage> {
       child: GestureDetector(
         onTap: () async {
           setState(() {
-            isloading = true;
+            isLoading = true;
           });
           if (await limitReport()) {
             if (reportType != 'Others') {
@@ -193,7 +188,7 @@ class _ReportPageState extends State<ReportPage> {
             showSnackBar("You can only report once every 24 hours.");
           }
           setState(() {
-            isloading = false;
+            isLoading = false;
           });
         },
         child: Container(

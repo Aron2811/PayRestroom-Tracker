@@ -27,7 +27,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
     _fetchReviews(); // Fetch reviews when page initializes
   }
 
-Future<void> _fetchReviews() async {
+  Future<void> _fetchReviews() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
         .where('position',
@@ -47,7 +47,8 @@ Future<void> _fetchReviews() async {
         reviews.forEach((review) {
           final userRating = ratings.firstWhere(
             (rating) => rating['userId'] == review['userId'],
-            orElse: () => {'rating': 0.0}, // Set default rating to 0 if not found
+            orElse: () =>
+                {'rating': 0.0}, // Set default rating to 0 if not found
           );
 
           review['rating'] = userRating['rating'];
@@ -60,7 +61,6 @@ Future<void> _fetchReviews() async {
     }
   }
 
-
   String _formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
     return DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
@@ -70,12 +70,6 @@ Future<void> _fetchReviews() async {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(
-          color: Colors.white,
-          onPressed: () {
-            Navigator.pushNamed(context, '/mappage');
-          },
-        ),
         title: const Text(
           'Reviews',
           style: TextStyle(fontSize: 20, color: Colors.white),

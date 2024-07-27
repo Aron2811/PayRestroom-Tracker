@@ -38,7 +38,9 @@ class _AddReviewPageState extends State<AddReviewPage> {
         // Check if the marker already exists in Firestore
         final querySnapshot = await _firestore
             .collection('Tags')
-            .where('position', isEqualTo: GeoPoint(widget.destination.latitude, widget.destination.longitude))
+            .where('position',
+                isEqualTo: GeoPoint(
+                    widget.destination.latitude, widget.destination.longitude))
             .get();
 
         if (querySnapshot.docs.isNotEmpty) {
@@ -49,16 +51,21 @@ class _AddReviewPageState extends State<AddReviewPage> {
 
           // Check if the user has already posted a review in the last 24 hours
           final now = Timestamp.now();
-          final oneDayAgo = Timestamp.fromMillisecondsSinceEpoch(now.millisecondsSinceEpoch - 86400000);
+          final oneDayAgo = Timestamp.fromMillisecondsSinceEpoch(
+              now.millisecondsSinceEpoch - 86400000);
 
           bool hasRecentReview = comments.any((comment) {
             final Timestamp commentTimestamp = comment['timestamp'];
-            return comment['userId'] == user.uid && commentTimestamp.millisecondsSinceEpoch > oneDayAgo.millisecondsSinceEpoch;
+            return comment['userId'] == user.uid &&
+                commentTimestamp.millisecondsSinceEpoch >
+                    oneDayAgo.millisecondsSinceEpoch;
           });
 
           if (hasRecentReview) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text("You can only post one review per day for this destination")),
+              SnackBar(
+                  content: Text(
+                      "You can only post one review per day for this destination")),
             );
             return;
           }
@@ -78,7 +85,8 @@ class _AddReviewPageState extends State<AddReviewPage> {
         } else {
           // Create a new marker document with the comment
           await _firestore.collection('Tags').add({
-            'position': GeoPoint(widget.destination.latitude, widget.destination.longitude),
+            'position': GeoPoint(
+                widget.destination.latitude, widget.destination.longitude),
             'comments': [
               {
                 'userId': user.uid,
@@ -128,7 +136,8 @@ class _AddReviewPageState extends State<AddReviewPage> {
               enableFeedback: false,
               backgroundColor: Color.fromARGB(255, 97, 84, 158),
               minimumSize: const Size(10, 30),
-              textStyle: const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              textStyle:
+                  const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
             ),
             onPressed: _postReview,
             child: const Text(
@@ -148,17 +157,18 @@ class _AddReviewPageState extends State<AddReviewPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    const SizedBox(height: 100),
+                    const SizedBox(height: 10),
                     Padding(
                       padding: const EdgeInsets.all(30),
                       child: TextField(
                         controller: _textController,
-                        minLines: 1,
-                        maxLines: 4,
+                        minLines: 5,
+                        maxLines: 10,
                         style: const TextStyle(fontSize: 17),
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(
-                            borderSide: BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 115, 99, 183)),
                           ),
                         ),
                       ),
