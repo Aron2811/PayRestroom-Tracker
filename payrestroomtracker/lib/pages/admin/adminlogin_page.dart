@@ -1,11 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/admin/adminpage.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class AdminLoginPage extends StatefulWidget {
-  const AdminLoginPage({
-    Key? key, required this.report
-  }) : super(key: key);
+  const AdminLoginPage({Key? key, required this.report}) : super(key: key);
   final String report;
   @override
   State<StatefulWidget> createState() => _AdminLoginPageState();
@@ -22,6 +21,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   void initState() {
     super.initState();
     _isObscured = true;
+    _checkLoginStatus();
   }
 
   Future<void> _login() async {
@@ -46,6 +46,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         var storedPassword = adminDoc['password'];
 
         if (storedPassword == password) {
+          await _saveLoginDetails(username, password);
           Navigator.push(
             context,
             _createRoute(AdminPage(
@@ -83,6 +84,44 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         _passwordError = ''; // Clear password error explicitly
       }
     });
+  }
+
+  Future<void> _saveLoginDetails(String username, String password) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setString('username', username);
+    await prefs.setString('password', password);
+  }
+
+  Future<void> _checkLoginStatus() async {
+    final prefs = await SharedPreferences.getInstance();
+    String? username = prefs.getString('username');
+    String? password = prefs.getString('password');
+
+    if (username != null && password != null) {
+      try {
+        QuerySnapshot querySnapshot = await FirebaseFirestore.instance
+            .collection('admin')
+            .where('username', isEqualTo: username)
+            .get();
+
+        if (querySnapshot.docs.isNotEmpty) {
+          var adminDoc = querySnapshot.docs.first;
+          var storedPassword = adminDoc['password'];
+
+          if (storedPassword == password) {
+            Navigator.pushReplacement(
+              context,
+              _createRoute(AdminPage(
+                username: username,
+                report: widget.report,
+              )),
+            );
+          }
+        }
+      } catch (e) {
+        debugPrint('Error: $e');
+      }
+    }
   }
 
   @override

@@ -55,6 +55,7 @@ dependencies:
   flutter_rating_bar: ^4.0.0
   badges: ^3.0.0
   
+  
 
 dev_dependencies:
   flutter_test:

@@ -3,7 +3,8 @@ import 'package:flutter_button/pages/admin/adminMap.dart';
 import 'package:flutter_button/pages/admin/admin_report.dart';
 import 'package:flutter_button/pages/intro_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:cloud_firestore/cloud_firestore.dart'; // Import to use GeoPoint
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:shared_preferences/shared_preferences.dart'; // Import to use GeoPoint
 
 // Custom Badge Widget
 class Badge extends StatelessWidget {
@@ -50,7 +51,8 @@ class Badge extends StatelessWidget {
 }
 
 class AdminPage extends StatefulWidget {
-  const AdminPage({Key? key, required this.username, required this.report}) : super(key: key);
+  const AdminPage({Key? key, required this.username, required this.report})
+      : super(key: key);
   final String username;
   final String report;
 
@@ -59,7 +61,8 @@ class AdminPage extends StatefulWidget {
 }
 
 class _AdminPageState extends State<AdminPage> {
-  LatLng destination = LatLng(14.303142147986497, 121.07613374318477); // Default destination
+  LatLng destination =
+      LatLng(14.303142147986497, 121.07613374318477); // Default destination
 
   Route _createRoute(Widget child) {
     return PageRouteBuilder(
@@ -71,7 +74,8 @@ class _AdminPageState extends State<AdminPage> {
         const end = Offset.zero;
         const curve = Curves.easeInOut;
 
-        var tween = Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+        var tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
 
         var offsetAnimation = animation.drive(tween);
 
@@ -80,6 +84,17 @@ class _AdminPageState extends State<AdminPage> {
           child: child,
         );
       },
+    );
+  }
+
+  Future<void> _logout() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove('username');
+    await prefs.remove('password');
+
+    Navigator.pushReplacement(
+      context,
+      _createRoute(IntroPage(report: '')),
     );
   }
 
@@ -98,11 +113,7 @@ class _AdminPageState extends State<AdminPage> {
           ),
           TextButton(
             onPressed: () {
-              Navigator.of(context).pop(true);
-              Navigator.push(
-                context,
-                _createRoute(IntroPage(report: '',)),
-              );
+              _logout();
             },
             child: const Text("Yes"),
           ),
@@ -135,20 +146,18 @@ class _AdminPageState extends State<AdminPage> {
                 mainAxisAlignment: MainAxisAlignment.end,
                 children: <Widget>[
                   const Padding(
-                    padding: EdgeInsets.symmetric(horizontal: 20, vertical: 60.0),
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 20, vertical: 60.0),
                     child: SizedBox.shrink(), // Placeholder for an empty child
                   ),
                   Container(
-                    margin: const EdgeInsets.only(top: 50, right: 25), // Adjust the value to your needs
+                    margin: const EdgeInsets.only(
+                        top: 50, right: 25), // Adjust the value to your needs
                     child: Align(
                       alignment: Alignment.topRight,
                       child: GestureDetector(
                         onTap: () {
-                          Navigator.of(context).pop(true);
-                          Navigator.push(
-                            context,
-                            _createRoute(IntroPage(report: '',)),
-                          );
+                          _logout();
                         },
                         child: Icon(Icons.logout_rounded, color: Colors.white),
                       ),
@@ -259,7 +268,8 @@ class _AdminPageState extends State<AdminPage> {
                                     bottomRight: Radius.circular(10),
                                   ),
                                 ),
-                                foregroundColor: Color.fromARGB(255, 97, 84, 158),
+                                foregroundColor:
+                                    Color.fromARGB(255, 97, 84, 158),
                                 textStyle: const TextStyle(
                                   fontSize: 16,
                                 ),
