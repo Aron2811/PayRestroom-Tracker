@@ -167,62 +167,80 @@ String? formatAddress(String fullAddress) {
 
 
   Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
-    Map<Marker, double> markerRatings = {};
+  final Map<GeoPoint, Marker> geoPointToMarkerMap = {};
+  final List<GeoPoint> geoPoints = [];
 
-    for (Marker marker in markers) {
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('Tags')
-          .where('position',
-              isEqualTo:
-                  GeoPoint(marker.position.latitude, marker.position.longitude))
-          .get();
+  // Build mapping of GeoPoints to markers
+  for (final marker in markers) {
+    final geoPoint = GeoPoint(marker.position.latitude, marker.position.longitude);
+    geoPointToMarkerMap[geoPoint] = marker;
+    geoPoints.add(geoPoint);
+  }
 
-      if (querySnapshot.docs.isNotEmpty) {
-        final doc = querySnapshot.docs.first;
-        final data = doc.data();
-        final fetchedRating = data?['averageRating'] as double? ?? 0.0;
-        markerRatings[marker] = fetchedRating;
-      } else {
-        markerRatings[marker] = 0.0;
+  final Map<Marker, double> markerRatings = {};
+
+  // Fetch ratings in batches
+  const int batchSize = 30;
+  for (int i = 0; i < geoPoints.length; i += batchSize) {
+    final batchGeoPoints = geoPoints.skip(i).take(batchSize).toList();
+    
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position', whereIn: batchGeoPoints)
+        .get();
+
+    for (final doc in querySnapshot.docs) {
+      final data = doc.data();
+      final geoPoint = GeoPoint(
+        data['position'].latitude,
+        data['position'].longitude,
+      );
+      final marker = geoPointToMarkerMap[geoPoint];
+      if (marker != null) {
+        markerRatings[marker] = data['averageRating'] as double? ?? 0.0;
       }
     }
-
-    return markerRatings;
   }
 
-  Future<List<Marker>> getNearestMarkers(
-      LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
-    List<Marker> markers =
-        _markers.where((marker) => marker.icon == customMarkerIcon).toList();
-
-    // Fetch ratings for all markers
-    Map<Marker, double> markerRatings = await _fetchRatings(markers);
-
-    // Sort by distance first
-    markers.sort((a, b) {
-      final distanceA = _calculateDistance(userPosition, a.position);
-      final distanceB = _calculateDistance(userPosition, b.position);
-      return distanceA.compareTo(distanceB);
-    });
-
-    // Take the top 'count' markers by distance
-    markers = markers.take(count).toList();
-
-    // Sort by rating (highest rating first)
-    markers.sort((a, b) {
-      final ratingA = markerRatings[a]!;
-      final ratingB = markerRatings[b]!;
-      return ratingB.compareTo(ratingA);
-    });
-
-    return markers;
+  // Assign default rating for markers without data
+  for (final marker in markers) {
+    if (!markerRatings.containsKey(marker)) {
+      markerRatings[marker] = 0.0;
+    }
   }
 
-  double _calculateDistance(LatLng start, LatLng end) {
-    var distance = sqrt(pow(end.latitude - start.latitude, 2) +
-        pow(end.longitude - start.longitude, 2));
-    return distance;
-  }
+  return markerRatings;
+}
+
+Future<List<Marker>> getNearestMarkers(LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
+  final List<Marker> markers = _markers
+      .where((marker) => marker.icon == customMarkerIcon)
+      .toList();
+
+  // Fetch ratings for all markers
+  final markerRatings = await _fetchRatings(markers);
+
+  // Calculate distances and sort markers
+  markers.sort((a, b) {
+    final distanceA = _calculateDistance(userPosition, a.position);
+    final distanceB = _calculateDistance(userPosition, b.position);
+    return distanceA.compareTo(distanceB);
+  });
+
+  // Take top 'count' markers by distance
+  final nearestMarkers = markers.take(count).toList();
+
+  // Sort the nearest markers by rating (highest first)
+  nearestMarkers.sort((a, b) => (markerRatings[b] ?? 0.0).compareTo(markerRatings[a] ?? 0.0));
+
+  return nearestMarkers;
+}
+
+double _calculateDistance(LatLng start, LatLng end) {
+  final latDiff = end.latitude - start.latitude;
+  final lngDiff = end.longitude - start.longitude;
+  return sqrt(latDiff * latDiff + lngDiff * lngDiff);
+}
 
   void _showFindNearestPayToilet() async {
     LatLng userPosition = _currentP!;
