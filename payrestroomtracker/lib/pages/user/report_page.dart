@@ -81,11 +81,6 @@ class _ReportPageState extends State<ReportPage> {
     return Scaffold(
       backgroundColor: const Color.fromARGB(255, 97, 84, 158),
       appBar: AppBar(
-        leading: BackButton(
-          onPressed: () {
-            Navigator.push(context, _createRoute(MapPage()));
-          },
-        ),
         title: const Text(
           'Report',
           style: TextStyle(fontSize: 20, color: Colors.white, letterSpacing: 3),

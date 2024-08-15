@@ -148,13 +148,13 @@ class _AddReviewPageState extends State<AddReviewPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    const SizedBox(height: 100),
+                    const SizedBox(height: 10),
                     Padding(
                       padding: const EdgeInsets.all(30),
                       child: TextField(
                         controller: _textController,
-                        minLines: 1,
-                        maxLines: 4,
+                        minLines: 5,
+                        maxLines: 10,
                         style: const TextStyle(fontSize: 17),
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(

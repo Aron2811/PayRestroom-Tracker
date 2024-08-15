@@ -33,6 +33,8 @@ class AdminMapState extends State<AdminMap> {
   late String _mapStyleString;
   Set<Polyline> _polylines = {};
 
+   bool isUserLocationVisible = false;
+
   @override
   void initState() {
     super.initState();
@@ -342,8 +344,27 @@ class AdminMapState extends State<AdminMap> {
               LatLng(currentLocation.latitude!, currentLocation.longitude!);
         });
         updateCurrentAddress();
+
+        if (!isUserLocationVisible) {
+          _ensureUserLocationVisible();
+          isUserLocationVisible = true;
+        }
       }
     });
+  }
+
+    Future<void> _ensureUserLocationVisible() async {
+    if (_currentP != null && mapController != null) {
+     //Center the camera on the user's location
+     mapController.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: _currentP!, //center on the user's current position
+          zoom: await mapController.getZoomLevel(), //Maintain the current zoom level
+        ),
+      ),
+     );
+    }
   }
 
   void _addMarker(LatLng latLng, MarkerId markerId_) {

@@ -48,7 +48,12 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
         reviews.forEach((review) {
           final userRating = ratings.firstWhere(
             (rating) => rating['userId'] == review['userId'],
+<<<<<<< HEAD
             orElse: () => {'rating': 0.0}, // Set default rating to 0 if not found
+=======
+            orElse: () =>
+                {'rating': 0.0}, // Set default rating to 0 if not found
+>>>>>>> 5ba03e43f82d14d4c8218375c5adbdbba62499ad
           );
 
           review['rating'] = userRating['rating'];
@@ -67,6 +72,7 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
   }
 
   void _deleteReview(int index) async {
+<<<<<<< HEAD
   // Fetch the document for the given position
   final querySnapshot = await FirebaseFirestore.instance
       .collection('Tags')
@@ -77,11 +83,21 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
   if (querySnapshot.docs.isNotEmpty) {
     final doc = querySnapshot.docs.first;
     final docRef = doc.reference;
+=======
+    // Fetch the document for the given position
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+>>>>>>> 5ba03e43f82d14d4c8218375c5adbdbba62499ad
 
     // Remove the comment from the list of comments
     List<Map<String, dynamic>> updatedComments = List<Map<String, dynamic>>.from(doc.data()['comments']);
     updatedComments.removeAt(index);
 
+<<<<<<< HEAD
     // Update the document with the new list of comments
     await docRef.update({'comments': updatedComments});
 
@@ -102,6 +118,27 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
         backgroundColor: Color.fromARGB(255, 115, 99, 183),
       ),
     );
+=======
+      // Remove the comment from the list of comments
+      List<Map<String, dynamic>> updatedComments =
+          List<Map<String, dynamic>>.from(doc.data()['comments']);
+      updatedComments.removeAt(index);
+
+      // Update the document with the new list of comments
+      await docRef.update({'comments': updatedComments});
+
+      setState(() {
+        reviews.removeAt(index); // Update the local state
+      });
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Review deleted successfully'),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
+      );
+    }
+>>>>>>> 5ba03e43f82d14d4c8218375c5adbdbba62499ad
   }
 }
 
@@ -110,12 +147,15 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
+<<<<<<< HEAD
         leading: BackButton(
           color: Colors.white,
           onPressed: () {
             Navigator.push(context, _createRoute(AdminMap(username: "", report: "")));
           },
         ),
+=======
+>>>>>>> 5ba03e43f82d14d4c8218375c5adbdbba62499ad
         title: const Text(
           'Reviews',
           style: TextStyle(fontSize: 20, color: Colors.white),
@@ -156,15 +196,16 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
                         child: Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start, // Align children to the start (left)
+                            crossAxisAlignment: CrossAxisAlignment
+                                .start, // Align children to the start (left)
                             children: [
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   CircleAvatar(
                                     radius: 20,
-                                    backgroundImage: NetworkImage(
-                                        review['photoURL'] ?? ''),
+                                    backgroundImage:
+                                        NetworkImage(review['photoURL'] ?? ''),
                                   ),
                                   const SizedBox(width: 20),
                                   Text(
@@ -190,7 +231,8 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
                                         const Color.fromARGB(255, 97, 84, 158),
                                     halfFilledColor: const Color.fromARGB(
                                         255, 186, 176, 228),
-                                    initialRating: review['rating'] ?? 0.0, // Update with review's actual rating
+                                    initialRating: review['rating'] ??
+                                        0.0, // Update with review's actual rating
                                     maxRating: 5,
                                   ),
                                   const SizedBox(width: 10),
@@ -199,16 +241,16 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
                                         ? _formatTimestamp(
                                             review['timestamp'] as Timestamp)
                                         : '',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
                                   ),
                                 ],
                               ),
                               SizedBox(height: 10),
                               ReadMoreText(
                                 review['comment'] ?? '',
-                                textAlign: TextAlign.left, // Align text to the left
+                                textAlign:
+                                    TextAlign.left, // Align text to the left
                                 trimLines: 2,
                                 trimMode: TrimMode.Line,
                                 trimExpandedText: ' Show less',
