@@ -28,8 +28,20 @@ class LoadingPage extends StatelessWidget {
             GestureDetector(
               child: Image.asset('assets/Loading.gif'),
               onTap: () {
-                Navigator.push(context, _createRoute(IntroPage(report: '',)));
+                Navigator.push(context, _createRoute(IntroPage()));
               },
+            ),
+            const SizedBox(height: 10),
+            // Text
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 20.0),
+              child: Text(
+                'Tap anywhere',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.white,
+                ),
+              ),
             ),
           ]))
     ])));
