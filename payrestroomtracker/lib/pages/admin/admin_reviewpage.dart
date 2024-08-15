@@ -48,12 +48,8 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
         reviews.forEach((review) {
           final userRating = ratings.firstWhere(
             (rating) => rating['userId'] == review['userId'],
-<<<<<<< HEAD
-            orElse: () => {'rating': 0.0}, // Set default rating to 0 if not found
-=======
             orElse: () =>
                 {'rating': 0.0}, // Set default rating to 0 if not found
->>>>>>> 5ba03e43f82d14d4c8218375c5adbdbba62499ad
           );
 
           review['rating'] = userRating['rating'];
@@ -72,18 +68,6 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
   }
 
   void _deleteReview(int index) async {
-<<<<<<< HEAD
-  // Fetch the document for the given position
-  final querySnapshot = await FirebaseFirestore.instance
-      .collection('Tags')
-      .where('position',
-          isEqualTo: GeoPoint(widget.destination.latitude, widget.destination.longitude))
-      .get();
-
-  if (querySnapshot.docs.isNotEmpty) {
-    final doc = querySnapshot.docs.first;
-    final docRef = doc.reference;
-=======
     // Fetch the document for the given position
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -91,34 +75,11 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
             isEqualTo: GeoPoint(
                 widget.destination.latitude, widget.destination.longitude))
         .get();
->>>>>>> 5ba03e43f82d14d4c8218375c5adbdbba62499ad
 
-    // Remove the comment from the list of comments
-    List<Map<String, dynamic>> updatedComments = List<Map<String, dynamic>>.from(doc.data()['comments']);
-    updatedComments.removeAt(index);
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final docRef = doc.reference;
 
-<<<<<<< HEAD
-    // Update the document with the new list of comments
-    await docRef.update({'comments': updatedComments});
-
-    setState(() {
-      reviews.removeAt(index); // Update the local state
-    });
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Review deleted successfully'),
-        backgroundColor: Color.fromARGB(255, 115, 99, 183),
-      ),
-    );
-  } else {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Error: Document not found'),
-        backgroundColor: Color.fromARGB(255, 115, 99, 183),
-      ),
-    );
-=======
       // Remove the comment from the list of comments
       List<Map<String, dynamic>> updatedComments =
           List<Map<String, dynamic>>.from(doc.data()['comments']);
@@ -138,24 +99,12 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
         ),
       );
     }
->>>>>>> 5ba03e43f82d14d4c8218375c5adbdbba62499ad
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-<<<<<<< HEAD
-        leading: BackButton(
-          color: Colors.white,
-          onPressed: () {
-            Navigator.push(context, _createRoute(AdminMap(username: "", report: "")));
-          },
-        ),
-=======
->>>>>>> 5ba03e43f82d14d4c8218375c5adbdbba62499ad
         title: const Text(
           'Reviews',
           style: TextStyle(fontSize: 20, color: Colors.white),

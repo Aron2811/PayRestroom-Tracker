@@ -31,6 +31,17 @@ class LoadingPage extends StatelessWidget {
                 Navigator.push(context, _createRoute(IntroPage(report: '',)));
               },
             ),
+            const Padding(
+                    padding:
+                        EdgeInsets.symmetric(horizontal: 25.0, vertical: 20.0),
+                    child: Text(
+                      'Tap anywhere',
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
           ]))
     ])));
   }

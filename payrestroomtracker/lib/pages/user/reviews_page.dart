@@ -27,11 +27,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
     _fetchReviews(); // Fetch reviews when page initializes
   }
 
-<<<<<<< HEAD
-Future<void> _fetchReviews() async {
-=======
   Future<void> _fetchReviews() async {
->>>>>>> 5ba03e43f82d14d4c8218375c5adbdbba62499ad
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
         .where('position',
@@ -51,24 +47,9 @@ Future<void> _fetchReviews() async {
         reviews.forEach((review) {
           final userRating = ratings.firstWhere(
             (rating) => rating['userId'] == review['userId'],
-<<<<<<< HEAD
-            orElse: () => {'rating': 0.0}, // Set default rating to 0 if not found
-          );
-
-          review['rating'] = userRating['rating'];
-        });
-      });
-    } else {
-      setState(() {
-        reviews = [];
-      });
-    }
-  }
-=======
             orElse: () =>
                 {'rating': 0.0}, // Set default rating to 0 if not found
           );
->>>>>>> 5ba03e43f82d14d4c8218375c5adbdbba62499ad
 
           review['rating'] = userRating['rating'];
         });
