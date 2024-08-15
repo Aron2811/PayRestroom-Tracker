@@ -23,6 +23,15 @@ class MapPage extends StatefulWidget {
   State<MapPage> createState() => MapPageState();
 }
 
+class MarkerData {
+  final Marker marker;
+  final double distance;
+  final double rating;
+
+  MarkerData(this.marker, this.distance, this.rating);
+}
+
+
 class MapPageState extends State<MapPage> {
   static const LatLng _pGooglePlex =
       LatLng(14.303142147986497, 121.07613374318477);
@@ -140,7 +149,8 @@ class MapPageState extends State<MapPage> {
     }
   }
 
-  Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
+
+ Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
     Map<Marker, double> markerRatings = {};
 
     for (Marker marker in markers) {
@@ -197,7 +207,6 @@ class MapPageState extends State<MapPage> {
         pow(end.longitude - start.longitude, 2));
     return distance;
   }
-
   void _showFindNearestPayToilet() async {
     LatLng userPosition = _currentP!;
 
@@ -549,24 +558,15 @@ class MapPageState extends State<MapPage> {
 
   Future<void> _ensureUserLocationVisible() async {
     if (_currentP != null && mapController != null) {
-      // Get the current visible region
-      LatLngBounds bounds = await mapController.getVisibleRegion();
-
-      // Check if the user's location is within the bounds
-      bool isUserLocationVisible = bounds.contains(_currentP!);
-
-      if (!isUserLocationVisible) {
-        // If the user's location is not visible, adjust the zoom level
-        double zoomLevel = await mapController.getZoomLevel();
-        mapController.animateCamera(
-          CameraUpdate.newCameraPosition(
-            CameraPosition(
-              target: _pGooglePlex,
-              zoom: zoomLevel - 1, // Adjust zoom level as needed
-            ),
-          ),
-        );
-      }
+     //Center the camera on the user's location
+     mapController.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          target: _currentP!, //center on the user's current position
+          zoom: await mapController.getZoomLevel(), //Maintain the current zoom level
+        ),
+      ),
+     );
     }
   }
 

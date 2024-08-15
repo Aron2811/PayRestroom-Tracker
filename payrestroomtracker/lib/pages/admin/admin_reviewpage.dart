@@ -48,7 +48,8 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
         reviews.forEach((review) {
           final userRating = ratings.firstWhere(
             (rating) => rating['userId'] == review['userId'],
-            orElse: () => {'rating': 0}, // Set default rating to 0 if not found
+            orElse: () =>
+                {'rating': 0.0}, // Set default rating to 0 if not found
           );
 
           review['rating'] = userRating['rating'];
@@ -66,33 +67,34 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
     return DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
   }
 
-  Future<void> _deleteReview(int index) async {
-    final reviewToDelete = reviews[index];
-
-    // Find the document in Firestore to update
+  void _deleteReview(int index) async {
+    // Fetch the document for the given position
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
         .where('position',
-            isEqualTo: GeoPoint(widget.destination.latitude, widget.destination.longitude))
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
         .get();
 
     if (querySnapshot.docs.isNotEmpty) {
       final doc = querySnapshot.docs.first;
       final docRef = doc.reference;
 
-      // Remove the review from the Firestore document
-      await docRef.update({
-        'comments': FieldValue.arrayRemove([reviewToDelete])
-      });
+      // Remove the comment from the list of comments
+      List<Map<String, dynamic>> updatedComments =
+          List<Map<String, dynamic>>.from(doc.data()['comments']);
+      updatedComments.removeAt(index);
 
-      // Update the local state
+      // Update the document with the new list of comments
+      await docRef.update({'comments': updatedComments});
+
       setState(() {
-        reviews.removeAt(index);
+        reviews.removeAt(index); // Update the local state
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
-          content: Text('Review has been deleted'),
+          content: Text('Review deleted successfully'),
           backgroundColor: Color.fromARGB(255, 115, 99, 183),
         ),
       );
@@ -103,12 +105,6 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(
-          color: Colors.white,
-          onPressed: () {
-            Navigator.push(context, _createRoute(AdminMap(username: "", report: "")));
-          },
-        ),
         title: const Text(
           'Reviews',
           style: TextStyle(fontSize: 20, color: Colors.white),
@@ -149,15 +145,16 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
                         child: Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start, // Align children to the start (left)
+                            crossAxisAlignment: CrossAxisAlignment
+                                .start, // Align children to the start (left)
                             children: [
                               Row(
                                 mainAxisAlignment: MainAxisAlignment.start,
                                 children: [
                                   CircleAvatar(
                                     radius: 20,
-                                    backgroundImage: NetworkImage(
-                                        review['photoURL'] ?? ''),
+                                    backgroundImage:
+                                        NetworkImage(review['photoURL'] ?? ''),
                                   ),
                                   const SizedBox(width: 20),
                                   Text(
@@ -183,7 +180,8 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
                                         const Color.fromARGB(255, 97, 84, 158),
                                     halfFilledColor: const Color.fromARGB(
                                         255, 186, 176, 228),
-                                    initialRating: review['rating'] ?? 0.0, // Update with review's actual rating
+                                    initialRating: review['rating'] ??
+                                        0.0, // Update with review's actual rating
                                     maxRating: 5,
                                   ),
                                   const SizedBox(width: 10),
@@ -192,16 +190,16 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
                                         ? _formatTimestamp(
                                             review['timestamp'] as Timestamp)
                                         : '',
-                                    style: Theme.of(context)
-                                        .textTheme
-                                        .bodyMedium,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
                                   ),
                                 ],
                               ),
                               SizedBox(height: 10),
                               ReadMoreText(
                                 review['comment'] ?? '',
-                                textAlign: TextAlign.left, // Align text to the left
+                                textAlign:
+                                    TextAlign.left, // Align text to the left
                                 trimLines: 2,
                                 trimMode: TrimMode.Line,
                                 trimExpandedText: ' Show less',

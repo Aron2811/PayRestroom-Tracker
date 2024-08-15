@@ -1,4 +1,5 @@
 import 'package:custom_rating_bar/custom_rating_bar.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:readmore/readmore.dart';
@@ -46,7 +47,8 @@ class _ReviewsPageState extends State<ReviewsPage> {
         reviews.forEach((review) {
           final userRating = ratings.firstWhere(
             (rating) => rating['userId'] == review['userId'],
-            orElse: () => {'rating': 0}, // Set default rating to 0 if not found
+            orElse: () =>
+                {'rating': 0.0}, // Set default rating to 0 if not found
           );
 
           review['rating'] = userRating['rating'];
@@ -68,12 +70,6 @@ class _ReviewsPageState extends State<ReviewsPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        leading: BackButton(
-          color: Colors.white,
-          onPressed: () {
-            Navigator.pushNamed(context, '/mappage');
-          },
-        ),
         title: const Text(
           'Reviews',
           style: TextStyle(fontSize: 20, color: Colors.white),
@@ -95,7 +91,8 @@ class _ReviewsPageState extends State<ReviewsPage> {
                     itemCount: reviews.length,
                     itemBuilder: (context, index) {
                       final review = reviews[index];
-                      double rating = review['rating'] ?? 0.0; // Use user's rating if available
+                      double rating = review['rating'] ??
+                          0.0; // Use user's rating if available
 
                       // Print the value of rating before displaying it
                       print('Rating for review ${index + 1}: $rating');
@@ -137,13 +134,15 @@ class _ReviewsPageState extends State<ReviewsPage> {
                                       const Color.fromARGB(255, 97, 84, 158),
                                   halfFilledColor:
                                       const Color.fromARGB(255, 186, 176, 228),
-                                  initialRating: rating, // Display user's rating if available
+                                  initialRating:
+                                      rating, // Display user's rating if available
                                   maxRating: 5,
                                 ),
                                 const SizedBox(width: 10),
                                 Text(
                                   review['timestamp'] != null
-                                      ? _formatTimestamp(review['timestamp'] as Timestamp)
+                                      ? _formatTimestamp(
+                                          review['timestamp'] as Timestamp)
                                       : '',
                                   style: Theme.of(context).textTheme.bodyMedium,
                                 ),
