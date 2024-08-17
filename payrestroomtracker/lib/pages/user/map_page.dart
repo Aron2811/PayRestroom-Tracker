@@ -44,6 +44,7 @@ class MapPageState extends State<MapPage> {
   BitmapDescriptor? _jeepMarkerIcon;
   BitmapDescriptor? _personMarkerIcon;
   BitmapDescriptor? _carMarkerIcon;
+  MarkerId? _selectedMarkerId;
   final Completer<GoogleMapController> _controller = Completer();
   late String _mapStyleString;
   Set<Polyline> _polylines = {};
@@ -395,7 +396,7 @@ class MapPageState extends State<MapPage> {
               child: Align(
                 alignment: Alignment.center,
                 child: Text(
-                  _currentAddress ?? 'Fetching address...',
+                  _currentAddress ?? 'Fetching user location...',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 14.0,
@@ -433,7 +434,7 @@ class MapPageState extends State<MapPage> {
                         ),
                         height: 30,
                         width: 300,
-                        margin: const EdgeInsets.only(top: 30, left: 0),
+                        margin: const EdgeInsets.only(top: 30, left: 20),
                         child: Align(
                           alignment: Alignment.center,
                           child: Text(
@@ -451,172 +452,190 @@ class MapPageState extends State<MapPage> {
                         ),
                       ),
                     ),
-                    Row(mainAxisAlignment: MainAxisAlignment.start, children: [
-                      ClipRRect(
-                          borderRadius: BorderRadius.circular(25.0),
-                          child: Container(
-                              color: Color.fromARGB(255, 172, 161, 228),
-                              height: 55,
-                              width: 153,
-                              child: Padding(
-                                  padding: EdgeInsets.only(
-                                    top: 10,
-                                  ),
-                                  child: Row(
-                                    mainAxisAlignment: MainAxisAlignment.start,
-                                    children: [
-                                      Padding(
-                                          padding: EdgeInsets.only(
-                                            right: 10,
-                                            left: 15,
-                                          ),
-                                          child: Column(
-                                            children: [
-                                              GestureDetector(
-                                                child: Container(
+                  ]))),
+          Padding(
+              padding: EdgeInsets.only(bottom: 80, left: 20),
+              child: Visibility(
+                visible: isVisible,
+                maintainSize: true,
+                maintainAnimation: true,
+                maintainState: true,
+                child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                              borderRadius: BorderRadius.circular(25.0),
+                              child: Container(
+                                  color: Color.fromARGB(255, 172, 161, 228),
+                                  height: 55,
+                                  width: 153,
+                                  child: Padding(
+                                      padding: EdgeInsets.only(
+                                        top: 10,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 10,
+                                                left: 15,
+                                              ),
+                                              child: Column(
+                                                children: [
+                                                  GestureDetector(
+                                                    child: Container(
+                                                        height: 35,
+                                                        width: 35,
+                                                        child: Image.asset(
+                                                            'assets/car.png')),
+                                                    onTap: () {
+                                                      _isLoading = false;
+                                                      _drawRouteToDestination(
+                                                          end!, 'private');
+                                                      _markers.add(
+                                                        Marker(
+                                                          markerId: const MarkerId(
+                                                              'User Location'),
+                                                          position: _currentP!,
+                                                          icon: _carMarkerIcon ??
+                                                              BitmapDescriptor
+                                                                  .defaultMarker, // Set the custom icon here
+                                                        ),
+                                                      );
+                                                    },
+                                                  ),
+                                                  SizedBox(height: 5),
+                                                ],
+                                              )),
+                                          Column(children: [
+                                            Padding(
+                                                padding:
+                                                    EdgeInsets.only(right: 7),
+                                                child: GestureDetector(
+                                                  child: Container(
                                                     height: 35,
                                                     width: 35,
                                                     child: Image.asset(
-                                                        'assets/car.png')),
-                                                onTap: () {
-                                                  _isLoading = false;
-                                                  _drawRouteToDestination(
-                                                      end!, 'private');
-                                                  _markers.add(
-                                                    Marker(
-                                                      markerId: const MarkerId(
-                                                          'User Location'),
-                                                      position: _currentP!,
-                                                      icon: _carMarkerIcon ??
-                                                          BitmapDescriptor
-                                                              .defaultMarker, // Set the custom icon here
-                                                    ),
-                                                  );
-                                                },
-                                              ),
-                                              SizedBox(height: 5),
-                                            ],
-                                          )),
-                                      Column(children: [
-                                        Padding(
-                                            padding: EdgeInsets.only(right: 7),
-                                            child: GestureDetector(
-                                              child: Container(
-                                                height: 35,
-                                                width: 35,
-                                                child: Image.asset(
-                                                    'assets/jeep.png'),
-                                              ),
-                                              onTap: () {
-                                                _isLoading = false;
-                                                _drawRouteToDestination(
-                                                    end!, 'commute');
-                                                _markers.add(
-                                                  Marker(
-                                                    markerId: const MarkerId(
-                                                        'User Location'),
-                                                    position: _currentP!,
-                                                    icon: _jeepMarkerIcon ??
-                                                        BitmapDescriptor
-                                                            .defaultMarker, // Set the custom icon here
+                                                        'assets/jeep.png'),
                                                   ),
-                                                );
-                                              },
-                                            )),
-                                        SizedBox(height: 5),
-                                      ]),
-                                      Column(children: [
-                                        Padding(
-                                            padding: EdgeInsets.only(right: 5),
-                                            child: GestureDetector(
-                                              child: Container(
-                                                  height: 35,
-                                                  width: 35,
-                                                  child: Image.asset(
-                                                      'assets/person.png')),
-                                              onTap: () {
-                                                _isLoading = false;
-                                                _drawRouteToDestination(
-                                                    end!, 'byFoot');
-                                                _markers.add(
-                                                  Marker(
-                                                    markerId: const MarkerId(
-                                                        'User Location'),
-                                                    position: _currentP!,
-                                                    icon: _personMarkerIcon ??
-                                                        BitmapDescriptor
-                                                            .defaultMarker, // Set the custom icon here
-                                                  ),
-                                                );
-                                              },
-                                            )),
-                                        SizedBox(height: 5),
-                                      ])
-                                    ],
-                                  )))),
-                      SizedBox(width: 5),
-                      Padding(
-                          padding: EdgeInsets.only(left: 0),
-                          child: ClipRRect(
-                              borderRadius: BorderRadius.only(
-                                  topLeft: Radius.circular(50),
-                                  bottomLeft: Radius.circular(50),
-                                  topRight: Radius.circular(25),
-                                  bottomRight: Radius.circular(25)),
-                              child: Container(
-                                  color: Colors.white,
-                                  height: 45,
-                                  width: 120,
-                                  child: Row(children: [
-                                    SizedBox(
-                                      width: 5,
-                                    ),
-                                    CircleAvatar(
-                                      radius: 15,
-                                      backgroundImage: getBackgroundImage(),
-                                    ),
-                                    SizedBox(
-                                      width: 5,
-                                    ),
-                                    Align(
-                                        alignment: Alignment.center,
-                                        child: Column(children: [
-                                          SizedBox(
-                                            height: 3,
-                                          ),
-                                          Text(
-                                            '${estimatedTime ?? '15 min'}',
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color.fromARGB(
-                                                  255, 97, 84, 158),
-                                            ),
-                                          ),
-                                          SizedBox(
-                                            height: 3,
-                                          ),
-                                          Text(
-                                            distanceInMiles ?? '',
-                                            style: TextStyle(
-                                              fontSize: 13,
-                                              fontWeight: FontWeight.bold,
-                                              color: Color.fromARGB(
-                                                  255, 97, 84, 158),
-                                            ),
-                                          )
-                                        ]))
-                                  ])))),
-                      SizedBox(width: 5),
-                      FloatingActionButton.small(
-                        backgroundColor: Colors.white,
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50)),
-                        child: Icon(Icons.close_rounded),
-                        onPressed: () {},
-                      ),
-                    ])
-                  ]))),
+                                                  onTap: () {
+                                                    _isLoading = false;
+                                                    _drawRouteToDestination(
+                                                        end!, 'commute');
+                                                    _markers.add(
+                                                      Marker(
+                                                        markerId: const MarkerId(
+                                                            'User Location'),
+                                                        position: _currentP!,
+                                                        icon: _jeepMarkerIcon ??
+                                                            BitmapDescriptor
+                                                                .defaultMarker, // Set the custom icon here
+                                                      ),
+                                                    );
+                                                  },
+                                                )),
+                                            SizedBox(height: 5),
+                                          ]),
+                                          Column(children: [
+                                            Padding(
+                                                padding:
+                                                    EdgeInsets.only(right: 5),
+                                                child: GestureDetector(
+                                                  child: Container(
+                                                      height: 35,
+                                                      width: 35,
+                                                      child: Image.asset(
+                                                          'assets/person.png')),
+                                                  onTap: () {
+                                                    _isLoading = false;
+                                                    _drawRouteToDestination(
+                                                        end!, 'byFoot');
+                                                    _markers.add(
+                                                      Marker(
+                                                        markerId: const MarkerId(
+                                                            'User Location'),
+                                                        position: _currentP!,
+                                                        icon: _personMarkerIcon ??
+                                                            BitmapDescriptor
+                                                                .defaultMarker, // Set the custom icon here
+                                                      ),
+                                                    );
+                                                  },
+                                                )),
+                                            SizedBox(height: 5),
+                                          ])
+                                        ],
+                                      )))),
+                          SizedBox(width: 5),
+                          Padding(
+                              padding: EdgeInsets.only(left: 0),
+                              child: ClipRRect(
+                                  borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(50),
+                                      bottomLeft: Radius.circular(50),
+                                      topRight: Radius.circular(25),
+                                      bottomRight: Radius.circular(25)),
+                                  child: Container(
+                                      color: Colors.white,
+                                      height: 45,
+                                      width: 120,
+                                      child: Row(children: [
+                                        SizedBox(
+                                          width: 5,
+                                        ),
+                                        CircleAvatar(
+                                          radius: 15,
+                                          backgroundImage: getBackgroundImage(),
+                                        ),
+                                        SizedBox(
+                                          width: 5,
+                                        ),
+                                        Align(
+                                            alignment: Alignment.center,
+                                            child: Column(children: [
+                                              SizedBox(
+                                                height: 3,
+                                              ),
+                                              Text(
+                                                '${estimatedTime ?? '15 min'}',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color.fromARGB(
+                                                      255, 97, 84, 158),
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                height: 3,
+                                              ),
+                                              Text(
+                                                distanceInMiles ?? '',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color.fromARGB(
+                                                      255, 97, 84, 158),
+                                                ),
+                                              )
+                                            ]))
+                                      ])))),
+                          SizedBox(width: 5),
+                          FloatingActionButton.small(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(50)),
+                            child: Icon(Icons.close_rounded),
+                            onPressed: () {
+                              _hidePath();
+                              _polylines.clear();
+                            },
+                          ),
+                        ])),
+              )),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
@@ -670,6 +689,12 @@ class MapPageState extends State<MapPage> {
   void toggleVisibility() {
     setState(() {
       isVisible = true;
+    });
+  }
+
+  void _hidePath() {
+    setState(() {
+      isVisible = false;
     });
   }
 

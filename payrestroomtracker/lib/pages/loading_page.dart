@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_button/pages/dialog/apprate_dialog.dart';
 import 'package:flutter_button/pages/intro_page.dart';
 
 class LoadingPage extends StatelessWidget {
@@ -48,6 +49,21 @@ class LoadingPage extends StatelessWidget {
                 ),
               ),
             ),
+
+            GestureDetector(
+              onTap: () {
+                showDialog(
+                    context: context,
+                    builder: (context) => const AppRateDialog());
+              },
+              child: Text(
+                'Rate App',
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.white,
+                ),
+              ),
+            )
           ]))
     ])));
   }

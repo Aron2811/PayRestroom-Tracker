@@ -90,24 +90,39 @@ class _MyDraggableSheetState extends State<MyDraggableSheet> {
   SliverToBoxAdapter topButtonIndicator() {
     return SliverToBoxAdapter(
       child: Container(
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-            Container(
-                child: Center(
-                    child: Wrap(children: <Widget>[
-              Container(
-                  width: 100,
-                  margin: const EdgeInsets.only(top: 10, bottom: 10),
-                  height: 5,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.rectangle,
-                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                  )),
-            ]))),
-          ])),
+        child: Stack(
+          children: [
+            // Centered indicator
+            Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: 100,
+                margin: const EdgeInsets.only(top: 10, bottom: 10),
+                height: 5,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.rectangle,
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                ),
+              ),
+            ),
+            // Close button at the top right
+            Padding(
+                padding: EdgeInsets.only(top: 5, right: 5),
+                child: Align(
+                    alignment: Alignment.topRight,
+                    child: FloatingActionButton.small(
+                      onPressed: () {
+                        Navigator.pop(context); 
+                      },
+                      child: Icon(Icons.close_rounded),
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50)),
+                    ))),
+          ],
+        ),
+      ),
     );
   }
 }
