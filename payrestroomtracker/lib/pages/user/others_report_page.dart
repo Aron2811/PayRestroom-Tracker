@@ -1,11 +1,77 @@
 import 'package:flutter/material.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter_button/pages/dialog/others_report.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
-class OthersReportPage extends StatelessWidget {
+class OthersReportPage extends StatefulWidget {
+  final LatLng destination;
+
+  const OthersReportPage({super.key, required this.destination});
+
+  @override
+  State<OthersReportPage> createState() => _OthersReportPageState();
+}
+
+class _OthersReportPageState extends State<OthersReportPage> {
+  final TextEditingController _textController = TextEditingController();
+  final FirebaseAuth _auth = FirebaseAuth.instance;
+  final FirebaseFirestore _firestore = FirebaseFirestore.instance;
+  String _restroomName = ""; 
+
+    @override
+  void initState() {
+    super.initState();
+    _fetchPaidRestroomName();
+    
+  }
+
+    Future<void> _fetchPaidRestroomName() async {
+    try {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .where('position', isEqualTo: GeoPoint(widget.destination.latitude, widget.destination.longitude))
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final data = doc.data();
+        final fetchedName = data['Name'] as String? ?? "No name available";
+
+        setState(() {
+          _restroomName = fetchedName;
+        });
+      } else {
+        setState(() {
+          _restroomName = "No restroom found at this location";
+        });
+      }
+    } catch (e) {
+      setState(() {
+        _restroomName = "Error fetching data";
+      });
+    }
+  }
+
+  Future<void> storeReport(String reportType, String reportContent) async {
+    User? user = _auth.currentUser;
+    if (user != null) {
+      await _firestore.collection('reports').add({
+        'username': user.displayName,
+        'photo': user.photoURL,
+        'report': reportType,
+        'timestamp': FieldValue.serverTimestamp(),
+        'read': false,
+        'restroomName': _restroomName,
+        'reportContent': reportContent,
+      });
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: Color.fromARGB(255, 193, 184, 236),
+      backgroundColor: const Color.fromARGB(255, 193, 184, 236),
       appBar: AppBar(
         title: const Text(
           'Report',
@@ -16,13 +82,19 @@ class OthersReportPage extends StatelessWidget {
         actions: <Widget>[
           const SizedBox(width: 10),
           IconButton(
-            icon: Icon(
+            icon: const Icon(
               Icons.send_rounded,
               color: Colors.white,
             ),
-            onPressed: () {
+            onPressed: () async {
+              await storeReport('Others', _textController.text);
               showDialog(
-                  context: context, builder: (context) => OthersReportDialog());
+                context: context,
+                builder: (context) => OthersReportDialog(
+                  reportContent: _textController.text,
+                  destination: widget.destination,
+                ),
+              );
             },
           ),
           const SizedBox(width: 20),
@@ -36,7 +108,7 @@ class OthersReportPage extends StatelessWidget {
               const SizedBox(height: 30),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 80),
-                child: const Text(
+                child: Text(
                   'Others',
                   style: TextStyle(
                       fontSize: 20,
@@ -47,7 +119,7 @@ class OthersReportPage extends StatelessWidget {
               const SizedBox(height: 5),
               const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 80),
-                child: const Text(
+                child: Text(
                   'Report Description',
                   style: TextStyle(
                       fontSize: 20,
@@ -56,39 +128,23 @@ class OthersReportPage extends StatelessWidget {
                 ),
               ),
               const SizedBox(height: 10),
-              const Padding(
-                padding: EdgeInsets.all(30),
+              Padding(
+                padding: const EdgeInsets.all(30),
                 child: TextField(
-                    minLines: 1,
-                    maxLines: 4,
-                    style: TextStyle(fontSize: 17),
-                    decoration: InputDecoration(
-                      border: OutlineInputBorder(
-                        borderSide: BorderSide(
-                            color: Color.fromARGB(255, 115, 99, 183)),
+                  controller: _textController,
+                  minLines: 1,
+                  maxLines: 4,
+                  style: const TextStyle(fontSize: 17),
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(
+                      borderSide: BorderSide(
+                        color: Color.fromARGB(255, 115, 99, 183),
                       ),
-                    )),
+                    ),
+                  ),
+                ),
               ),
               const SizedBox(height: 15),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                    enableFeedback: false,
-                    backgroundColor: Colors.white,
-                    minimumSize: const Size(100, 40),
-                    shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(50)),
-                    side: BorderSide(
-                      color: Color.fromARGB(
-                          255, 115, 99, 183), //Set the border color
-                      width: 2.0,
-                    ),
-                    textStyle: const TextStyle(
-                        fontSize: 20, fontWeight: FontWeight.bold)),
-                onPressed: () {},
-                icon: Icon(Icons.upload_rounded,
-                    color: Color.fromARGB(255, 115, 99, 183)),
-                label: const Text("Upload"),
-              ),
             ],
           ),
         ],

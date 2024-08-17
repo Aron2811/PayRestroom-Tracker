@@ -3,12 +3,12 @@ import 'package:http/http.dart' as http;
 import 'dart:convert';
 import 'dart:math';
 import 'package:collection/collection.dart';
-import 'package:flutter/material.dart';
 
 class AStar {
   final String googleMapsApiKey;
+  final Function(String, String) updateDurationCallback;
 
-  AStar(this.googleMapsApiKey);
+  AStar(this.googleMapsApiKey, this.updateDurationCallback);
 
   Future<List<LatLng>> findAndDrawPath(
       LatLng start, LatLng goal, String options) async {
@@ -17,9 +17,9 @@ class AStar {
 
     var pathPoints = await _fetchRouteFromGoogleMaps(start, goal, options);
     print('Path points from Google Maps Directions API:');
-    pathPoints.forEach((point) {
+    for (var point in pathPoints) {
       print('$point');
-    });
+    }
     if (pathPoints.isEmpty) {
       print('No valid route found from Google Maps Directions API.');
       return [start, goal]; // or handle the case appropriately
@@ -40,9 +40,9 @@ class AStar {
       print('${node.position}');
     });
     print('Initial closed set:');
-    closedSet.forEach((position) {
+    for (var position in closedSet) {
       print('$position');
-    });
+    }
 
     while (openSet.isNotEmpty) {
       // Step a: Find the Node with the Lowest f Value
@@ -136,9 +136,33 @@ class AStar {
         List<LatLng> pathPoints = _decodeDetailedPolyline(
             data['routes'][0]['overview_polyline']['points']);
         print('Path points retrieved from Google Maps:');
-        pathPoints.forEach((point) {
+        for (var point in pathPoints) {
           print('$point');
-        });
+        }
+
+        // Initialize durationString with a default value
+        String durationString = '';
+
+        // Extract the duration and store it in the appropriate variable
+        int durationSeconds = data['routes'][0]['legs'][0]['duration']['value'];
+
+        if (options == 'byFoot') {
+          durationString =
+              '${(durationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(durationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}min';
+        } else if (options == 'commute') {
+          // Subtract 11 minutes from the byFoot duration
+          int commuteDurationSeconds = durationSeconds - (8 * 60);
+          durationString =
+              '${(commuteDurationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(commuteDurationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}min';
+        } else if (options == 'private') {
+          // Handle private mode, assuming it's driving
+          durationString =
+              '${(durationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(durationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}min';
+        }
+
+        // Use the callback to update the state in the parent widget
+        updateDurationCallback(options, durationString);
+
         return pathPoints;
       } else {
         print('Error fetching route: ${data['status']}');
@@ -257,6 +281,28 @@ class AStar {
       totalPath.add(current);
     }
     return totalPath.reversed.toList();
+  }
+
+  // New method to calculate the distance in miles
+  String getDistanceInMiles(LatLng start, LatLng end) {
+    const double earthRadiusMiles = 3958.8; // Earth's radius in miles
+
+    double lat1 = start.latitude * pi / 180.0;
+    double lon1 = start.longitude * pi / 180.0;
+    double lat2 = end.latitude * pi / 180.0;
+    double lon2 = end.longitude * pi / 180.0;
+
+    double dLat = lat2 - lat1;
+    double dLon = lon2 - lon1;
+
+    double havTheta =
+        pow(sin(dLat / 2), 2) + cos(lat1) * cos(lat2) * pow(sin(dLon / 2), 2);
+    double distance = 2 * earthRadiusMiles * asin(sqrt(havTheta));
+
+    // Format the distance to 2 decimal places
+    String formattedDistance = distance.toStringAsFixed(2);
+
+    return '$formattedDistance miles';
   }
 }
 

@@ -9,45 +9,45 @@ class FacilitiesDialog extends StatelessWidget {
       Center(
           child: Column(
         children: [
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
-          Icon(Icons.check_circle_rounded,
+          const Icon(Icons.check_circle_rounded,
               color: Color.fromARGB(255, 97, 84, 158), size: 50),
-          SizedBox(
+          const SizedBox(
             height: 30,
           ),
-          Text(
+          const Text(
             "You Selected",
             style: TextStyle(
                 color: Color.fromARGB(255, 97, 84, 158),
                 fontSize: 17,
                 fontWeight: FontWeight.bold),
           ),
-          SizedBox(
+          const SizedBox(
             height: 10,
           ),
-          Text("Facilities and amenities report",
+          const Text("Facilities and amenities report",
               style: TextStyle(
                   color: Color.fromARGB(255, 97, 84, 158),
                   fontSize: 17,
                   fontWeight: FontWeight.bold),
               textAlign: TextAlign.justify),
-          SizedBox(
+          const SizedBox(
             height: 10,
           ),
-          Text(
+          const Text(
             "We use your feedback to help our systems learn when something isn't right",
             style: TextStyle(
                 color: Color.fromARGB(255, 97, 84, 158), fontSize: 17),
             textAlign: TextAlign.justify,
           ),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
           RichText(
               textAlign: TextAlign.justify,
-              text: TextSpan(
+              text: const TextSpan(
                   style: TextStyle(
                       color: Color.fromARGB(255, 97, 84, 158), fontSize: 13),
                   children: <TextSpan>[
@@ -62,7 +62,7 @@ class FacilitiesDialog extends StatelessWidget {
                           'We may inform the Paid Restroom to address this report',
                     )
                   ])),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
           Padding(
@@ -81,7 +81,7 @@ class FacilitiesDialog extends StatelessWidget {
                       width: 2.0, // Set the border width
                     ),
                   ),
-                  foregroundColor: Color.fromARGB(255, 135, 125, 186),
+                  foregroundColor: const Color.fromARGB(255, 135, 125, 186),
                   textStyle: const TextStyle(
                     fontSize: 16,
                   ),

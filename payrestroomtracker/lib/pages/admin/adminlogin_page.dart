@@ -3,8 +3,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/admin/adminpage.dart';
 
 class AdminLoginPage extends StatefulWidget {
-  const AdminLoginPage({Key? key}) : super(key: key);
-
+  const AdminLoginPage({
+    Key? key, required this.report
+  }) : super(key: key);
+  final String report;
   @override
   State<StatefulWidget> createState() => _AdminLoginPageState();
 }
@@ -46,15 +48,22 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
         if (storedPassword == password) {
           Navigator.push(
             context,
-            _createRoute(AdminPage(username: username)),
+            _createRoute(AdminPage(
+              username: username,
+              report: widget.report,
+            )),
           );
           return;
         } else {
-          passwordValid = false; // Password is incorrect
+          passwordValid = false;
+          // Password is incorrect
+          Navigator.of(context).pop(false);
         }
         usernameValid = true; // Username is valid (found in database)
       } else {
-        usernameValid = false; // Username is incorrect (not found in database)
+        usernameValid = false;
+        // Username is incorrect (not found in database)
+        Navigator.of(context).pop(false);
       }
     } catch (e) {
       debugPrint('Error: $e');

@@ -1,8 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/user/report_page.dart';
+import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class OthersReportDialog extends StatelessWidget {
-  const OthersReportDialog({super.key});
+  final String reportContent;
+  final LatLng destination;
+
+  const OthersReportDialog({super.key, required this.reportContent, required this.destination});
 
   @override
   Widget build(BuildContext context) {
@@ -10,45 +14,45 @@ class OthersReportDialog extends StatelessWidget {
       Center(
           child: Column(
         children: [
-          SizedBox(
-            height: 20,
-          ),
-          Icon(Icons.check_circle_rounded,
-              color: Color.fromARGB(255, 97, 84, 158), size: 50),
-          SizedBox(
+          const SizedBox(
             height: 30,
           ),
-          Text(
+          const Icon(Icons.check_circle_rounded,
+              color: Color.fromARGB(255, 97, 84, 158), size: 50),
+          const SizedBox(
+            height: 20,
+          ),
+          const Text(
             "You Selected",
             style: TextStyle(
                 color: Color.fromARGB(255, 97, 84, 158),
                 fontSize: 17,
                 fontWeight: FontWeight.bold),
           ),
-          SizedBox(
-            height: 10,
-          ),
-          Text("Others report",
-              style: TextStyle(
-                  color: Color.fromARGB(255, 97, 84, 158),
-                  fontSize: 17,
-                  fontWeight: FontWeight.bold),
-              textAlign: TextAlign.justify),
-          SizedBox(
-            height: 10,
+          const SizedBox(
+            height: 20,
           ),
           Text(
+            reportContent,
+            style: const TextStyle(
+                color: Color.fromARGB(255, 97, 84, 158), fontSize: 17),
+            textAlign: TextAlign.justify,
+          ),
+          const SizedBox(
+            height: 20,
+          ),
+          const Text(
             "We use your feedback to help our systems learn when something isn't right",
             style: TextStyle(
                 color: Color.fromARGB(255, 97, 84, 158), fontSize: 17),
             textAlign: TextAlign.justify,
           ),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
           RichText(
               textAlign: TextAlign.justify,
-              text: TextSpan(
+              text: const TextSpan(
                   style: TextStyle(
                       color: Color.fromARGB(255, 97, 84, 158), fontSize: 13),
                   children: <TextSpan>[
@@ -63,7 +67,7 @@ class OthersReportDialog extends StatelessWidget {
                           'We may inform the Paid Restroom to address this report',
                     )
                   ])),
-          SizedBox(
+          const SizedBox(
             height: 20,
           ),
           Padding(
@@ -82,7 +86,7 @@ class OthersReportDialog extends StatelessWidget {
                       width: 2.0, // Set the border width
                     ),
                   ),
-                  foregroundColor: Color.fromARGB(255, 135, 125, 186),
+                  foregroundColor: const Color.fromARGB(255, 135, 125, 186),
                   textStyle: const TextStyle(
                     fontSize: 16,
                   ),
@@ -92,9 +96,10 @@ class OthersReportDialog extends StatelessWidget {
                   style: TextStyle(fontWeight: FontWeight.bold),
                 ),
                 onPressed: () {
-                  Navigator.of(context).pop();
-                   Navigator.push(context, _createRoute(ReportPage()));
-
+                  Navigator.push(
+                    context,
+                    _createRoute(ReportPage(destination: destination)),
+                  );
                 },
               ))
         ],
@@ -102,6 +107,7 @@ class OthersReportDialog extends StatelessWidget {
     ]);
   }
 }
+
 Route _createRoute(Widget child) {
   return PageRouteBuilder(
       pageBuilder: (BuildContext context, Animation<double> animation,

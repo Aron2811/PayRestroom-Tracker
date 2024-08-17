@@ -3,7 +3,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
 class UserProfileDialog extends StatefulWidget {
-  const UserProfileDialog({Key? key}) : super(key: key);
+  const UserProfileDialog({super.key});
 
   @override
   _UserProfileDialogState createState() => _UserProfileDialogState();
@@ -11,7 +11,7 @@ class UserProfileDialog extends StatefulWidget {
 
 class _UserProfileDialogState extends State<UserProfileDialog> {
   String? _displayName;
-  TextEditingController _usernameController = TextEditingController();
+  final TextEditingController _usernameController = TextEditingController();
 
   @override
   void initState() {
@@ -62,7 +62,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
     return AlertDialog(
       actions: [
         Padding(
-          padding: EdgeInsets.symmetric(horizontal: 10.0),
+          padding: const EdgeInsets.symmetric(horizontal: 10.0),
           child: TextField(
             controller: _usernameController,
             textAlign: TextAlign.center,
@@ -70,8 +70,8 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
             decoration: InputDecoration(
               border: InputBorder.none,
               hintText: '$_displayName',
-              hintStyle: TextStyle(
-                fontSize: 15,
+              hintStyle: const TextStyle(
+                fontSize: 17,
                 color: Color.fromARGB(255, 115, 99, 183),
               ),
             ),
@@ -96,7 +96,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
                   content: TextField(
                     textAlign: TextAlign.center,
                     controller: _usernameController,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       hintText: 'Enter new username',
                     ),
                   ),
@@ -143,7 +143,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
                   width: 2.0,
                 ),
               ),
-              foregroundColor: Color.fromARGB(255, 135, 125, 186),
+              foregroundColor: const Color.fromARGB(255, 135, 125, 186),
               textStyle: const TextStyle(
                 fontSize: 16,
               ),

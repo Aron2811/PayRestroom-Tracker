@@ -28,7 +28,7 @@ class LoadingPage extends StatelessWidget {
             GestureDetector(
               child: Image.asset('assets/Loading.gif'),
               onTap: () {
-                Navigator.push(context, _createRoute(IntroPage()));
+                Navigator.push(context, _createRoute(IntroPage(report: '',)));
               },
             ),
           ]))

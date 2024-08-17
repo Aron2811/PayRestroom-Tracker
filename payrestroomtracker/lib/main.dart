@@ -1,6 +1,7 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_button/firebase_options.dart';
+import 'package:flutter_button/pages/admin/adminMap.dart';
 import 'package:flutter_button/pages/loading_page.dart';
 import 'package:flutter_button/pages/intro_page.dart';
 import 'package:flutter_button/pages/user/map_page.dart';
@@ -30,15 +31,12 @@ class Main extends StatelessWidget {
         home: const LoadingPage(),
         routes: {
           '/Loadingpage': (context) => const LoadingPage(),
-          '/intropage': (context) => const IntroPage(),
+          '/intropage': (context) => const IntroPage(report: '',),
           '/userloginpage': (context) => const UserLoginPage(),
           '/userloggedinpage': (context) => const UserLoggedInPage(),
-          '/adminloginpage': (context) => const AdminLoginPage(),
+          '/adminloginpage': (context) => const AdminLoginPage(report: '',),
           '/mappage': (context) => const MapPage(),
-          '/addreviewpage': (context) => const AddReviewPage(),
-          '/reviewspage': (context) => ReviewsPage(),
-          '/reportpage': (context) => ReportPage(),
-          '/othersreportpage': (context) => OthersReportPage(),
+          '/adminmappage' : (context) => const AdminMap(username: '', report: '',),
           '/privacydialog': (context) => const PrivacyDialog(),
           '/userprofiledialog': (context) => const UserProfileDialog(),
         });
