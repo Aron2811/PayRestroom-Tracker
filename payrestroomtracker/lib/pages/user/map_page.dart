@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_button/pages/dialog/tutorial_dialog.dart';
 import 'package:flutter_button/pages/intro_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
@@ -15,6 +16,8 @@ import 'package:flutter_button/pages/bottomsheet/draggablesheet.dart';
 import 'package:flutter_button/algo/Astar.dart';
 import 'package:flutter_button/pages/admin/adminMap.dart';
 import 'dart:math';
+
+import 'package:shared_preferences/shared_preferences.dart';
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -76,10 +79,25 @@ class MapPageState extends State<MapPage> {
     });
     // TODO: implement initState
     super.initState();
+    _checkAndShowTutorial();
     getLocationUpdates();
     _loadCustomMarkerIcon();
     _loadMarkers();
     _aStar = AStar('YOUR_GOOGLE_MAPS_API_KEY', _updateDuration);
+  }
+
+  Future<void> _checkAndShowTutorial() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? tutorialShown = prefs.getBool('tutorial_shown');
+
+    if (tutorialShown == null || !tutorialShown) {
+      _showTutorialDialog();
+      await prefs.setBool('tutorial_shown', true);
+    }
+  }
+
+  void _showTutorialDialog() {
+    showDialog(context: context, builder: (context) => const TutorialDialog());
   }
 
   void _updateDuration(String mode, String duration) {
