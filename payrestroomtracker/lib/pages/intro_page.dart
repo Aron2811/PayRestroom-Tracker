@@ -67,7 +67,11 @@ class IntroPage extends StatelessWidget {
                         textStyle: const TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold)),
                     onPressed: () {
-                       Navigator.push(context, _createRoute(AdminLoginPage(report: report ,)));
+                      Navigator.push(
+                          context,
+                          _createRoute(AdminLoginPage(
+                            report: report,
+                          )));
                     },
                     label: const Text("ADMIN"),
                     icon: const Icon(
@@ -111,6 +115,7 @@ class IntroPage extends StatelessWidget {
     );
   }
 }
+
 Route _createRoute(Widget child) {
   return PageRouteBuilder(
       pageBuilder: (BuildContext context, Animation<double> animation,

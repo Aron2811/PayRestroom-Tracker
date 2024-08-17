@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_button/pages/dialog/tutorial_dialog.dart';
 import 'package:flutter_button/pages/user/map_page.dart';
 
 class UserLoggedInPage extends StatelessWidget {
@@ -67,13 +68,17 @@ class UserLoggedInPage extends StatelessWidget {
                     ),
                   ),
                   onPressed: () {
-                    Navigator.push(context, _createRoute(const MapPage()));
+                    Navigator.push(context, _createRoute(MapPage()));
                   },
                   label: const Text("View Map"),
                   icon: const Icon(
                     Icons.map_rounded,
                     color: Color.fromARGB(255, 97, 84, 158),
                   ),
+                ),
+
+                const SizedBox(
+                  height: 30,
                 ),
               ],
             ),
@@ -83,8 +88,6 @@ class UserLoggedInPage extends StatelessWidget {
     );
   }
 }
-
-
 
 Route _createRoute(Widget child) {
   return PageRouteBuilder(
