@@ -39,9 +39,13 @@ class MapPageState extends State<MapPage> {
   BitmapDescriptor? _jeepMarkerIcon;
   BitmapDescriptor? _personMarkerIcon;
   BitmapDescriptor? _carMarkerIcon;
+  BitmapDescriptor? _newMarkerIcon;
+  Set<MarkerId> _clickedMarkerIds = Set<MarkerId>();
+  Map<MarkerId, BitmapDescriptor?> _originalIcons = {};
   final Completer<GoogleMapController> _controller = Completer();
   late String _mapStyleString;
   Set<Polyline> _polylines = {};
+
   LatLng? end;
   String? _displayPaidRestroomName;
   String? _displayLocationGuide;
@@ -120,7 +124,7 @@ class MapPageState extends State<MapPage> {
           position: marker.position,
           icon: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
           onTap: () {
-            _showPayToiletInformation(marker.position);
+            _onMarkerTap(marker.markerId);
           },
         );
       }).toSet();
@@ -145,6 +149,10 @@ class MapPageState extends State<MapPage> {
     _carMarkerIcon = await BitmapDescriptor.fromAssetImage(
       ImageConfiguration(size: Size(1, 1)),
       'assets/car_Tag.png',
+    );
+    _newMarkerIcon = await BitmapDescriptor.fromAssetImage(
+      ImageConfiguration(size: Size(1, 1)),
+      'assets/tag2.png',
     );
   }
 
@@ -271,19 +279,54 @@ class MapPageState extends State<MapPage> {
     );
   }
 
+  void _onMarkerTap(MarkerId markerId) {
+    setState(() {
+      _clickedMarkerIds.add(markerId); // Track the clicked marker
+
+      _markers = _markers.map((marker) {
+        if (marker.markerId == markerId) {
+          // Change the icon of the clicked marker
+          return marker.copyWith(
+            iconParam: _newMarkerIcon ?? BitmapDescriptor.defaultMarker,
+          );
+        }
+        return marker;
+      }).toSet();
+    });
+
+    // Optionally, show some information or UI update related to the marker
+    final clickedMarker = _markers.firstWhere((m) => m.markerId == markerId);
+    _showPayToiletInformation(clickedMarker.position);
+  }
+
   void _showPayToiletInformation(LatLng destination) {
     showModalBottomSheet(
-        context: context,
-        isScrollControlled: true,
-        shape: const RoundedRectangleBorder(
-          borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-        ),
-        backgroundColor: Colors.transparent,
-        builder: (context) => PaidRestroomInfo(
-              drawRouteToDestination: _drawRouteToDestination,
-              destination: destination,
-              toggleVisibility: toggleVisibility,
-            ));
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      backgroundColor: Colors.transparent,
+      builder: (context) => PaidRestroomInfo(
+        drawRouteToDestination: _drawRouteToDestination,
+        destination: destination,
+        toggleVisibility: toggleVisibility,
+      ),
+    ).whenComplete(() {
+      setState(() {
+        // Restore the original icons for clicked markers
+        _markers = _markers.map((marker) {
+          if (_clickedMarkerIds.contains(marker.markerId)) {
+            // Restore the original icon
+            return marker.copyWith(
+              iconParam: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+            );
+          }
+          return marker;
+        }).toSet();
+        _clickedMarkerIds.clear(); // Clear the clicked marker ids
+      });
+    });
   }
 
   @override
