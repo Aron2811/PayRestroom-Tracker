@@ -294,7 +294,7 @@ class MapPageState extends State<MapPage> {
       }).toSet();
     });
 
-    // Optionally, show some information or UI update related to the marker
+    
     final clickedMarker = _markers.firstWhere((m) => m.markerId == markerId);
     _showPayToiletInformation(clickedMarker.position);
   }
