@@ -227,30 +227,43 @@ class MapPageState extends State<MapPage> {
       ),
       backgroundColor: Colors.transparent,
       builder: (context) {
-        return FutureBuilder<List<Marker>>(
-          future: getNearestMarkers(userPosition, 10,
-              _customMarkerIcon ?? BitmapDescriptor.defaultMarker),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(child: CircularProgressIndicator());
-            }
+        return DraggableScrollableSheet(
+          initialChildSize: 0.4, // Initial height of the sheet
+          minChildSize: 0.2, // Minimum height of the sheet
+          maxChildSize: 0.9, // Maximum height of the sheet
+          builder: (context, scrollController) {
+            return FutureBuilder<List<Marker>>(
+              future: getNearestMarkers(userPosition, 10,
+                  _customMarkerIcon ?? BitmapDescriptor.defaultMarker),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
 
-            if (!snapshot.hasData || snapshot.data!.isEmpty) {
-              return Center(child: Text('No restrooms found.'));
-            }
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(child: Text('No restrooms found.'));
+                }
 
-            final nearestMarkers = snapshot.data!;
+                final nearestMarkers = snapshot.data!;
 
-            return MyDraggableSheet(
-              child: Column(
-                children: nearestMarkers.map((marker) {
-                  return PaidRestroomRecommendationList(
-                    drawRouteToDestination: _drawRouteToDestination,
-                    destination: marker.position,
-                    toggleVisibility: toggleVisibility,
-                  );
-                }).toList(),
-              ),
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Color(0xFF766EBD),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(30)),
+                  ),
+                  child: ListView(
+                    controller: scrollController,
+                    children: nearestMarkers.map((marker) {
+                      return PaidRestroomRecommendationList(
+                        drawRouteToDestination: _drawRouteToDestination,
+                        destination: marker.position,
+                        toggleVisibility: toggleVisibility,
+                      );
+                    }).toList(),
+                  ),
+                );
+              },
             );
           },
         );
