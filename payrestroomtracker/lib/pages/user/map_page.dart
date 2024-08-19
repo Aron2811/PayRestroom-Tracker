@@ -192,8 +192,6 @@ class MapPageState extends State<MapPage> {
   }
 
   Future<String> _getCurrentUsername() async {
-    // Replace this with your method to get the current user's username
-    // For example, using FirebaseAuth:
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
       DocumentSnapshot userDoc = await FirebaseFirestore.instance

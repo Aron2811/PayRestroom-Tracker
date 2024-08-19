@@ -52,14 +52,14 @@ class _AppRateDialogState extends State<AppRateDialog> {
             .get();
 
         if (userRating.exists) {
-          // Safely access the 'hasrated' field
+         
           var data = userRating.data() as Map<String, dynamic>?;
           return data != null && data.containsKey('hasrated')
               ? data['hasrated'] as bool
               : false;
         }
       } catch (e) {
-        // Handle any errors (e.g., network issues, Firestore exceptions)
+       
         print('Error checking user rating: $e');
       }
     }
