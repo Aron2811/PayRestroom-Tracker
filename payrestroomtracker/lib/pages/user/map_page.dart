@@ -153,7 +153,7 @@ class MapPageState extends State<MapPage> {
 
       if (username == null || username.isEmpty) {
         // Handle the case where username is not available
-        return false; // Prevent the actual back navigation or handle accordingly
+        return false; // Prevent the actual back navigation
       }
 
       // Check if the user has already rated based on the fetched username
