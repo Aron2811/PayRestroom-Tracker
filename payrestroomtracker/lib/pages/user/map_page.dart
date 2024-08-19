@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_button/pages/dialog/apprate-dialog.dart';
 import 'package:flutter_button/pages/dialog/tutorial_dialog.dart';
 import 'package:flutter_button/pages/intro_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -52,6 +53,10 @@ class MapPageState extends State<MapPage> {
   String? _displayCost;
   String? estimatedTime;
   String? distanceInMiles;
+  //apprating related
+  int _backPressCount = 0;
+  String _userDisplayName = '';
+  bool _hasRated = false;
 
   bool hasBeenListed = false;
   bool isVisible = false;
@@ -116,6 +121,91 @@ class MapPageState extends State<MapPage> {
     });
   }
 
+  //apprate related
+  Future<bool> _hasUserRated(String username) async {
+    // Check if the user has already rated the app based on the username
+    QuerySnapshot ratingSnapshot = await FirebaseFirestore.instance
+        .collection('apprating')
+        .where('username', isEqualTo: username)
+        .get();
+
+    return ratingSnapshot.docs.isNotEmpty;
+  }
+
+  Future<void> _markUserAsRated(String username) async {
+    // Update the user's rating status in Firestore
+    await FirebaseFirestore.instance.collection('apprating').doc(username).set({
+      'hasRated': true,
+      'timestamp':
+          FieldValue.serverTimestamp(), // Optional: store the timestamp
+    }, SetOptions(merge: true));
+  }
+
+  //handle both method because i cant put 2 methods in onWillPop
+  Future<bool> _handleBackButton() async {
+    _backPressCount++;
+
+    if (_backPressCount == 5) {
+      _backPressCount = 0; // Reset counter after checking
+
+      // Fetch the username in real-time
+      String username = await _getCurrentUsername();
+
+      if (username == null || username.isEmpty) {
+        // Handle the case where username is not available
+        return false; // Prevent the actual back navigation or handle accordingly
+      }
+
+      // Check if the user has already rated based on the fetched username
+      bool hasRated = await _hasUserRated(username);
+
+      if (!hasRated) {
+        // If user hasn't rated, show the rating dialog
+        await _showRateDialog(); // Ensure dialog interaction is awaited
+        return false; // Prevent the actual back navigation
+      }
+    }
+
+    // If the back button press count is less than 5, continue with normal back behavior
+    return await _onBackButtonPressed(); // Allow or prevent back navigation based on user choice
+  }
+
+  Future<void> _showRateDialog() async {
+    // Fetch the username in real-time
+    String username = await _getCurrentUsername();
+
+    // Check if the user has already rated
+    bool hasRated = await _hasUserRated(username);
+
+    if (!hasRated) {
+      // Show the rating dialog
+      await showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AppRateDialog(displayName: username);
+        },
+      );
+
+      // Mark user as rated after they interact with the dialog
+      await _markUserAsRated(username);
+    }
+  }
+
+  Future<String> _getCurrentUsername() async {
+    // Replace this with your method to get the current user's username
+    // For example, using FirebaseAuth:
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      DocumentSnapshot userDoc = await FirebaseFirestore.instance
+          .collection('users')
+          .doc(user.uid)
+          .get();
+      return userDoc.get('displayName') as String? ?? '';
+    }
+    return '';
+  }
+
+  //end
   Future<void> _loadMarkers() async {
     _markers = await adminMap.loadMarkersFromPrefs().then((markers) {
       return markers.map((marker) {
@@ -294,7 +384,6 @@ class MapPageState extends State<MapPage> {
       }).toSet();
     });
 
-    
     final clickedMarker = _markers.firstWhere((m) => m.markerId == markerId);
     _showPayToiletInformation(clickedMarker.position);
   }
@@ -344,7 +433,7 @@ class MapPageState extends State<MapPage> {
     }
 
     return WillPopScope(
-        onWillPop: _onBackButtonPressed,
+        onWillPop: _handleBackButton,
         child: Scaffold(
             body: Stack(children: [
           GoogleMap(

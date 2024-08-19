@@ -3,12 +3,15 @@ import 'package:flutter/material.dart';
 import 'package:custom_rating_bar/custom_rating_bar.dart' as custom_rating_bar;
 import 'package:another_carousel_pro/another_carousel_pro.dart';
 import 'package:flutter_button/pages/user/add_review_page.dart';
+import 'package:flutter_button/pages/user/app_tutorial.dart';
 import 'package:flutter_button/pages/user/report_page.dart';
 import 'package:flutter_button/pages/user/reviews_page.dart';
 import 'package:flutter_button/pages/bottomsheet/draggablesheet.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
+import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 
 class PaidRestroomInfo extends StatefulWidget {
   final Function(LatLng, String) drawRouteToDestination;
@@ -31,10 +34,58 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
   String _name = "Paid Restroom Name";
   String _location = "Location";
   String _cost = "Cost";
+  final directionKey = GlobalKey();
+  final reportKey = GlobalKey();
+  late TutorialCoachMark tutorialCoachMark;
+
+  final String tutorialKey = "tutorial_completed";
+
+  void initAddInAppTour() {
+    tutorialCoachMark = TutorialCoachMark(
+      targets: components1(
+        directionKey: directionKey,
+        reportKey: reportKey,
+      ),
+      colorShadow: Color.fromARGB(230, 18, 17, 22),
+      paddingFocus: 10,
+      hideSkip: false,
+      opacityShadow: 0.8,
+      onFinish: () async {
+        print("Completed");
+        await _saveTutorialState(true); // Save that the tutorial is completed
+      },
+    );
+  }
+
+  void _showAppTour() {
+    Future.delayed(const Duration(seconds: 2), () {
+      tutorialCoachMark.show(context: context);
+    });
+  }
+
+  Future<void> _loadTutorialState() async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    bool? tutorialCompleted = prefs.getBool(tutorialKey);
+
+    if (tutorialCompleted == null || !tutorialCompleted) {
+      initAddInAppTour();
+      _showAppTour();
+    } else {
+      setState(() {
+        // If the tutorial was completed, hide the component
+      });
+    }
+  }
+
+  Future<void> _saveTutorialState(bool isCompleted) async {
+    SharedPreferences prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(tutorialKey, isCompleted);
+  }
 
   @override
   void initState() {
     super.initState();
+    _loadTutorialState();
     _userRatingFuture = fetchUserRating();
     _fetchPaidRestroomName();
     _fetchPaidRestroomLocation();
@@ -357,6 +408,7 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 ElevatedButton.icon(
+                  key: directionKey,
                   style: ElevatedButton.styleFrom(
                     enableFeedback: false,
                     backgroundColor: const Color.fromARGB(255, 226, 223, 229),
@@ -386,6 +438,7 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                 ),
                 const SizedBox(width: 20),
                 ElevatedButton.icon(
+                  key: reportKey,
                   style: ElevatedButton.styleFrom(
                     enableFeedback: false,
                     backgroundColor: const Color.fromARGB(255, 226, 223, 229),
@@ -399,7 +452,11 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                     ),
                   ),
                   onPressed: () {
-                    Navigator.push(context, _createRoute(ReportPage(destination: widget.destination,)));
+                    Navigator.push(
+                        context,
+                        _createRoute(ReportPage(
+                          destination: widget.destination,
+                        )));
                   },
                   label: const Text(
                     'Report',
