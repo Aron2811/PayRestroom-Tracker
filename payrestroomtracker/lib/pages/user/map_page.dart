@@ -137,7 +137,7 @@ class MapPageState extends State<MapPage> {
     await FirebaseFirestore.instance.collection('apprating').doc(username).set({
       'hasRated': true,
       'timestamp':
-          FieldValue.serverTimestamp(), // Optional: store the timestamp
+          FieldValue.serverTimestamp(), 
     }, SetOptions(merge: true));
   }
 
