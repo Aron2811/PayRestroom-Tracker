@@ -9,6 +9,7 @@ import 'package:flutter_button/pages/bottomsheet/draggablesheet.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:flutter_button/pages/user/street_view.dart';
 
 class PaidRestroomInfo extends StatefulWidget {
   final Function(LatLng, String) drawRouteToDestination;
@@ -411,6 +412,37 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                   ),
                 ),
               ],
+            ),
+          ),
+          const SizedBox(height: 20),
+          ElevatedButton.icon(
+            style: ElevatedButton.styleFrom(
+              enableFeedback: false,
+              backgroundColor: const Color.fromARGB(255, 226, 223, 229),
+              minimumSize: const Size(200, 50),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(50),
+              ),
+              side: const BorderSide(
+                color: Color.fromARGB(255, 97, 84, 158),
+                width: 2.0,
+              ),
+            ),
+            onPressed: () {
+              Navigator.push(
+                context,
+                _createRoute(
+                  StreetViewPage(location: widget.destination),
+                ),
+              );
+            },
+            label: const Text(
+              'View Street',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+            ),
+            icon: const Icon(
+              Icons.streetview,
+              color: Color.fromARGB(255, 97, 84, 158),
             ),
           ),
           const SizedBox(height: 30),

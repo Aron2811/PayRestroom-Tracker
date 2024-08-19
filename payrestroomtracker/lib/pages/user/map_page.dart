@@ -44,13 +44,12 @@ class MapPageState extends State<MapPage> {
   BitmapDescriptor? _jeepMarkerIcon;
   BitmapDescriptor? _personMarkerIcon;
   BitmapDescriptor? _carMarkerIcon;
+  MarkerId? _selectedMarkerId;
   final Completer<GoogleMapController> _controller = Completer();
   late String _mapStyleString;
   Set<Polyline> _polylines = {};
   LatLng? end;
   String? _displayPaidRestroomName;
-  String? _displayLocationGuide;
-  String? _displayCost;
   String? estimatedTime;
   String? distanceInMiles;
 
@@ -138,109 +137,91 @@ class MapPageState extends State<MapPage> {
     );
   }
 
-Future<void> updateCurrentAddress() async {
-  if (_currentP != null) {
-    String? fullAddress = await getAddressFromLatLng(_currentP!.latitude, _currentP!.longitude);
-    if (fullAddress != null) {
-      _currentAddress = formatAddress(fullAddress);
-      setState(() {});
+  Future<void> updateCurrentAddress() async {
+    if (_currentP != null) {
+      String? fullAddress =
+          await getAddressFromLatLng(_currentP!.latitude, _currentP!.longitude);
+      if (fullAddress != null) {
+        _currentAddress = formatAddress(fullAddress);
+        setState(() {});
+      } else {
+        _currentAddress = null;
+      }
     } else {
       _currentAddress = null;
     }
-  } else {
-    _currentAddress = null;
   }
-}
 
-String? formatAddress(String fullAddress) {
-  // Split the address by comma and trim whitespace
-  List<String> addressParts = fullAddress.split(',').map((part) => part.trim()).toList();
+  String? formatAddress(String fullAddress) {
+    // Split the address by comma and trim whitespace
+    List<String> addressParts =
+        fullAddress.split(',').map((part) => part.trim()).toList();
 
-  // Assign components based on the known order
-  String municipality = addressParts.length > 2 ? addressParts[1] : '';
-  String province = addressParts.length > 3 ? addressParts[2] : '';
-  String country = addressParts.length > 3 ? addressParts[3] : '';
+    // Assign components based on the known order
+    String municipality = addressParts.length > 2 ? addressParts[1] : '';
+    String province = addressParts.length > 3 ? addressParts[2] : '';
+    String country = addressParts.length > 3 ? addressParts[3] : '';
 
-  return "$municipality, $province, $country";
-}
-
-
+    return "$municipality, $province, $country";
+  }
 
   Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
-  final Map<GeoPoint, Marker> geoPointToMarkerMap = {};
-  final List<GeoPoint> geoPoints = [];
+    Map<Marker, double> markerRatings = {};
 
-  // Build mapping of GeoPoints to markers
-  for (final marker in markers) {
-    final geoPoint = GeoPoint(marker.position.latitude, marker.position.longitude);
-    geoPointToMarkerMap[geoPoint] = marker;
-    geoPoints.add(geoPoint);
-  }
+    for (Marker marker in markers) {
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .where('position',
+              isEqualTo:
+                  GeoPoint(marker.position.latitude, marker.position.longitude))
+          .get();
 
-  final Map<Marker, double> markerRatings = {};
-
-  // Fetch ratings in batches
-  const int batchSize = 30;
-  for (int i = 0; i < geoPoints.length; i += batchSize) {
-    final batchGeoPoints = geoPoints.skip(i).take(batchSize).toList();
-    
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position', whereIn: batchGeoPoints)
-        .get();
-
-    for (final doc in querySnapshot.docs) {
-      final data = doc.data();
-      final geoPoint = GeoPoint(
-        data['position'].latitude,
-        data['position'].longitude,
-      );
-      final marker = geoPointToMarkerMap[geoPoint];
-      if (marker != null) {
-        markerRatings[marker] = data['averageRating'] as double? ?? 0.0;
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final data = doc.data();
+        final fetchedRating = data?['averageRating'] as double? ?? 0.0;
+        markerRatings[marker] = fetchedRating;
+      } else {
+        markerRatings[marker] = 0.0;
       }
     }
+
+    return markerRatings;
   }
 
-  // Assign default rating for markers without data
-  for (final marker in markers) {
-    if (!markerRatings.containsKey(marker)) {
-      markerRatings[marker] = 0.0;
-    }
+  Future<List<Marker>> getNearestMarkers(
+      LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
+    List<Marker> markers =
+        _markers.where((marker) => marker.icon == customMarkerIcon).toList();
+
+    // Fetch ratings for all markers
+    Map<Marker, double> markerRatings = await _fetchRatings(markers);
+
+    // Sort by distance first
+    markers.sort((a, b) {
+      final distanceA = _calculateDistance(userPosition, a.position);
+      final distanceB = _calculateDistance(userPosition, b.position);
+      return distanceA.compareTo(distanceB);
+    });
+
+    // Take the top 'count' markers by distance
+    markers = markers.take(count).toList();
+
+    // Sort by rating (highest rating first)
+    markers.sort((a, b) {
+      final ratingA = markerRatings[a]!;
+      final ratingB = markerRatings[b]!;
+      return ratingB.compareTo(ratingA);
+    });
+
+    return markers;
   }
 
-  return markerRatings;
-}
-
-Future<List<Marker>> getNearestMarkers(LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
-  final List<Marker> markers = _markers
-      .where((marker) => marker.icon == customMarkerIcon)
-      .toList();
-
-  // Fetch ratings for all markers
-  final markerRatings = await _fetchRatings(markers);
-
-  // Calculate distances and sort markers
-  markers.sort((a, b) {
-    final distanceA = _calculateDistance(userPosition, a.position);
-    final distanceB = _calculateDistance(userPosition, b.position);
-    return distanceA.compareTo(distanceB);
-  });
-
-  // Take top 'count' markers by distance
-  final nearestMarkers = markers.take(count).toList();
-
-  // Sort the nearest markers by rating (highest first)
-  nearestMarkers.sort((a, b) => (markerRatings[b] ?? 0.0).compareTo(markerRatings[a] ?? 0.0));
-
-  return nearestMarkers;
-}
-
-double _calculateDistance(LatLng start, LatLng end) {
-  final latDiff = end.latitude - start.latitude;
-  final lngDiff = end.longitude - start.longitude;
-  return sqrt(latDiff * latDiff + lngDiff * lngDiff);
-}
+  double _calculateDistance(LatLng start, LatLng end) {
+    var distance = sqrt(pow(end.latitude - start.latitude, 2) +
+        pow(end.longitude - start.longitude, 2));
+    return distance;
+  }
 
   void _showFindNearestPayToilet() async {
     LatLng userPosition = _currentP!;
@@ -316,298 +297,404 @@ double _calculateDistance(LatLng start, LatLng end) {
     return WillPopScope(
         onWillPop: _onBackButtonPressed,
         child: Scaffold(
-            appBar: AppBar(
-              title: Text(
-                _currentAddress ?? 'Fetching address...',
-                style: TextStyle(
-                  fontSize: 14.0, // Smaller font size
-                  fontWeight: FontWeight.w500,
-                  overflow: TextOverflow.ellipsis, 
-                ),
-                 maxLines: 2, // Ensure the text stays on one line
-              ),
-              backgroundColor:
-                  Color.fromARGB(
-                              255, 149, 134, 225),  // Customize the background color if needed
-              centerTitle: true, // Keep the title centered
-            ),
             body: Stack(children: [
-              GoogleMap(
-                initialCameraPosition: const CameraPosition(
-                  target: _pGooglePlex,
-                  zoom: 13,
-                ),
-                zoomControlsEnabled:
-                    false, // Disable zoom in and zoom out buttons
-                onMapCreated: (GoogleMapController controller) {
-                  mapController = controller;
-                  mapController.setMapStyle(_mapStyleString);
-                },
-                markers: _markers,
-                polylines: _polylines,
-              ),
-              if (_isLoading)
-                Center(
-                  child: CircularProgressIndicator(),
-                ),
-              Row(mainAxisAlignment: MainAxisAlignment.end, children: <Widget>[
-                const Padding(
-                  padding: EdgeInsets.symmetric(horizontal: 20, vertical: 60.0),
-                  child: SizedBox.shrink(), // Placeholder for an empty child
-                ),
-                Container(
-                  margin: const EdgeInsets.only(
-                      top: 50, right: 20), // Adjust the value to your needs
-                  child: Align(
-                    alignment: Alignment.topRight,
-                    child: FloatingActionButton(
-                      backgroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(60),
-                        side: const BorderSide(
-                          color: Color.fromARGB(
-                              255, 149, 134, 225), // Set the border color
-                          width: 3.0, // Set the border width
+          GoogleMap(
+            initialCameraPosition: const CameraPosition(
+              target: _pGooglePlex,
+              zoom: 13,
+            ),
+            zoomControlsEnabled: false, // Disable zoom in and zoom out buttons
+            onMapCreated: (GoogleMapController controller) {
+              mapController = controller;
+              mapController.setMapStyle(_mapStyleString);
+            },
+            markers: _markers,
+            polylines: _polylines,
+          ),
+          if (_isLoading)
+            Center(
+              child: CircularProgressIndicator(),
+            ),
+          Column(
+            // mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              Padding(
+                padding: EdgeInsets.only(top: 50, left: 10, right: 10),
+                child: Container(
+                  height: 50,
+                  width: 340,
+                  decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.circular(30),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.black12,
+                        blurRadius: 5,
+                        offset: Offset(0, 2),
+                      ),
+                    ],
+                  ),
+                  child: TextField(
+                    decoration: InputDecoration(
+                      hintText: 'Search...',
+                      prefixIcon: Icon(Icons.search, color: Colors.grey),
+                      suffixIcon: Container(
+                        height: 15,
+                        width: 15,
+                        margin: EdgeInsets.only(right: 5),
+                        // Adjust the value to your needs
+                        child: FloatingActionButton(
+                          backgroundColor: Colors.white,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50),
+                            side: const BorderSide(
+                              color: Color.fromARGB(
+                                  255, 149, 134, 225), // Set the border color
+                              width: 3.0, // Set the border width
+                            ),
+                          ),
+                          child: CircleAvatar(
+                            radius: 22,
+                            backgroundImage: NetworkImage(
+                                FirebaseAuth.instance.currentUser?.photoURL ??
+                                    ''),
+                          ),
+                          onPressed: () {
+                            showDialog(
+                                context: context,
+                                builder: (context) => UserProfileDialog());
+                          },
                         ),
                       ),
-                      child: CircleAvatar(
-                        radius: 25,
-                        backgroundImage: NetworkImage(
-                            FirebaseAuth.instance.currentUser?.photoURL ?? ''),
-                      ),
-                      onPressed: () {
-                        showDialog(
-                            context: context,
-                            builder: (context) => UserProfileDialog());
-                      },
+                      border: InputBorder.none,
+                      contentPadding: EdgeInsets.symmetric(vertical: 15),
                     ),
+                    onChanged: (value) {
+                      // Handle search input changes here
+                      print('Search input: $value');
+                    },
                   ),
                 ),
-              ]),
-              Padding(
-                  padding: EdgeInsets.only(top: 50, left: 10, right: 10),
-                  child: Visibility(
-                      visible: isVisible,
-                      maintainSize: true,
-                      maintainAnimation: true,
-                      maintainState: true,
-                      child: Column(
-                          mainAxisAlignment: MainAxisAlignment.start,
-                          children: [
-                            ClipRRect(
-                                borderRadius: BorderRadius.circular(25.0),
-                                child: Container(
-                                    color: Color.fromARGB(255, 172, 161, 228),
-                                    height: 60,
-                                    width: 153,
-                                    child: Padding(
-                                        padding: EdgeInsets.only(top: 10),
-                                        child: Row(
-                                          mainAxisAlignment:
-                                              MainAxisAlignment.start,
-                                          children: [
-                                            Padding(
-                                                padding: EdgeInsets.only(
-                                                  right: 10,
-                                                  left: 15,
-                                                ),
-                                                child: Column(
-                                                  children: [
-                                                    GestureDetector(
-                                                      child: Container(
-                                                          height: 35,
-                                                          width: 35,
-                                                          child: Image.asset(
-                                                              'assets/car.png')),
-                                                      onTap: () {
-                                                        _isLoading = false;
-                                                        _drawRouteToDestination(
-                                                            end!, 'private');
-                                                        _markers.add(
-                                                          Marker(
-                                                            markerId:
-                                                                const MarkerId(
-                                                                    'User Location'),
-                                                            position:
-                                                                _currentP!,
-                                                            icon: _carMarkerIcon ??
-                                                                BitmapDescriptor
-                                                                    .defaultMarker, // Set the custom icon here
-                                                          ),
-                                                        );
-                                                      },
-                                                    ),
-                                                    SizedBox(height: 5),
-                                                  ],
-                                                )),
-                                            Column(children: [
-                                              Padding(
-                                                  padding:
-                                                      EdgeInsets.only(right: 7),
-                                                  child: GestureDetector(
-                                                    child: Container(
-                                                      height: 35,
-                                                      width: 35,
-                                                      child: Image.asset(
-                                                          'assets/jeep.png'),
-                                                    ),
-                                                    onTap: () {
-                                                      _isLoading = false;
-                                                      _drawRouteToDestination(
-                                                          end!, 'commute');
-                                                      _markers.add(
-                                                        Marker(
-                                                          markerId: const MarkerId(
-                                                              'User Location'),
-                                                          position: _currentP!,
-                                                          icon: _jeepMarkerIcon ??
-                                                              BitmapDescriptor
-                                                                  .defaultMarker, // Set the custom icon here
-                                                        ),
-                                                      );
-                                                    },
-                                                  )),
-                                              SizedBox(height: 5),
-                                            ]),
-                                            Column(children: [
-                                              Padding(
-                                                  padding:
-                                                      EdgeInsets.only(right: 5),
-                                                  child: GestureDetector(
+              ),
+            ],
+          ),
+          Padding(
+            padding: EdgeInsets.only(top: 80, left: 30, right: 10),
+            child: Container(
+              decoration: BoxDecoration(
+                color: Color.fromARGB(255, 149, 134, 225),
+                borderRadius: BorderRadius.circular(30),
+                border: Border.all(
+                  color: const Color.fromARGB(
+                      111, 255, 255, 255), // Set the border color here
+                  width: 2, // Adjust the border width as needed
+                ), // Adjust the radius value as needed
+              ),
+              height: 30,
+              width: 300,
+              margin: const EdgeInsets.only(top: 30, left: 0),
+              child: Align(
+                alignment: Alignment.center,
+                child: Text(
+                  _currentAddress ?? 'Fetching user location...',
+                  textAlign: TextAlign.center,
+                  style: TextStyle(
+                    fontSize: 14.0,
+                    fontWeight: FontWeight.w500,
+                    overflow: TextOverflow.ellipsis,
+                    color: Colors.white,
+                  ),
+                  maxLines: 2,
+                ),
+              ),
+            ),
+          ),
+          Padding(
+              padding: EdgeInsets.only(top: 115, left: 10, right: 10),
+              child: Visibility(
+                  visible: isVisible,
+                  maintainSize: true,
+                  maintainAnimation: true,
+                  maintainState: true,
+                  child: Column(children: <Widget>[
+                    Padding(
+                      padding: EdgeInsets.only(
+                        bottom: 10,
+                        left: 0,
+                      ),
+                      child: Container(
+                        decoration: BoxDecoration(
+                          color: Color.fromARGB(255, 149, 134, 225),
+                          borderRadius: BorderRadius.circular(30),
+                          border: Border.all(
+                            color: const Color.fromARGB(111, 255, 255,
+                                255), // Set the border color here
+                            width: 2, // Adjust the border width as needed
+                          ), // Adjust the radius value as needed
+                        ),
+                        height: 30,
+                        width: 300,
+                        margin: const EdgeInsets.only(top: 30, left: 20),
+                        child: Align(
+                          alignment: Alignment.center,
+                          child: Text(
+                            _displayPaidRestroomName ??
+                                'Fetching paid restroom name...',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w500,
+                              overflow: TextOverflow.ellipsis,
+                              color: Colors.white,
+                            ),
+                            maxLines: 2,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ]))),
+          Padding(
+              padding: EdgeInsets.only(bottom: 80, left: 20),
+              child: Visibility(
+                visible: isVisible,
+                maintainSize: true,
+                maintainAnimation: true,
+                maintainState: true,
+                child: Align(
+                    alignment: Alignment.bottomLeft,
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          ClipRRect(
+                              borderRadius: BorderRadius.circular(25.0),
+                              child: Container(
+                                  color: Color.fromARGB(255, 172, 161, 228),
+                                  height: 55,
+                                  width: 153,
+                                  child: Padding(
+                                      padding: EdgeInsets.only(
+                                        top: 10,
+                                      ),
+                                      child: Row(
+                                        mainAxisAlignment:
+                                            MainAxisAlignment.start,
+                                        children: [
+                                          Padding(
+                                              padding: EdgeInsets.only(
+                                                right: 10,
+                                                left: 15,
+                                              ),
+                                              child: Column(
+                                                children: [
+                                                  GestureDetector(
                                                     child: Container(
                                                         height: 35,
                                                         width: 35,
                                                         child: Image.asset(
-                                                            'assets/person.png')),
+                                                            'assets/car.png')),
                                                     onTap: () {
                                                       _isLoading = false;
                                                       _drawRouteToDestination(
-                                                          end!, 'byFoot');
+                                                          end!, 'private');
                                                       _markers.add(
                                                         Marker(
                                                           markerId: const MarkerId(
                                                               'User Location'),
                                                           position: _currentP!,
-                                                          icon: _personMarkerIcon ??
+                                                          icon: _carMarkerIcon ??
                                                               BitmapDescriptor
                                                                   .defaultMarker, // Set the custom icon here
                                                         ),
                                                       );
                                                     },
-                                                  )),
-                                              SizedBox(height: 5),
-                                            ])
-                                          ],
-                                        )))),
-                            SizedBox(height: 10),
-                            Padding(
-                                padding: EdgeInsets.only(left: 0),
-                                child: ClipRRect(
-                                    borderRadius: BorderRadius.only(
-                                        topLeft: Radius.circular(50),
-                                        bottomLeft: Radius.circular(50),
-                                        topRight: Radius.circular(25),
-                                        bottomRight: Radius.circular(25)),
-                                    child: Container(
-                                        color: Colors.white,
-                                        height: 45,
-                                        width: 120,
-                                        child: Row(children: [
-                                          SizedBox(
-                                            width: 5,
-                                          ),
-                                          CircleAvatar(
-                                            radius: 15,
-                                            backgroundImage:
-                                                getBackgroundImage(),
-                                          ),
-                                          SizedBox(
-                                            width: 5,
-                                          ),
-                                          Align(
-                                              alignment: Alignment.center,
-                                              child: Column(children: [
-                                                SizedBox(
-                                                  height: 3,
-                                                ),
-                                                Text(
-                                                  '${estimatedTime ?? '15 min'}',
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color.fromARGB(
-                                                        255, 97, 84, 158),
                                                   ),
-                                                ),
-                                                SizedBox(
-                                                  height: 3,
-                                                ),
-                                                Text(
-                                                  distanceInMiles ?? '',
-                                                  style: TextStyle(
-                                                    fontSize: 13,
-                                                    fontWeight: FontWeight.bold,
-                                                    color: Color.fromARGB(
-                                                        255, 97, 84, 158),
+                                                  SizedBox(height: 5),
+                                                ],
+                                              )),
+                                          Column(children: [
+                                            Padding(
+                                                padding:
+                                                    EdgeInsets.only(right: 7),
+                                                child: GestureDetector(
+                                                  child: Container(
+                                                    height: 35,
+                                                    width: 35,
+                                                    child: Image.asset(
+                                                        'assets/jeep.png'),
                                                   ),
-                                                )
-                                              ]))
-                                        ])))),
-                          ]))),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  const Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 5, vertical: 60.0),
-                    child: SizedBox.shrink(), // Placeholder for an empty child
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(
-                        bottom: 20.0), // Adjust the value to your needs
-                    child: Align(
-                      alignment: Alignment.bottomCenter,
-                      child: ElevatedButton.icon(
-                        style: ElevatedButton.styleFrom(
-                          enableFeedback: false,
-                          backgroundColor: Colors.white,
-                          minimumSize: const Size(115, 50),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(30),
-                            side: const BorderSide(
-                              color: Color.fromARGB(
-                                  255, 149, 134, 225), // Set the border color
-                              width: 4.0, // Set the border width
-                            ),
+                                                  onTap: () {
+                                                    _isLoading = false;
+                                                    _drawRouteToDestination(
+                                                        end!, 'commute');
+                                                    _markers.add(
+                                                      Marker(
+                                                        markerId: const MarkerId(
+                                                            'User Location'),
+                                                        position: _currentP!,
+                                                        icon: _jeepMarkerIcon ??
+                                                            BitmapDescriptor
+                                                                .defaultMarker, // Set the custom icon here
+                                                      ),
+                                                    );
+                                                  },
+                                                )),
+                                            SizedBox(height: 5),
+                                          ]),
+                                          Column(children: [
+                                            Padding(
+                                                padding:
+                                                    EdgeInsets.only(right: 5),
+                                                child: GestureDetector(
+                                                  child: Container(
+                                                      height: 35,
+                                                      width: 35,
+                                                      child: Image.asset(
+                                                          'assets/person.png')),
+                                                  onTap: () {
+                                                    _isLoading = false;
+                                                    _drawRouteToDestination(
+                                                        end!, 'byFoot');
+                                                    _markers.add(
+                                                      Marker(
+                                                        markerId: const MarkerId(
+                                                            'User Location'),
+                                                        position: _currentP!,
+                                                        icon: _personMarkerIcon ??
+                                                            BitmapDescriptor
+                                                                .defaultMarker, // Set the custom icon here
+                                                      ),
+                                                    );
+                                                  },
+                                                )),
+                                            SizedBox(height: 5),
+                                          ])
+                                        ],
+                                      )))),
+                          SizedBox(width: 5),
+                          Padding(
+                              padding: EdgeInsets.only(left: 0),
+                              child: ClipRRect(
+                                  borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(50),
+                                      bottomLeft: Radius.circular(50),
+                                      topRight: Radius.circular(25),
+                                      bottomRight: Radius.circular(25)),
+                                  child: Container(
+                                      color: Colors.white,
+                                      height: 45,
+                                      width: 120,
+                                      child: Row(children: [
+                                        SizedBox(
+                                          width: 5,
+                                        ),
+                                        CircleAvatar(
+                                          radius: 15,
+                                          backgroundImage: getBackgroundImage(),
+                                        ),
+                                        SizedBox(
+                                          width: 5,
+                                        ),
+                                        Align(
+                                            alignment: Alignment.center,
+                                            child: Column(children: [
+                                              SizedBox(
+                                                height: 3,
+                                              ),
+                                              Text(
+                                                '${estimatedTime ?? '15 min'}',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color.fromARGB(
+                                                      255, 97, 84, 158),
+                                                ),
+                                              ),
+                                              SizedBox(
+                                                height: 3,
+                                              ),
+                                              Text(
+                                                distanceInMiles ?? '',
+                                                style: TextStyle(
+                                                  fontSize: 13,
+                                                  fontWeight: FontWeight.bold,
+                                                  color: Color.fromARGB(
+                                                      255, 97, 84, 158),
+                                                ),
+                                              )
+                                            ]))
+                                      ])))),
+                          SizedBox(width: 5),
+                          FloatingActionButton.small(
+                            backgroundColor: Colors.white,
+                            shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(50)),
+                            child: Icon(Icons.close_rounded),
+                            onPressed: () {
+                              _hidePath();
+                              _polylines.clear();
+                            },
                           ),
-                          foregroundColor: Color.fromARGB(255, 97, 84, 158),
-                          textStyle: const TextStyle(
-                            fontSize: 16,
-                          ),
+                        ])),
+              )),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: <Widget>[
+              const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 5, vertical: 60.0),
+                child: SizedBox.shrink(), // Placeholder for an empty child
+              ),
+              Container(
+                margin: const EdgeInsets.only(
+                    bottom: 20.0), // Adjust the value to your needs
+                child: Align(
+                  alignment: Alignment.bottomCenter,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                      enableFeedback: false,
+                      backgroundColor: Colors.white,
+                      minimumSize: const Size(115, 50),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(30),
+                        side: const BorderSide(
+                          color: Color.fromARGB(
+                              255, 149, 134, 225), // Set the border color
+                          width: 4.0, // Set the border width
                         ),
-                        label: const Text(
-                          "FIND NEAREST PAY TOILET",
-                          style: TextStyle(fontWeight: FontWeight.bold),
-                        ),
-                        icon: const Icon(
-                          Icons.search_rounded,
-                          color: Color.fromARGB(255, 97, 84, 158),
-                        ),
-                        onPressed: () {
-                          _showFindNearestPayToilet();
-                        },
+                      ),
+                      foregroundColor: Color.fromARGB(255, 97, 84, 158),
+                      textStyle: const TextStyle(
+                        fontSize: 16,
                       ),
                     ),
+                    label: const Text(
+                      "FIND NEAREST PAY TOILET",
+                      style: TextStyle(fontWeight: FontWeight.bold),
+                    ),
+                    icon: const Icon(
+                      Icons.search_rounded,
+                      color: Color.fromARGB(255, 97, 84, 158),
+                    ),
+                    onPressed: () {
+                      _showFindNearestPayToilet();
+                    },
                   ),
-                  const SizedBox(height: 30),
-                ],
-              )
-            ])));
+                ),
+              ),
+              const SizedBox(height: 30),
+            ],
+          )
+        ])));
   }
 
   void toggleVisibility() {
     setState(() {
       isVisible = true;
+    });
+  }
+
+  void _hidePath() {
+    setState(() {
+      isVisible = false;
     });
   }
 
@@ -723,6 +810,26 @@ double _calculateDistance(LatLng start, LatLng end) {
             ));
   }
 
+    Future<void> _fetchPaidRestroomName(LatLng destination) async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                destination.latitude, destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedName = data['Name'] as String? ?? "Paid Restroom Name";
+
+      setState(() {
+        _displayPaidRestroomName = fetchedName;
+      });
+    }
+  }
+
+
   Future<void> _drawRouteToDestination(
       LatLng destination, String option) async {
     if (option == 'commute') {
@@ -744,7 +851,8 @@ double _calculateDistance(LatLng start, LatLng end) {
       print('User location not available.');
       return;
     }
-
+    _fetchPaidRestroomName(destination);
+    
     AStar aStar =
         AStar('AIzaSyC1Ooxwod2ykAO6R99jhnXoYA3ubvkrB9M', _updateDuration);
 
@@ -765,6 +873,7 @@ double _calculateDistance(LatLng start, LatLng end) {
           color: Color.fromARGB(255, 115, 99, 183),
           width: 5,
           points: path,
+          
         ));
         _fitRouteOnMap(path); // Fit map bounds to the route
       } else {
@@ -830,7 +939,7 @@ double _calculateDistance(LatLng start, LatLng end) {
         northeast: LatLng(maxLat.toDouble(), maxLng.toDouble()),
       );
 
-      mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 50));
+      mapController.animateCamera(CameraUpdate.newLatLngBounds(bounds, 100));
     }
   }
 }
