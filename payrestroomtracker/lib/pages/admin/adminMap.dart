@@ -31,6 +31,8 @@ class AdminMapState extends State<AdminMap> {
   Location _locationController = Location();
   BitmapDescriptor? _customMarkerIcon;
   BitmapDescriptor? _personMarkerIcon;
+
+
   late String _mapStyleString;
   Set<Polyline> _polylines = {};
 
@@ -62,7 +64,11 @@ class AdminMapState extends State<AdminMap> {
       ImageConfiguration(size: Size(1, 1)),
       'assets/person_Tag.png',
     );
+
+    
   }
+
+
 
   Future<Set<Marker>> loadMarkersFromPrefs() async {
     final firestoreMarkers =
