@@ -57,6 +57,21 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
     }
   }
 
+  Future<void> _logout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      Navigator.pushNamedAndRemoveUntil(
+          context, '/intropage', (route) => false);
+    } catch (e) {
+      // Handle the error accordingly, e.g., show a dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error logging out: $e'),
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return AlertDialog(
@@ -157,7 +172,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
               color: Color.fromARGB(255, 97, 84, 158),
             ),
             onPressed: () {
-              Navigator.pushNamed(context, '/intropage');
+              _logout(context);
             },
           ),
         ),
