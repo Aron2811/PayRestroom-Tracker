@@ -257,55 +257,55 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
     if (_validateInputs()) {
       confirmPressed = true; // Set confirmation status
       Navigator.of(context).pop(confirmPressed);
-    try {
-      DocumentReference tagRef = FirebaseFirestore.instance
-          .collection('Tags')
-          .doc(widget.markerId.value);
+      try {
+        DocumentReference tagRef = FirebaseFirestore.instance
+            .collection('Tags')
+            .doc(widget.markerId.value);
 
-      DocumentSnapshot tagSnapshot = await tagRef.get();
-      Map<String, dynamic>? tagData =
-          tagSnapshot.data() as Map<String, dynamic>?;
+        DocumentSnapshot tagSnapshot = await tagRef.get();
+        Map<String, dynamic>? tagData =
+            tagSnapshot.data() as Map<String, dynamic>?;
 
-      String currentName = tagData?['Name'] ?? '';
-      String currentLocation = tagData?['Location'] ?? '';
-      String currentCost = tagData?['Cost'] ?? '';
+        String currentName = tagData?['Name'] ?? '';
+        String currentLocation = tagData?['Location'] ?? '';
+        String currentCost = tagData?['Cost'] ?? '';
 
-      String newName =
-          nameController.text.isEmpty ? currentName : nameController.text;
-      String newLocation = locationController.text.isEmpty
-          ? currentLocation
-          : locationController.text;
-      String newCost =
-          costController.text.isEmpty ? currentCost : costController.text;
+        String newName =
+            nameController.text.isEmpty ? currentName : nameController.text;
+        String newLocation = locationController.text.isEmpty
+            ? currentLocation
+            : locationController.text;
+        String newCost =
+            costController.text.isEmpty ? currentCost : costController.text;
 
-      await tagRef.set(
-        {
-          'Name': newName,
-          'Location': newLocation,
-          'Cost': newCost,
-          'Rating': rating.toString(),
-        },
-        SetOptions(merge: true),
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Restroom information updated successfully'),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          ),
+        await tagRef.set(
+          {
+            'Name': newName,
+            'Location': newLocation,
+            'Cost': '₱${newCost}',
+            'Rating': rating.toString(),
+          },
+          SetOptions(merge: true),
         );
-        Navigator.of(context).pop();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Restroom information updated successfully'),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
+          );
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to update restroom information'),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
+          );
+        }
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update restroom information'),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          ),
-        );
-      }
-    }
     } else {
       if (mounted) {
         showDialog(
@@ -330,7 +330,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
     }
   }
 
-    bool _validateInputs() {
+  bool _validateInputs() {
     return nameController.text.isNotEmpty &&
         locationController.text.isNotEmpty &&
         costController.text.isNotEmpty &&
