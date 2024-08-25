@@ -136,8 +136,7 @@ class MapPageState extends State<MapPage> {
     // Update the user's rating status in Firestore
     await FirebaseFirestore.instance.collection('apprating').doc(username).set({
       'hasRated': true,
-      'timestamp':
-          FieldValue.serverTimestamp(), 
+      'timestamp': FieldValue.serverTimestamp(),
     }, SetOptions(merge: true));
   }
 
@@ -244,13 +243,23 @@ class MapPageState extends State<MapPage> {
     );
   }
 
+  //HAD AN ERROR HERE SO I HAD TO FIX 
   Future<void> updateCurrentAddress() async {
     if (_currentP != null) {
       _currentAddress =
           await getAddressFromLatLng(_currentP!.latitude, _currentP!.longitude);
-      setState(() {});
+
+      // Check if the widget is still mounted before calling setState
+      if (mounted) {
+        setState(() {});
+      }
     } else {
       _currentAddress = null;
+
+      // Check if the widget is still mounted before calling setState
+      if (mounted) {
+        setState(() {});
+      }
     }
   }
 

@@ -61,7 +61,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             'ImageUrls': updatedImageUrls,
             'Name': nameController.text,
             'Location': locationController.text,
-            'Cost': costController.text,
+            'Cost': '₱${costController.text}', //add peso sign
             'Rating': rating.toString(), // Store rating in Firestore
           },
           SetOptions(merge: true),

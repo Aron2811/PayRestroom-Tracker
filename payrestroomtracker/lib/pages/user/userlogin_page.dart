@@ -137,37 +137,46 @@ Route _createRoute(Widget child) {
 
 Future<void> signInWithGoogle(BuildContext context) async {
   try {
-    // Sign out the current user
-    await GoogleSignIn().signOut();
-    print('User signed out');
-
+    // Show loading dialog
     showDialog(
-        context: context,
-        builder: (context) {
-          return const Center(child: CircularProgressIndicator());
-        });
+      context: context,
+      barrierDismissible: false, // Prevent dismissing by tapping outside
+      builder: (context) {
+        return const Center(child: CircularProgressIndicator());
+      },
+    );
+
+    // Sign out the current user if they are signed in
+    final firebaseAuth = FirebaseAuth.instance;
+    if (firebaseAuth.currentUser != null) {
+      await firebaseAuth.signOut();
+    }
 
     // Sign in with Google
     GoogleSignInAccount? googleUser = await GoogleSignIn().signIn();
     if (googleUser == null) {
-      print('Google Sign-In was cancelled.');
+      if (Navigator.canPop(context)) Navigator.of(context).pop(); // Dismiss loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Google Sign-In was cancelled.')),
+      );
       return; // The user canceled the sign-in
     }
-    print('Google user signed in: ${googleUser.email}');
 
     GoogleSignInAuthentication googleAuth = await googleUser.authentication;
     if (googleAuth.accessToken == null && googleAuth.idToken == null) {
-      print('Error: accessToken and idToken are both null.');
+      if (Navigator.canPop(context)) Navigator.of(context).pop(); // Dismiss loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Error: AccessToken and IdToken are both null.')),
+      );
       return; // Neither token is available, cannot proceed
     }
-    print('Google authentication tokens received');
 
     AuthCredential credential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken, idToken: googleAuth.idToken);
 
     UserCredential userCredential =
         await FirebaseAuth.instance.signInWithCredential(credential);
-    print('Firebase user signed in with Google credentials');
 
     User? user = userCredential.user;
     if (user != null) {
@@ -178,19 +187,27 @@ Future<void> signInWithGoogle(BuildContext context) async {
         'photoURL': user.photoURL,
         'lastSignInTime': user.metadata.lastSignInTime,
       }, SetOptions(merge: true));
-      print('User information stored in Firestore');
 
-      Navigator.of(context).pop();
+      if (Navigator.canPop(context)) Navigator.of(context).pop(); // Dismiss loading dialog
       // Navigate to UserLoggedInPage upon successful sign-in
       Navigator.push(context, _createRoute(const UserLoggedInPage()));
-
-      print('Navigated to UserLoggedInPage');
     } else {
-      print('Error: Firebase user is null');
+      if (Navigator.canPop(context)) Navigator.of(context).pop(); // Dismiss loading dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Error: Firebase user is null.')),
+      );
     }
+  } catch (e, stackTrace) {
+    if (Navigator.canPop(context)) Navigator.of(context).pop(); // Dismiss loading dialog
+    // Show detailed error message and stack trace
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        content: Text('Error during Google sign-in: ${e.toString()}'),
+      ),
+    );
 
-    print('User displayName: ${user?.displayName}');
-  } catch (e) {
-    print("Error during Google sign-in: $e");
+    // Log error details for debugging
+    print('Exception: $e');
+    print('StackTrace: $stackTrace');
   }
 }

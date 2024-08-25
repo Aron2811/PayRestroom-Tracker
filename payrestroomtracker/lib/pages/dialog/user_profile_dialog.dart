@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 class UserProfileDialog extends StatefulWidget {
   const UserProfileDialog({super.key});
@@ -59,11 +60,19 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
 
   Future<void> _logout(BuildContext context) async {
     try {
+      final GoogleSignIn googleSignIn = GoogleSignIn();
+
+      // Attempt to sign out from Google
+      await googleSignIn.signOut();
+
+      // Attempt to sign out from Firebase
       await FirebaseAuth.instance.signOut();
+
+      // Navigate to the intro page and remove all previous routes
       Navigator.pushNamedAndRemoveUntil(
           context, '/intropage', (route) => false);
     } catch (e) {
-      // Handle the error accordingly, e.g., show a dialog
+      // Handle the error accordingly, e.g., show a dialog or snackbar
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(
           content: Text('Error logging out: $e'),
