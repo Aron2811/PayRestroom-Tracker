@@ -74,16 +74,24 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
     final pickedFiles = await ImagePicker().pickMultiImage();
     if (pickedFiles == null || pickedFiles.isEmpty) return;
 
-    if (pickedFiles.length > 3) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('You can upload a maximum of 3 images at a time'),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          ),
-        );
+    const int maxFileSizeInBytes = 3 * 1024 * 1024; // 3MB in bytes
+
+    // Check if any image exceeds 3MB
+    for (var pickedFile in pickedFiles) {
+      final file = File(pickedFile.path);
+      final fileSize = await file.length();
+
+      if (fileSize > maxFileSizeInBytes) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Image must be less than 3MB'),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
+          );
+        }
+        return;
       }
-      return;
     }
 
     showDialog(
