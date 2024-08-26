@@ -1,3 +1,4 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/admin/adminlogin_page.dart';
 import 'package:flutter_button/pages/user/userlogin_page.dart';
@@ -5,9 +6,28 @@ import 'package:flutter_button/pages/user/userlogin_page.dart';
 class IntroPage extends StatelessWidget {
   const IntroPage({Key? key, required this.report}) : super(key: key);
   final String report;
+
+  //check if user is logged in if user is then if user click the user it will direct them to map but if logged out it will direct to userloginpage
+  void _handleUserButton(BuildContext context) {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null) {
+      // User is logged in, navigate to the map page
+      Navigator.pushNamed(context, '/mappage');
+    } else {
+      // User is not logged in, navigate to the login page
+      Navigator.push(context, _createRoute(UserLoginPage()));
+    }
+  }
+
+  Route _createRoute(Widget page) {
+    return MaterialPageRoute(builder: (context) => page);
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+       debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: Stack(
           children: [
@@ -98,7 +118,7 @@ class IntroPage extends StatelessWidget {
                         textStyle: const TextStyle(
                             fontSize: 20, fontWeight: FontWeight.bold)),
                     onPressed: () {
-                      Navigator.push(context, _createRoute(UserLoginPage()));
+                      _handleUserButton(context);
                     },
                     label: const Text("USER"),
                     icon: const Icon(

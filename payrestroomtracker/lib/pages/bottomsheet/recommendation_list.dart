@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_button/pages/bottomsheet/paidrestroom_info.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
+import 'package:custom_rating_bar/custom_rating_bar.dart' as custom_rating_bar;
 
 class PaidRestroomRecommendationList extends StatefulWidget {
   final Function(LatLng, String) drawRouteToDestination;
@@ -48,8 +48,7 @@ class _PaidRestroomRecommendationListState
     if (querySnapshot.docs.isNotEmpty) {
       final doc = querySnapshot.docs.first;
       final data = doc.data();
-      final fetchedName =
-          data['Name'] as String? ?? "Paid Restroom Name";
+      final fetchedName = data['Name'] as String? ?? "Paid Restroom Name";
 
       setState(() {
         _name = fetchedName;
@@ -95,7 +94,7 @@ class _PaidRestroomRecommendationListState
     }
   }
 
-Future<double> fetchAverageRating() async {
+  Future<double> fetchAverageRating() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
         .where('position',
@@ -109,11 +108,10 @@ Future<double> fetchAverageRating() async {
       final averageRating = data['averageRating'] as double? ?? 0.0;
 
       if (averageRating == 0.0 && data.containsKey('Rating')) {
-          final stringRating = double.parse(data['Rating'].toString());
-          return stringRating;
-        }
+        final stringRating = double.parse(data['Rating'].toString());
+        return stringRating;
+      }
 
-        
       return averageRating;
     } else {
       return 0.0;
@@ -187,18 +185,22 @@ Future<double> fetchAverageRating() async {
                                         color: Colors.white,
                                       ),
                                     ),
-                                    RatingBarIndicator(
-                                      rating: snapshot.data!,
-                                      itemBuilder: (context, index) => Icon(
-                                        Icons.star,
-                                        color: const Color.fromARGB(
-                                            255, 97, 84, 158),
-                                      ),
-                                      itemCount: 5,
-                                      itemSize: 18.0,
-                                      unratedColor: Colors.white24,
-                                      direction: Axis.horizontal,
-                                    ),
+                                    custom_rating_bar.RatingBar(
+                                      filledIcon: Icons.star,
+                                      emptyIcon: Icons.star_border,
+                                      emptyColor: Colors.white24,
+                                      filledColor: const Color.fromARGB(
+                                          255, 97, 84, 158),
+                                      halfFilledColor: const Color.fromARGB(
+                                          255, 186, 176, 228),
+                                      size: 18.0,
+                                      alignment: Alignment.bottomLeft,
+                                      initialRating: snapshot.data!,
+                                      maxRating: 5,
+                                      onRatingChanged: (rate) {
+                                        snapshot.data!;
+                                      },
+                                    )
                                   ],
                                 );
                               }
@@ -239,6 +241,7 @@ Future<double> fetchAverageRating() async {
         ),
       ),
       onTap: () {
+        
         showModalBottomSheet(
             context: context,
             isScrollControlled: true,

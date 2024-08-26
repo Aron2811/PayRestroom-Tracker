@@ -1,9 +1,8 @@
 import 'dart:io';
-
-import 'package:custom_rating_bar/custom_rating_bar.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:flutter/material.dart';
 import 'package:another_carousel_pro/another_carousel_pro.dart';
+import 'package:flutter_button/pages/dialog/pesoformatter.dart';
 import 'package:full_screen_image/full_screen_image.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -26,9 +25,10 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
   TextEditingController nameController = TextEditingController();
   TextEditingController locationController = TextEditingController();
   TextEditingController costController = TextEditingController();
-  double rating = 0;
   bool isLoading = true;
   bool confirmPressed = false;
+  String dropdownValue = 'Pay Options'; // Default value
+  bool showCostField = false; // Default to false
 
   @override
   void initState() {
@@ -47,11 +47,15 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
         setState(() {
           nameController.text = tagSnapshot.get('Name') ?? '';
           locationController.text = tagSnapshot.get('Location') ?? '';
-          costController.text = tagSnapshot.get('Cost') ?? '';
-          rating = tagSnapshot.get('Rating') is double
-              ? tagSnapshot.get('Rating')
-              : double.tryParse(tagSnapshot.get('Rating') ?? '0') ?? 0;
+          String cost = tagSnapshot.get('Cost') ?? '';
+          // If cost doesn't include the peso sign, add it
+          costController.text = cost.startsWith('₱') ? cost : '₱$cost';
           imageUrls = List<String>.from(tagSnapshot.get('ImageUrls') ?? []);
+
+          // Set dropdownValue and showCostField based on fetched data
+          dropdownValue =
+              cost.isEmpty || cost == 'Pay Options' ? 'Pay Options' : cost;
+          showCostField = dropdownValue == '₱' || dropdownValue.startsWith('₱');
           isLoading = false;
         });
       } else {
@@ -74,16 +78,24 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
     final pickedFiles = await ImagePicker().pickMultiImage();
     if (pickedFiles == null || pickedFiles.isEmpty) return;
 
-    if (pickedFiles.length > 3) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('You can upload a maximum of 3 images at a time'),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          ),
-        );
+    const int maxFileSizeInBytes = 3 * 1024 * 1024; // 3MB in bytes
+
+    // Check if any image exceeds 3MB
+    for (var pickedFile in pickedFiles) {
+      final file = File(pickedFile.path);
+      final fileSize = await file.length();
+
+      if (fileSize > maxFileSizeInBytes) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Image must be less than 3MB'),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
+          );
+        }
+        return;
       }
-      return;
     }
 
     showDialog(
@@ -257,64 +269,65 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
     if (_validateInputs()) {
       confirmPressed = true; // Set confirmation status
       Navigator.of(context).pop(confirmPressed);
-    try {
-      DocumentReference tagRef = FirebaseFirestore.instance
-          .collection('Tags')
-          .doc(widget.markerId.value);
+      try {
+        DocumentReference tagRef = FirebaseFirestore.instance
+            .collection('Tags')
+            .doc(widget.markerId.value);
 
-      DocumentSnapshot tagSnapshot = await tagRef.get();
-      Map<String, dynamic>? tagData =
-          tagSnapshot.data() as Map<String, dynamic>?;
+        String newName = nameController.text.isEmpty ? '' : nameController.text;
+        String newLocation =
+            locationController.text.isEmpty ? '' : locationController.text;
+        String newCost = dropdownValue == 'Pay Options'
+            ? 'Pay Options'
+            : costController.text;
 
-      String currentName = tagData?['Name'] ?? '';
-      String currentLocation = tagData?['Location'] ?? '';
-      String currentCost = tagData?['Cost'] ?? '';
-
-      String newName =
-          nameController.text.isEmpty ? currentName : nameController.text;
-      String newLocation = locationController.text.isEmpty
-          ? currentLocation
-          : locationController.text;
-      String newCost =
-          costController.text.isEmpty ? currentCost : costController.text;
-
-      await tagRef.set(
-        {
-          'Name': newName,
-          'Location': newLocation,
-          'Cost': newCost,
-          'Rating': rating.toString(),
-        },
-        SetOptions(merge: true),
-      );
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Restroom information updated successfully'),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          ),
+        await tagRef.set(
+          {
+            'Name': newName,
+            'Location': newLocation,
+            'Cost': newCost,
+          },
+          SetOptions(merge: true),
         );
-        Navigator.of(context).pop();
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Restroom information updated successfully'),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
+          );
+          Navigator.of(context).pop();
+        }
+      } catch (e) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Failed to update restroom information'),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
+          );
+        }
       }
-    } catch (e) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Failed to update restroom information'),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          ),
-        );
-      }
-    }
     } else {
       if (mounted) {
         showDialog(
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text('Incomplete Information'),
+              title: Text(
+                'Incomplete Information',
+                textAlign: TextAlign.center,
+              ),
+              titleTextStyle: TextStyle(
+                  color: Color.fromARGB(255, 115, 99, 183),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold),
               content: Text(
-                  'Please fill in all fields, upload an image and provide a rating.'),
+                'Please fill in all fields and upload an image. Note: The cost field should have a "₱" peso sign.',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 115, 99, 183),
+                ),
+              ),
               actions: <Widget>[
                 TextButton(
                   child: Text('OK'),
@@ -330,12 +343,16 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
     }
   }
 
-    bool _validateInputs() {
-    return nameController.text.isNotEmpty &&
+  bool _validateInputs() {
+    // Check if the required fields are not empty
+    bool areFieldsFilled = nameController.text.isNotEmpty &&
         locationController.text.isNotEmpty &&
-        costController.text.isNotEmpty &&
-        imageUrls.isNotEmpty &&
-        rating > 0.0;
+        imageUrls.isNotEmpty;
+
+    // Check if cost is needed and is not empty
+    bool isCostValid = !showCostField || costController.text.isNotEmpty;
+
+    return areFieldsFilled && isCostValid;
   }
 
   Widget _buildCarousel() {
@@ -437,196 +454,188 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
         ? Center(child: CircularProgressIndicator())
         : SingleChildScrollView(
             child: AlertDialog(actions: [
-            const SizedBox(
-              height: 30,
-            ),
-            const Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10.0),
-              child: Text(
-                "Update Paid Restroom Information",
-                textAlign: TextAlign.center,
-                style: TextStyle(
-                  fontSize: 19,
-                  fontWeight: FontWeight.bold,
-                  color: Color.fromARGB(255, 97, 61, 189),
-                ),
+              const SizedBox(
+                height: 30,
               ),
-            ),
-            SizedBox(
-              height: 10,
-            ),
-            Padding(
+              const Padding(
                 padding: EdgeInsets.symmetric(horizontal: 10.0),
-                child: TextField(
-                  controller: nameController,
-                  minLines: 1,
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    labelText: 'Paid Restroom Name',
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
-                    ),
-                    labelStyle: TextStyle(
-                      fontSize: 15,
-                      color: Color.fromARGB(255, 115, 99, 183),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                        fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)
-                        // Change this color to the desired color,
-                        ),
-                    fillColor: Colors.white10,
-                    filled: true,
-                  ),
-                )),
-            SizedBox(
-              height: 10,
-            ),
-            Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.0),
-                child: TextField(
-                  controller: locationController,
-                  minLines: 1,
-                  maxLines: 3,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    labelText: 'Location',
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
-                    ),
-                    labelStyle: TextStyle(
-                      fontSize: 15,
-                      color: Color.fromARGB(255, 115, 99, 183),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                        fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)
-                        // Change this color to the desired color,
-                        ),
-                    fillColor: Colors.white10,
-                    filled: true,
-                  ),
-                )),
-            const SizedBox(height: 10),
-            Padding(
-                padding: EdgeInsets.symmetric(horizontal: 10.0),
-                child: TextField(
-                  controller: costController,
-                  minLines: 1,
-                  maxLines: 2,
-                  textAlign: TextAlign.center,
-                  decoration: InputDecoration(
-                    labelText: 'Cost',
-                    enabledBorder: UnderlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
-                    ),
-                    focusedBorder: UnderlineInputBorder(
-                      borderSide:
-                          BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
-                    ),
-                    labelStyle: TextStyle(
-                      fontSize: 15,
-                      color: Color.fromARGB(255, 115, 99, 183),
-                    ),
-                    floatingLabelStyle: TextStyle(
-                        fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)
-                        // Change this color to the desired color,
-                        ),
-                    fillColor: Colors.white10,
-                    filled: true,
-                  ),
-                )),
-            const SizedBox(height: 15),
-            _buildCarousel(),
-            const SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(
-                  '$rating', // Display current rating text
+                child: Text(
+                  "Update Paid Restroom Information",
                   textAlign: TextAlign.center,
                   style: TextStyle(
-                    fontSize: 17,
-                    color: Color.fromARGB(255, 97, 84, 158),
+                    fontSize: 19,
+                    fontWeight: FontWeight.bold,
+                    color: Color.fromARGB(255, 97, 61, 189),
                   ),
                 ),
-                SizedBox(width: 8),
-                RatingBar(
-                  size: 20,
-                  alignment: Alignment.center,
-                  filledIcon: Icons.star,
-                  emptyIcon: Icons.star_border,
-                  emptyColor: Colors.grey,
-                  filledColor: Color.fromARGB(255, 97, 84, 158),
-                  halfFilledColor: Color.fromARGB(255, 186, 176, 228),
-                  initialRating: rating,
-                  onRatingChanged: (newRating) {
-                    setState(() {
-                      rating = newRating;
-                    });
-                  },
-                  maxRating: 5,
-                ),
-              ],
-            ),
-            const SizedBox(height: 15),
-            Align(
-                alignment: Alignment.center,
-                child: ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                      enableFeedback: false,
-                      backgroundColor: Colors.white,
-                      minimumSize: const Size(100, 40),
-                      shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50)),
-                      side: BorderSide(
-                        color: Color.fromARGB(
-                            255, 149, 134, 225), //Set the border color
-                        width: 2.0,
+              ),
+              SizedBox(
+                height: 10,
+              ),
+              Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0),
+                  child: TextField(
+                    controller: nameController,
+                    minLines: 1,
+                    maxLines: 2,
+                    textAlign: TextAlign.center,
+                    decoration: InputDecoration(
+                      labelText: 'Paid Restroom Name',
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(
+                            color: Color.fromARGB(255, 115, 99, 183)),
                       ),
-                      textStyle: const TextStyle(fontSize: 16)),
-                  onPressed: _uploadImages,
-                  icon: Icon(Icons.upload_rounded,
-                      color: Color.fromARGB(255, 149, 134, 225)),
-                  label: const Text("Upload"),
-                )),
-            const SizedBox(height: 10),
-            Align(
-                alignment: Alignment.center,
-                child: ElevatedButton(
-                  style: ElevatedButton.styleFrom(
-                    enableFeedback: false,
-                    backgroundColor: Colors.white,
-                    minimumSize: const Size(150, 40),
-                    alignment: Alignment.center,
-                    shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(30),
-                      side: const BorderSide(
-                        color: Color.fromARGB(
-                            255, 149, 134, 225), // Set the border color
-                        width: 2.0, // Set the border width
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(
+                            color: Color.fromARGB(255, 115, 99, 183)),
+                      ),
+                      labelStyle: TextStyle(
+                        fontSize: 15,
+                        color: Color.fromARGB(255, 115, 99, 183),
+                      ),
+                      floatingLabelStyle: TextStyle(
+                          fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)
+                          // Change this color to the desired color,
+                          ),
+                      fillColor: Colors.white10,
+                      filled: true,
+                    ),
+                  )),
+              SizedBox(
+                height: 10,
+              ),
+              Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 10.0),
+                  child: TextField(
+                    controller: locationController,
+                    minLines: 1,
+                    maxLines: 3,
+                    textAlign: TextAlign.center,
+                    decoration: InputDecoration(
+                      labelText: 'Location',
+                      enabledBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(
+                            color: Color.fromARGB(255, 115, 99, 183)),
+                      ),
+                      focusedBorder: UnderlineInputBorder(
+                        borderSide: BorderSide(
+                            color: Color.fromARGB(255, 115, 99, 183)),
+                      ),
+                      labelStyle: TextStyle(
+                        fontSize: 15,
+                        color: Color.fromARGB(255, 115, 99, 183),
+                      ),
+                      floatingLabelStyle: TextStyle(
+                          fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)
+                          // Change this color to the desired color,
+                          ),
+                      fillColor: Colors.white10,
+                      filled: true,
+                    ),
+                  )),
+              SizedBox(height: 20),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  RadioListTile<String>(
+                    title: const Text('Cost'),
+                    value: 'Cost',
+                    groupValue: showCostField ? 'Cost' : null,
+                    onChanged: (String? value) {
+                      setState(() {
+                        dropdownValue = value!;
+                        showCostField = true;
+                      });
+                    },
+                    activeColor: showCostField ? Color.fromARGB(255, 115, 99, 183) : Colors.grey,
+                  ),
+                  if (showCostField)
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10.0),
+                      child: TextField(
+                        controller: costController,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        inputFormatters: [
+                          PesoInputFormatter(),
+                        ],
+                        decoration: InputDecoration(
+                          labelText: 'Enter the Cost',
+                          enabledBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 115, 99, 183)),
+                          ),
+                          focusedBorder: UnderlineInputBorder(
+                            borderSide: BorderSide(
+                                color: Color.fromARGB(255, 115, 99, 183)),
+                          ),
+                          labelStyle: TextStyle(
+                              fontSize: 15,
+                              color: Color.fromARGB(255, 115, 99, 183)),
+                        ),
                       ),
                     ),
-                    foregroundColor: Color.fromARGB(255, 149, 134, 225),
-                    textStyle: const TextStyle(
-                        fontSize: 18, fontWeight: FontWeight.bold),
+                  RadioListTile<String>(
+                    title: const Text('Pay Options'),
+                    value: 'Pay Options',
+                    groupValue: dropdownValue,
+                    onChanged: (String? value) {
+                      setState(() {
+                        dropdownValue = value!;
+                        showCostField = false;
+                      });
+                    },
                   ),
-                  child: const Text(
-                    "Confirm",
-                    style: TextStyle(fontWeight: FontWeight.bold),
+                ],
+              ),
+              const SizedBox(height: 15),
+              _buildCarousel(),
+              const SizedBox(height: 20),
+              const SizedBox(height: 15),
+              Align(
+                  alignment: Alignment.center,
+                  child: ElevatedButton.icon(
+                    style: ElevatedButton.styleFrom(
+                        enableFeedback: false,
+                        backgroundColor: Colors.white,
+                        minimumSize: const Size(100, 40),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(50)),
+                        side: BorderSide(
+                          color: Color.fromARGB(
+                              255, 149, 117, 205), // Border color
+                          width: 2,
+                        )),
+                    icon: const Icon(
+                      Icons.check_circle,
+                      color: Color.fromARGB(255, 149, 117, 205),
+                    ),
+                    label: Text(
+                      confirmPressed ? 'Please wait' : 'Confirm',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 149, 117, 205),
+                      ),
+                    ),
+                    onPressed: confirmPressed ? null : _updateRestroomInfo,
+                  )),
+              const SizedBox(
+                height: 10,
+              ),
+              Align(
+                alignment: Alignment.center,
+                child: TextButton(
+                  onPressed: () {
+                    Navigator.pop(context, false);
+                  },
+                  child: Text(
+                    'Cancel',
+                    style: TextStyle(
+                      color: Color.fromARGB(255, 115, 99, 183),
+                    ),
                   ),
-                  onPressed: _updateRestroomInfo,
-                ))
-          ]));
+                ),
+              ),
+            ]),
+          );
   }
 }

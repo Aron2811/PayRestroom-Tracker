@@ -57,103 +57,106 @@ class _AdminReportState extends State<AdminReport> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        leading: BackButton(
-          onPressed: () {
-            Navigator.push(
-              context,
-              _createRoute(
-                  AdminPage(username: widget.username, report: widget.report)),
-            );
-          },
-        ),
-        title: const Text(
-          'Report',
-          style: TextStyle(fontSize: 20, color: Colors.white, letterSpacing: 3),
-        ),
-        backgroundColor: const Color.fromARGB(255, 97, 84, 158),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: reports.isEmpty
-                ? Center(
-                    child: Text(
-                      'No reports found.',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: reports.length,
-                    itemBuilder: (context, index) {
-                      final report = reports[index];
-
-                      return ListTile(
-                        contentPadding: EdgeInsets.all(15),
-                        tileColor: report['read']
-                            ? const Color.fromARGB(0, 255, 255, 255)
-                            : Color.fromARGB(209, 221, 214, 255),
-                        title: Text(
-                          report['username'] ?? 'Anonymous',
-                          overflow: TextOverflow.ellipsis,
-                          maxLines: 1,
-                          textAlign: TextAlign.start,
-                          style: TextStyle(
-                            color: report['read']
-                                ? Color.fromARGB(255, 97, 84, 158)
-                                : const Color.fromARGB(230, 80, 77, 81),
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        subtitle: Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              Text(
-                                report['restroomName'] ?? 'Unknown Restroom',
-                                style: TextStyle(
-                                  color: report['read']
-                                      ? Color.fromARGB(255, 97, 84, 158)
-                                      : const Color.fromARGB(230, 80, 77, 81),
-                                ),
-                              ),
-                              Text(
-                                report['report'] ?? '',
-                                style: TextStyle(
-                                  color: report['read']
-                                      ? Color.fromARGB(255, 97, 84, 158)
-                                      : const Color.fromARGB(230, 80, 77, 81),
-                                ),
-                              ),
-                            ]),
-                        onTap: () {
-                          _updateReadStatus(report['id']);
-                          Navigator.push(
-                            context,
-                            _createRoute(ReportDetailPage(report: report)),
-                          );
-                        },
-                        leading: Container(
-                          width: 50, // Adjust the width as needed
-                          child: CircleAvatar(
-                            radius: 20,
-                            backgroundImage:
-                                NetworkImage(report['photo'] ?? ''),
-                          ),
-                        ),
-                        trailing: Text(
-                          report['timestamp'] != null
-                              ? _formatTimestamp(
-                                  report['timestamp'] as Timestamp)
-                              : '',
-                          style: Theme.of(context).textTheme.bodyMedium,
-                        ),
-                      );
-                    },
-                  ),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        appBar: AppBar(
+          leading: BackButton(
+            onPressed: () {
+              Navigator.push(
+                context,
+                _createRoute(
+                    AdminPage(username: widget.username, report: widget.report)),
+              );
+            },
           ),
-        ],
+          title: const Text(
+            'Report',
+            style: TextStyle(fontSize: 20, color: Colors.white, letterSpacing: 3),
+          ),
+          backgroundColor: const Color.fromARGB(255, 97, 84, 158),
+          centerTitle: true,
+        ),
+        body: Column(
+          children: [
+            Expanded(
+              child: reports.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No reports found.',
+                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: reports.length,
+                      itemBuilder: (context, index) {
+                        final report = reports[index];
+      
+                        return ListTile(
+                          contentPadding: EdgeInsets.all(15),
+                          tileColor: report['read']
+                              ? const Color.fromARGB(0, 255, 255, 255)
+                              : Color.fromARGB(209, 221, 214, 255),
+                          title: Text(
+                            report['username'] ?? 'Anonymous',
+                            overflow: TextOverflow.ellipsis,
+                            maxLines: 1,
+                            textAlign: TextAlign.start,
+                            style: TextStyle(
+                              color: report['read']
+                                  ? Color.fromARGB(255, 97, 84, 158)
+                                  : const Color.fromARGB(230, 80, 77, 81),
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          subtitle: Column(
+                              crossAxisAlignment: CrossAxisAlignment.start,
+                              children: [
+                                Text(
+                                  report['restroomName'] ?? 'Unknown Restroom',
+                                  style: TextStyle(
+                                    color: report['read']
+                                        ? Color.fromARGB(255, 97, 84, 158)
+                                        : const Color.fromARGB(230, 80, 77, 81),
+                                  ),
+                                ),
+                                Text(
+                                  report['report'] ?? '',
+                                  style: TextStyle(
+                                    color: report['read']
+                                        ? Color.fromARGB(255, 97, 84, 158)
+                                        : const Color.fromARGB(230, 80, 77, 81),
+                                  ),
+                                ),
+                              ]),
+                          onTap: () {
+                            _updateReadStatus(report['id']);
+                            Navigator.push(
+                              context,
+                              _createRoute(ReportDetailPage(report: report)),
+                            );
+                          },
+                          leading: Container(
+                            width: 50, // Adjust the width as needed
+                            child: CircleAvatar(
+                              radius: 20,
+                              backgroundImage:
+                                  NetworkImage(report['photo'] ?? ''),
+                            ),
+                          ),
+                          trailing: Text(
+                            report['timestamp'] != null
+                                ? _formatTimestamp(
+                                    report['timestamp'] as Timestamp)
+                                : '',
+                            style: Theme.of(context).textTheme.bodyMedium,
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

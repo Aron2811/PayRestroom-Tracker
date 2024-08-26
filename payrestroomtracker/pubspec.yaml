@@ -55,7 +55,7 @@ dependencies:
   flutter_rating_bar: ^4.0.0
   badges: ^3.0.0
   tutorial_coach_mark: ^1.2.4
-  
+  webview_flutter: ^2.0.0
 
 dev_dependencies:
   flutter_test:
@@ -99,6 +99,12 @@ flutter:
     - assets/person.png
     - assets/person_Tag.png
     - assets/icon.png
+    - assets/tag2.png
+    - assets/tutorial1.png
+    - assets/tutorial2.png
+    - assets/tutorial3.png
+    - assets/tutorial4.png
+    - assets/tutorial5.png
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

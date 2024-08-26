@@ -78,55 +78,58 @@ class _ReportPageState extends State<ReportPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 97, 84, 158),
-      appBar: AppBar(
-        title: const Text(
-          'Report',
-          style: TextStyle(fontSize: 20, color: Colors.white, letterSpacing: 3),
-        ),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
         backgroundColor: const Color.fromARGB(255, 97, 84, 158),
-        centerTitle: true,
-      ),
-      body: Center(
-        child: Column(
-          children: [
-            reportOption(
-                context, 
-                'Facilities and amenities report',
-                "The restroom lacks necessary facilities and amenities according to the user's concern. The user is concerned about these deficiencies and hopes for a prompt response to address and rectify these issues. Your attention to this matter would be greatly appreciated to ensure that the restroom meets the necessary standards of comfort and hygiene.", 
-                FacilitiesDialog()
-            ),
-            SizedBox(height: 20),
-            reportOption(
-                context, 
-                'Tag Location report', 
-                "The restroom tag location is not accurate according to the user's concern. The user is concerned about these deficiencies and hopes for a prompt response to address and rectify these issues. Your attention to this matter would be greatly appreciated to ensure that the restroom meets the necessary accuracy of the location.", 
-                TagLocationDialog()
-            ),
-            SizedBox(height: 20),
-            reportOption(
-                context, 
-                'Lack of location details report',
-                "The restroom lacks of location details according to the user's concern. The user is concerned about these deficiencies and hopes for a prompt response to address and rectify these issues. Your attention to this matter would be greatly appreciated to ensure that the restroom meets the accuracy of location details", 
-                LackDetailsDialog()
-            ),
-            SizedBox(height: 20),
-            reportOption(
-                context, 
-                'Direction report', 
-                "The restroom direction is not accurate according to the user's concern. The user is concerned about these deficiencies and hopes for a prompt response to address and rectify these issues. Your attention to this matter would be greatly appreciated to ensure that the restroom meets the accuracy of the direction.", 
-                DirectionDialog()
-            ),
-            SizedBox(height: 20),
-            reportOption(
-                context, 
-                'Others', 
-                "", 
-                OthersReportPage(destination: widget.destination,)
-            ),
-            SizedBox(height: 250),
-          ],
+        appBar: AppBar(
+          title: const Text(
+            'Report',
+            style: TextStyle(fontSize: 20, color: Colors.white, letterSpacing: 3),
+          ),
+          backgroundColor: const Color.fromARGB(255, 97, 84, 158),
+          centerTitle: true,
+        ),
+        body: Center(
+          child: Column(
+            children: [
+              reportOption(
+                  context, 
+                  'Facilities and amenities report',
+                  "The restroom lacks necessary facilities and amenities according to the user's concern. The user is concerned about these deficiencies and hopes for a prompt response to address and rectify these issues. Your attention to this matter would be greatly appreciated to ensure that the restroom meets the necessary standards of comfort and hygiene.", 
+                  FacilitiesDialog()
+              ),
+              SizedBox(height: 20),
+              reportOption(
+                  context, 
+                  'Tag Location report', 
+                  "The restroom tag location is not accurate according to the user's concern. The user is concerned about these deficiencies and hopes for a prompt response to address and rectify these issues. Your attention to this matter would be greatly appreciated to ensure that the restroom meets the necessary accuracy of the location.", 
+                  TagLocationDialog()
+              ),
+              SizedBox(height: 20),
+              reportOption(
+                  context, 
+                  'Lack of location details report',
+                  "The restroom lacks of location details according to the user's concern. The user is concerned about these deficiencies and hopes for a prompt response to address and rectify these issues. Your attention to this matter would be greatly appreciated to ensure that the restroom meets the accuracy of location details", 
+                  LackDetailsDialog()
+              ),
+              SizedBox(height: 20),
+              reportOption(
+                  context, 
+                  'Direction report', 
+                  "The restroom direction is not accurate according to the user's concern. The user is concerned about these deficiencies and hopes for a prompt response to address and rectify these issues. Your attention to this matter would be greatly appreciated to ensure that the restroom meets the accuracy of the direction.", 
+                  DirectionDialog()
+              ),
+              SizedBox(height: 20),
+              reportOption(
+                  context, 
+                  'Others', 
+                  "", 
+                  OthersReportPage(destination: widget.destination,)
+              ),
+              SizedBox(height: 250),
+            ],
+          ),
         ),
       ),
     );

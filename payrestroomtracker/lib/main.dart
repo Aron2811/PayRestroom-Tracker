@@ -1,5 +1,6 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_button/firebase_options.dart';
 import 'package:flutter_button/pages/admin/adminMap.dart';
 import 'package:flutter_button/pages/loading_page.dart';
@@ -18,6 +19,10 @@ import 'package:flutter_button/pages/dialog/user_profile_dialog.dart';
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
   runApp(Main());
 }
 

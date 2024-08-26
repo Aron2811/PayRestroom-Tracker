@@ -1,8 +1,100 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:custom_rating_bar/custom_rating_bar.dart' as custom_rating_bar;
 
-class AppRateDialog extends StatelessWidget {
-  const AppRateDialog({super.key});
+class AppRateDialog extends StatefulWidget {
+  final String displayName;
+
+  const AppRateDialog({super.key, required this.displayName});
+
+  @override
+  _AppRateDialogState createState() => _AppRateDialogState();
+}
+
+class _AppRateDialogState extends State<AppRateDialog> {
+  bool _hasRated = false;
+  String _userDisplayName = '';
+
+  @override
+  void initState() {
+    super.initState();
+    _hasUserRated();
+    _fetchUsername();
+  }
+
+  Future<void> _fetchUsername() async {
+    if (widget.displayName != null && widget.displayName!.isNotEmpty) {
+      setState(() {
+        _userDisplayName = widget.displayName!;
+      });
+      await _hasUserRated();
+    } else {
+      // Fetch the current user's display name from Firebase Authentication
+      User? user = FirebaseAuth.instance.currentUser;
+      if (user != null && user.displayName != null) {
+        setState(() {
+          _userDisplayName = user.displayName!;
+        });
+        await _hasUserRated();
+      } else {
+        print('User is not logged in or display name is not available.');
+      }
+    }
+  }
+
+  Future<bool> _hasUserRated() async {
+    if (_userDisplayName.isNotEmpty) {
+      try {
+        DocumentSnapshot userRating = await FirebaseFirestore.instance
+            .collection('apprating')
+            .doc(_userDisplayName)
+            .get();
+
+        if (userRating.exists) {
+         
+          var data = userRating.data() as Map<String, dynamic>?;
+          return data != null && data.containsKey('hasrated')
+              ? data['hasrated'] as bool
+              : false;
+        }
+      } catch (e) {
+       
+        print('Error checking user rating: $e');
+      }
+    }
+    return false; // Return false if the user has not rated or an error occurred
+  }
+
+  Future<void> _submitRating(BuildContext context, double rating) async {
+    if (_userDisplayName.isNotEmpty) {
+      // Check if the user has already rated
+      bool hasRated = await _hasUserRated();
+
+      if (!hasRated) {
+        await FirebaseFirestore.instance
+            .collection('apprating')
+            .doc(_userDisplayName)
+            .set({
+          'username': _userDisplayName,
+          'rating': rating,
+        });
+        setState(() {
+          _hasRated = true; // Update local variable
+        });
+        Navigator.of(context).pop();
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('You have already rated the app.')),
+        );
+      }
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Username is not available. Cannot submit rating.')),
+      );
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -31,7 +123,9 @@ class AppRateDialog extends StatelessWidget {
             emptyColor: Colors.grey,
             filledColor: const Color.fromARGB(255, 97, 84, 158),
             halfFilledColor: const Color.fromARGB(255, 186, 176, 228),
-            onRatingChanged: (p0) {},
+            onRatingChanged: (rating) {
+              _submitRating(context, rating);
+            },
             initialRating: 0,
             maxRating: 5,
           ),
@@ -66,7 +160,9 @@ class AppRateDialog extends StatelessWidget {
               Navigator.of(context).pop();
             },
           ),
-          SizedBox(height: 5,),
+          SizedBox(
+            height: 5,
+          ),
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: [

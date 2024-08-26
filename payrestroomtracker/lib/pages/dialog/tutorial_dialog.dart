@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:another_carousel_pro/another_carousel_pro.dart';
+import 'package:flutter_button/pages/user/user_loggedin_page.dart';
 
 class TutorialDialog extends StatelessWidget {
   const TutorialDialog({super.key});
@@ -10,24 +11,22 @@ class TutorialDialog extends StatelessWidget {
       actionsAlignment: MainAxisAlignment.center,
       actions: [
         SizedBox(
-          height: 586,
-          width: 300,
+          height: 300,
+          width: 250,
           child: AnotherCarousel(
-            borderRadius: true,
+            borderRadius: false,
             boxFit: BoxFit.cover,
-            radius: const Radius.circular(10),
+            //radius: const Radius.circular(10),
             autoplay: false,
             dotBgColor: Colors.transparent,
             dotIncreaseSize: 1.5,
+            dotSpacing: 15,
             images: const [
-              AssetImage('assets/1.png'),
-              AssetImage('assets/2.png'),
-              AssetImage('assets/3.png'),
-              AssetImage('assets/4.png'),
-              AssetImage('assets/5.png'),
-              AssetImage('assets/6.png'),
-              AssetImage('assets/7.png'),
-              AssetImage('assets/8.png'),
+              AssetImage('assets/tutorial1.png'),
+              AssetImage('assets/tutorial4.png'),
+              AssetImage('assets/tutorial2.png'),
+              AssetImage('assets/tutorial5.png'),
+              AssetImage('assets/tutorial3.png'),
             ],
             showIndicator: true,
           ),
@@ -60,6 +59,7 @@ class TutorialDialog extends StatelessWidget {
               ),
               onPressed: () {
                 Navigator.of(context).pop();
+               // Navigator.push(context, _createRoute(const UserLoggedInPage()));
               },
             ))
       ],
@@ -73,4 +73,24 @@ class TutorialDialog extends StatelessWidget {
       ),
     );
   }
+}
+
+Route _createRoute(Widget child) {
+  return PageRouteBuilder(
+      pageBuilder: (BuildContext context, Animation<double> animation,
+              Animation<double> secondaryAnimation) =>
+          child,
+      transitionsBuilder: (context, animation, secondaryAnimation, child) {
+        const begin = Offset(0.0, 1.0);
+        const end = Offset.zero;
+        const curve = Curves.easeInOut;
+
+        var tween =
+            Tween(begin: begin, end: end).chain(CurveTween(curve: curve));
+
+        return SlideTransition(
+          position: animation.drive(tween),
+          child: child,
+        );
+      });
 }

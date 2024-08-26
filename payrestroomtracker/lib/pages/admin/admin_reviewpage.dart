@@ -103,124 +103,127 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Reviews',
-          style: TextStyle(fontSize: 20, color: Colors.white),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Reviews',
+            style: TextStyle(fontSize: 20, color: Colors.white),
+          ),
+          backgroundColor: const Color.fromARGB(255, 97, 84, 158),
+          centerTitle: true,
         ),
-        backgroundColor: const Color.fromARGB(255, 97, 84, 158),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: reviews.isEmpty
-                ? Center(
-                    child: Text(
-                      'No Review Available',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: reviews.length,
-                    itemBuilder: (context, index) {
-                      final review = reviews[index];
-                      return Slidable(
-                        endActionPane: ActionPane(
-                          motion: const BehindMotion(),
-                          children: [
-                            SlidableAction(
-                              foregroundColor:
-                                  const Color.fromARGB(255, 255, 255, 255),
-                              backgroundColor:
-                                  const Color.fromARGB(255, 162, 151, 211),
-                              icon: Icons.delete_outline_rounded,
-                              onPressed: (context) {
-                                _showDeleteDialog(index);
-                              },
-                            ),
-                          ],
-                        ),
-                        child: Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment
-                                .start, // Align children to the start (left)
+        body: Column(
+          children: [
+            Expanded(
+              child: reviews.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No Review Available',
+                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: reviews.length,
+                      itemBuilder: (context, index) {
+                        final review = reviews[index];
+                        return Slidable(
+                          endActionPane: ActionPane(
+                            motion: const BehindMotion(),
                             children: [
-                              Row(
-                                mainAxisAlignment: MainAxisAlignment.start,
-                                children: [
-                                  CircleAvatar(
-                                    radius: 20,
-                                    backgroundImage:
-                                        NetworkImage(review['photoURL'] ?? ''),
-                                  ),
-                                  const SizedBox(width: 20),
-                                  Text(
-                                    review['userName'] ?? 'Anonymous',
-                                    textAlign: TextAlign.start,
-                                    style: const TextStyle(
-                                      fontSize: 17,
-                                      color: Color.fromARGB(255, 97, 84, 158),
-                                    ),
-                                  ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Row(
-                                children: [
-                                  RatingBar.readOnly(
-                                    size: 20,
-                                    alignment: Alignment.center,
-                                    filledIcon: Icons.star,
-                                    emptyIcon: Icons.star_border,
-                                    emptyColor: Colors.grey,
-                                    filledColor:
-                                        const Color.fromARGB(255, 97, 84, 158),
-                                    halfFilledColor: const Color.fromARGB(
-                                        255, 186, 176, 228),
-                                    initialRating: review['rating'] ??
-                                        0.0, // Update with review's actual rating
-                                    maxRating: 5,
-                                  ),
-                                  const SizedBox(width: 10),
-                                  Text(
-                                    review['timestamp'] != null
-                                        ? _formatTimestamp(
-                                            review['timestamp'] as Timestamp)
-                                        : '',
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
-                                  ),
-                                ],
-                              ),
-                              SizedBox(height: 10),
-                              ReadMoreText(
-                                review['comment'] ?? '',
-                                textAlign:
-                                    TextAlign.left, // Align text to the left
-                                trimLines: 2,
-                                trimMode: TrimMode.Line,
-                                trimExpandedText: ' Show less',
-                                moreStyle: const TextStyle(
-                                  color: Color.fromARGB(255, 97, 84, 158),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                trimCollapsedText: ' Show more',
-                                lessStyle: const TextStyle(
-                                  color: Color.fromARGB(255, 97, 84, 158),
-                                  fontWeight: FontWeight.bold,
-                                ),
+                              SlidableAction(
+                                foregroundColor:
+                                    const Color.fromARGB(255, 255, 255, 255),
+                                backgroundColor:
+                                    const Color.fromARGB(255, 162, 151, 211),
+                                icon: Icons.delete_outline_rounded,
+                                onPressed: (context) {
+                                  _showDeleteDialog(index);
+                                },
                               ),
                             ],
                           ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+                          child: Padding(
+                            padding: const EdgeInsets.all(20.0),
+                            child: Column(
+                              crossAxisAlignment: CrossAxisAlignment
+                                  .start, // Align children to the start (left)
+                              children: [
+                                Row(
+                                  mainAxisAlignment: MainAxisAlignment.start,
+                                  children: [
+                                    CircleAvatar(
+                                      radius: 20,
+                                      backgroundImage:
+                                          NetworkImage(review['photoURL'] ?? ''),
+                                    ),
+                                    const SizedBox(width: 20),
+                                    Text(
+                                      review['userName'] ?? 'Anonymous',
+                                      textAlign: TextAlign.start,
+                                      style: const TextStyle(
+                                        fontSize: 17,
+                                        color: Color.fromARGB(255, 97, 84, 158),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                                const SizedBox(height: 10),
+                                Row(
+                                  children: [
+                                    RatingBar.readOnly(
+                                      size: 20,
+                                      alignment: Alignment.center,
+                                      filledIcon: Icons.star,
+                                      emptyIcon: Icons.star_border,
+                                      emptyColor: Colors.grey,
+                                      filledColor:
+                                          const Color.fromARGB(255, 97, 84, 158),
+                                      halfFilledColor: const Color.fromARGB(
+                                          255, 186, 176, 228),
+                                      initialRating: review['rating'] ??
+                                          0.0, // Update with review's actual rating
+                                      maxRating: 5,
+                                    ),
+                                    const SizedBox(width: 10),
+                                    Text(
+                                      review['timestamp'] != null
+                                          ? _formatTimestamp(
+                                              review['timestamp'] as Timestamp)
+                                          : '',
+                                      style:
+                                          Theme.of(context).textTheme.bodyMedium,
+                                    ),
+                                  ],
+                                ),
+                                SizedBox(height: 10),
+                                ReadMoreText(
+                                  review['comment'] ?? '',
+                                  textAlign:
+                                      TextAlign.left, // Align text to the left
+                                  trimLines: 2,
+                                  trimMode: TrimMode.Line,
+                                  trimExpandedText: ' Show less',
+                                  moreStyle: const TextStyle(
+                                    color: Color.fromARGB(255, 97, 84, 158),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                  trimCollapsedText: ' Show more',
+                                  lessStyle: const TextStyle(
+                                    color: Color.fromARGB(255, 97, 84, 158),
+                                    fontWeight: FontWeight.bold,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }

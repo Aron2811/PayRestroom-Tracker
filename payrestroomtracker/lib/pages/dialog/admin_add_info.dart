@@ -2,10 +2,10 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:firebase_storage/firebase_storage.dart' as firebase_storage;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:flutter_button/pages/dialog/pesoformatter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:another_carousel_pro/another_carousel_pro.dart';
 import 'package:full_screen_image/full_screen_image.dart';
-import 'package:custom_rating_bar/custom_rating_bar.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 
 class AddInfoDialog extends StatefulWidget {
@@ -29,8 +29,10 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
   final TextEditingController nameController = TextEditingController();
   final TextEditingController locationController = TextEditingController();
   final TextEditingController costController = TextEditingController();
-  double rating = 0.0; // Added for storing rating value
-  String ratingText = ''; // Added for displaying rating text
+  String dropdownValue = 'Cost';
+  bool showCostField = true;
+  int? _selectedCost;
+  String? _selectedPayOption;
 
   @override
   void initState() {
@@ -55,14 +57,18 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
 
         List<String> updatedImageUrls = [...existingImageUrls, ...imageUrls];
 
+        // Handle cost based on dropdown value
+        String costValue = dropdownValue == 'Pay Options'
+            ? 'Pay Options' // Store 'Pay Options' directly
+            : '${costController.text}'; // Add peso sign for other options
+
         await tagRef.set(
           {
             'TagId': widget.markerId.value,
             'ImageUrls': updatedImageUrls,
             'Name': nameController.text,
             'Location': locationController.text,
-            'Cost': costController.text,
-            'Rating': rating.toString(), // Store rating in Firestore
+            'Cost': costValue, // Set the cost value accordingly
           },
           SetOptions(merge: true),
         );
@@ -91,9 +97,20 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
           context: context,
           builder: (BuildContext context) {
             return AlertDialog(
-              title: Text('Incomplete Information'),
+              title: Text(
+                'Incomplete Information',
+                textAlign: TextAlign.center,
+              ),
+              titleTextStyle: TextStyle(
+                  color: Color.fromARGB(255, 115, 99, 183),
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold),
               content: Text(
-                  'Please fill in all fields, upload an image and provide a rating.'),
+                'Please fill in all fields and upload an image.                                                           Note: The cost field should have a "₱" peso sign only if "Cost" is selected.',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 115, 99, 183),
+                ),
+              ),
               actions: <Widget>[
                 TextButton(
                   child: Text('OK'),
@@ -110,16 +127,42 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
   }
 
   bool _validateInputs() {
-    return nameController.text.isNotEmpty &&
+    bool isCostFieldVisible = dropdownValue == 'Cost';
+
+    // Check if the required fields are not empty
+    bool areFieldsFilled = nameController.text.isNotEmpty &&
         locationController.text.isNotEmpty &&
-        costController.text.isNotEmpty &&
-        imageUrls.isNotEmpty &&
-        rating > 0.0;
+        imageUrls.isNotEmpty;
+
+    // Check if cost is needed and is not empty
+    bool isCostValid = !isCostFieldVisible || costController.text.isNotEmpty;
+
+    return areFieldsFilled && isCostValid;
   }
 
   Future<void> _uploadImages() async {
     final pickedFiles = await ImagePicker().pickMultiImage();
     if (pickedFiles == null || pickedFiles.isEmpty) return;
+
+    const int maxFileSizeInBytes = 3 * 1024 * 1024; // 3MB in bytes
+
+    // Check if any image exceeds 3MB
+    for (var pickedFile in pickedFiles) {
+      final file = File(pickedFile.path);
+      final fileSize = await file.length();
+
+      if (fileSize > maxFileSizeInBytes) {
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Image must be less than 3MB'),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
+          );
+        }
+        return;
+      }
+    }
 
     if (pickedFiles.length > 3) {
       if (mounted) {
@@ -199,23 +242,21 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
         setState(() {
           imageUrls = List<String>.from(urls);
         });
-        String ratingString = tagSnapshot.get('Rating') ?? '0.0';
-        setState(() {
-          rating = double.tryParse(ratingString) ?? 0.0;
-        });
       } else {
         setState(() {
           imageUrls = [];
         });
       }
     } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error fetching image URLs: Add Image'),
-          duration: Duration(seconds: 3),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),
-        ),
-      );
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Error fetching image URLs: $e'),
+            duration: Duration(seconds: 3),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+      }
       Navigator.of(context).pop(false);
     }
   }
@@ -401,7 +442,25 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 maxLines: 2,
                 textAlign: TextAlign.center,
                 decoration: InputDecoration(
-                  labelText: 'Paid Restroom Name',
+                  labelText: null,
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Paid Restroom Name', // Replace this with the appropriate label
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Color.fromARGB(255, 115, 99, 183),
+                        ),
+                      ),
+                      Text(
+                        '*',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 236, 154, 148),
+                        ),
+                      ),
+                    ],
+                  ),
                   enabledBorder: UnderlineInputBorder(
                     borderSide:
                         BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
@@ -421,7 +480,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 ),
               ),
             ),
-            SizedBox(height: 10),
+            const SizedBox(height: 10),
             Padding(
               padding: EdgeInsets.symmetric(horizontal: 10.0),
               child: TextField(
@@ -430,7 +489,25 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 maxLines: 2,
                 textAlign: TextAlign.center,
                 decoration: InputDecoration(
-                  labelText: 'Paid Restroom Location',
+                  labelText: null,
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Paid Restroom Location', // Replace this with the appropriate label
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Color.fromARGB(255, 115, 99, 183),
+                        ),
+                      ),
+                      Text(
+                        '*',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 236, 154, 148),
+                        ),
+                      ),
+                    ],
+                  ),
                   enabledBorder: UnderlineInputBorder(
                     borderSide:
                         BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
@@ -450,69 +527,76 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 ),
               ),
             ),
-            SizedBox(height: 10),
-            Padding(
-              padding: EdgeInsets.symmetric(horizontal: 10.0),
-              child: TextField(
-                controller: costController,
-                minLines: 1,
-                maxLines: 2,
-                textAlign: TextAlign.center,
-                decoration: InputDecoration(
-                  labelText: 'Cost',
-                  enabledBorder: UnderlineInputBorder(
-                    borderSide:
-                        BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
-                  ),
-                  focusedBorder: UnderlineInputBorder(
-                    borderSide:
-                        BorderSide(color: Color.fromARGB(255, 115, 99, 183)),
-                  ),
-                  labelStyle: TextStyle(
-                      fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)),
-                  floatingLabelStyle: TextStyle(
-                      fontSize: 15, color: Color.fromARGB(255, 115, 99, 183)),
-                  fillColor: Colors.white10,
-                  filled: true,
-                ),
-              ),
-            ),
-            SizedBox(height: 15),
-            _buildCarousel(),
             SizedBox(height: 20),
-            Row(
-              mainAxisAlignment: MainAxisAlignment.center,
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  '$ratingText', // Display current rating text
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Color.fromARGB(255, 97, 84, 158),
+                RadioListTile<String>(
+                  title: const Text(
+                    'Cost',
+                    style: TextStyle(
+                      color: Color.fromARGB(255, 115, 99, 183),
+                    ),
                   ),
-                ),
-                SizedBox(width: 8),
-                RatingBar(
-                  size: 20,
-                  alignment: Alignment.center,
-                  filledIcon: Icons.star,
-                  emptyIcon: Icons.star_border,
-                  emptyColor: Colors.grey,
-                  filledColor: Color.fromARGB(255, 97, 84, 158),
-                  halfFilledColor: Color.fromARGB(255, 186, 176, 228),
-                  initialRating: rating,
-                  onRatingChanged: (newRating) {
+                  value: 'Cost',
+                  groupValue: dropdownValue,
+                  onChanged: (String? value) {
                     setState(() {
-                      rating = newRating;
-                      // Update rating text based on the selected rating
-                      ratingText = '$newRating';
+                      dropdownValue = value!;
+                      showCostField = true;
                     });
                   },
-                  maxRating: 5,
+                  
+                ),
+                if (showCostField)
+                  Padding(
+                    padding: EdgeInsets.symmetric(horizontal: 10.0),
+                    child: TextField(
+                      controller: costController,
+                      keyboardType: TextInputType.number,
+                      textAlign: TextAlign.center,
+                      inputFormatters: [
+                        PesoInputFormatter(),
+                      ],
+                      decoration: InputDecoration(
+                        labelText: 'Enter the Cost',
+                        enabledBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Color.fromARGB(255, 115, 99, 183)),
+                        ),
+                        focusedBorder: UnderlineInputBorder(
+                          borderSide: BorderSide(
+                              color: Color.fromARGB(255, 115, 99, 183)),
+                        ),
+                        labelStyle: TextStyle(
+                            fontSize: 15,
+                            color: Color.fromARGB(255, 115, 99, 183)),
+                        floatingLabelStyle: TextStyle(
+                            fontSize: 15,
+                            color: Color.fromARGB(255, 115, 99, 183)),
+                        fillColor: Colors.white10,
+                        filled: true,
+                      ),
+                    ),
+                  ),
+                RadioListTile<String>(
+                  title: const Text('Pay Options', style: TextStyle(
+                      color: Color.fromARGB(255, 115, 99, 183),
+                    ),),
+                  value: 'Pay Options',
+                  groupValue: dropdownValue,
+                  onChanged: (String? value) {
+                    setState(() {
+                      dropdownValue = value!;
+                      showCostField = false;
+                    });
+                  }, 
                 ),
               ],
             ),
             SizedBox(height: 15),
+            _buildCarousel(),
+            SizedBox(height: 20),
             Align(
               alignment: Alignment.center,
               child: ElevatedButton.icon(
@@ -532,7 +616,24 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 onPressed: _uploadImages,
                 icon: Icon(Icons.upload_rounded,
                     color: Color.fromARGB(255, 149, 134, 225)),
-                label: const Text("Upload"),
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Upload Image ', // Replace this with the appropriate label
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Color.fromARGB(255, 115, 99, 183),
+                      ),
+                    ),
+                    Text(
+                      '*',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 236, 154, 148),
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
             SizedBox(height: 10),

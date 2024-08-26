@@ -12,7 +12,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_button/pages/dialog/admin_add_info.dart';
 
 class AdminMap extends StatefulWidget {
-  const AdminMap({Key? key, required this.username, required this.report}) : super(key: key);
+  const AdminMap({Key? key, required this.username, required this.report})
+      : super(key: key);
   final String username;
   final String report;
 
@@ -30,10 +31,12 @@ class AdminMapState extends State<AdminMap> {
   Location _locationController = Location();
   BitmapDescriptor? _customMarkerIcon;
   BitmapDescriptor? _personMarkerIcon;
+
+
   late String _mapStyleString;
   Set<Polyline> _polylines = {};
 
-   bool isUserLocationVisible = false;
+  bool isUserLocationVisible = false;
 
   @override
   void initState() {
@@ -61,7 +64,11 @@ class AdminMapState extends State<AdminMap> {
       ImageConfiguration(size: Size(1, 1)),
       'assets/person_Tag.png',
     );
+
+    
   }
+
+
 
   Future<Set<Marker>> loadMarkersFromPrefs() async {
     final firestoreMarkers =
@@ -164,7 +171,8 @@ class AdminMapState extends State<AdminMap> {
                             showDialog(
                               context: context,
                               builder: (context) => AddInfoDialog(
-                                markerId: markerId_,  destination: _currentP!,
+                                markerId: markerId_,
+                                destination: _currentP!,
                               ),
                             ).then((confirmed) {
                               print(confirmed);
@@ -226,8 +234,10 @@ class AdminMapState extends State<AdminMap> {
                                 Navigator.of(context).pop(true);
                                 showDialog(
                                   context: context,
-                                  builder: (context) =>
-                                      AddInfoDialog(markerId: markerId_, destination: latLng,),
+                                  builder: (context) => AddInfoDialog(
+                                    markerId: markerId_,
+                                    destination: latLng,
+                                  ),
                                 ).then((confirmed) {
                                   print(confirmed);
                                   if (confirmed == true) {
@@ -274,7 +284,10 @@ class AdminMapState extends State<AdminMap> {
               Navigator.of(context).pop(true);
               Navigator.push(
                 context,
-                _createRoute(AdminPage(username: widget.username, report: widget.report,)),
+                _createRoute(AdminPage(
+                  username: widget.username,
+                  report: widget.report,
+                )),
               );
             },
             child: const Text("Yes"),
@@ -353,17 +366,18 @@ class AdminMapState extends State<AdminMap> {
     });
   }
 
-    Future<void> _ensureUserLocationVisible() async {
+  Future<void> _ensureUserLocationVisible() async {
     if (_currentP != null && mapController != null) {
-     //Center the camera on the user's location
-     mapController.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: _currentP!, //center on the user's current position
-          zoom: await mapController.getZoomLevel(), //Maintain the current zoom level
+      //Center the camera on the user's location
+      mapController.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: _currentP!, //center on the user's current position
+            zoom: await mapController
+                .getZoomLevel(), //Maintain the current zoom level
+          ),
         ),
-      ),
-     );
+      );
     }
   }
 

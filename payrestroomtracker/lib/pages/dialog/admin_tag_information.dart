@@ -213,28 +213,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                   ),
                 ))),
             const SizedBox(height: 30),
-            Padding(
-                padding: EdgeInsets.only(left: 60, right: 30),
-                child: Row(children: [
-                  Text(
-                    ratingText,
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: Color.fromARGB(255, 97, 84, 158),
-                    ),
-                  ),
-                  RatingBar.readOnly(
-                    size: 20,
-                    filledIcon: Icons.star,
-                    emptyIcon: Icons.star_border,
-                    emptyColor: const Color.fromARGB(255, 153, 149, 149),
-                    filledColor: Color.fromARGB(255, 97, 84, 158),
-                    halfFilledColor: Color.fromARGB(255, 148, 139, 185),
-                    initialRating: rating,
-                    maxRating: 5,
-                  ),
-                ])),
-            SizedBox(height: 20),
+           
             Align(
                 alignment: Alignment.center,
                 child: GestureDetector(

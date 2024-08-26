@@ -70,84 +70,87 @@ class _OthersReportPageState extends State<OthersReportPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: const Color.fromARGB(255, 193, 184, 236),
-      appBar: AppBar(
-        title: const Text(
-          'Report',
-          style: TextStyle(fontSize: 20, color: Colors.white, letterSpacing: 3),
-        ),
-        backgroundColor: const Color.fromARGB(255, 97, 84, 158),
-        centerTitle: true,
-        actions: <Widget>[
-          const SizedBox(width: 10),
-          IconButton(
-            icon: const Icon(
-              Icons.send_rounded,
-              color: Colors.white,
-            ),
-            onPressed: () async {
-              await storeReport('Others', _textController.text);
-              showDialog(
-                context: context,
-                builder: (context) => OthersReportDialog(
-                  reportContent: _textController.text,
-                  destination: widget.destination,
-                ),
-              );
-            },
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        backgroundColor: const Color.fromARGB(255, 193, 184, 236),
+        appBar: AppBar(
+          title: const Text(
+            'Report',
+            style: TextStyle(fontSize: 20, color: Colors.white, letterSpacing: 3),
           ),
-          const SizedBox(width: 20),
-        ],
-      ),
-      body: Column(
-        children: [
-          Column(
-            mainAxisAlignment: MainAxisAlignment.start,
-            children: <Widget>[
-              const SizedBox(height: 30),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 80),
-                child: Text(
-                  'Others',
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: Color.fromARGB(255, 97, 84, 158),
-                      fontWeight: FontWeight.bold),
-                ),
+          backgroundColor: const Color.fromARGB(255, 97, 84, 158),
+          centerTitle: true,
+          actions: <Widget>[
+            const SizedBox(width: 10),
+            IconButton(
+              icon: const Icon(
+                Icons.send_rounded,
+                color: Colors.white,
               ),
-              const SizedBox(height: 5),
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 80),
-                child: Text(
-                  'Report Description',
-                  style: TextStyle(
-                      fontSize: 20,
-                      color: Color.fromARGB(255, 97, 84, 158),
-                      fontWeight: FontWeight.bold),
+              onPressed: () async {
+                await storeReport('Others', _textController.text);
+                showDialog(
+                  context: context,
+                  builder: (context) => OthersReportDialog(
+                    reportContent: _textController.text,
+                    destination: widget.destination,
+                  ),
+                );
+              },
+            ),
+            const SizedBox(width: 20),
+          ],
+        ),
+        body: Column(
+          children: [
+            Column(
+              mainAxisAlignment: MainAxisAlignment.start,
+              children: <Widget>[
+                const SizedBox(height: 30),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 80),
+                  child: Text(
+                    'Others',
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: Color.fromARGB(255, 97, 84, 158),
+                        fontWeight: FontWeight.bold),
+                  ),
                 ),
-              ),
-              const SizedBox(height: 10),
-              Padding(
-                padding: const EdgeInsets.all(30),
-                child: TextField(
-                  controller: _textController,
-                  minLines: 1,
-                  maxLines: 4,
-                  style: const TextStyle(fontSize: 17),
-                  decoration: const InputDecoration(
-                    border: OutlineInputBorder(
-                      borderSide: BorderSide(
-                        color: Color.fromARGB(255, 115, 99, 183),
+                const SizedBox(height: 5),
+                const Padding(
+                  padding: EdgeInsets.symmetric(horizontal: 80),
+                  child: Text(
+                    'Report Description',
+                    style: TextStyle(
+                        fontSize: 20,
+                        color: Color.fromARGB(255, 97, 84, 158),
+                        fontWeight: FontWeight.bold),
+                  ),
+                ),
+                const SizedBox(height: 10),
+                Padding(
+                  padding: const EdgeInsets.all(30),
+                  child: TextField(
+                    controller: _textController,
+                    minLines: 1,
+                    maxLines: 4,
+                    style: const TextStyle(fontSize: 17),
+                    decoration: const InputDecoration(
+                      border: OutlineInputBorder(
+                        borderSide: BorderSide(
+                          color: Color.fromARGB(255, 115, 99, 183),
+                        ),
                       ),
                     ),
                   ),
                 ),
-              ),
-              const SizedBox(height: 15),
-            ],
-          ),
-        ],
+                const SizedBox(height: 15),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
