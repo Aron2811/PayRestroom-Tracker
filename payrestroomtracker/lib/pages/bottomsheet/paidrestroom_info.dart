@@ -43,7 +43,7 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
     _fetchPaidRestroomCost();
   }
 
-  double calculateAverageRating(List<dynamic> ratings) {
+   double calculateAverageRating(List<dynamic> ratings) {
     if (ratings.isEmpty) {
       return 0.0; // Return 0 if there are no ratings yet
     }
@@ -56,9 +56,9 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
     return totalRating / ratings.length;
   }
 
+
 // Updated _updateRating method
   void _updateRating(double newRating) async {
-  
     try {
       final user = FirebaseAuth.instance.currentUser;
       if (user == null) {
@@ -92,50 +92,27 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
           // Update existing rating
           ratings[userRatingIndex]['rating'] = newRating;
           ratings[userRatingIndex]['timestamp'] = Timestamp.now();
-
-          await FirebaseFirestore.instance
-              .collection('Tags')
-              .doc(doc.id)
-              .update({
-            'ratings': ratings,
-          });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Rating updated successfully"),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
-          );
         } else {
           // Add new rating
-          await FirebaseFirestore.instance
-              .collection('Tags')
-              .doc(doc.id)
-              .update({
-            'ratings': FieldValue.arrayUnion([
-              {
-                'userId': user.uid,
-                'rating': newRating,
-                'timestamp': Timestamp.now(),
-              }
-            ]),
+          ratings.add({
+            'userId': user.uid,
+            'rating': newRating,
+            'timestamp': Timestamp.now(),
           });
-
-          ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(content: Text("Rating added successfully"),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
-          );
         }
 
-        // Calculate average rating and update it in Firestore
-       double averageRatingValue = calculateAverageRating(ratings);
-      if(averageRatingValue == 0.0){
+        // Calculate average rating
+        double averageRatingValue =
+            calculateAverageRating(ratings);
+
         await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
-        'averageRating': newRating,
-      });
-      } else{
-        await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
-        'averageRating': averageRatingValue,
-      });
-      }
+          'ratings': ratings,
+          'averageRating': averageRatingValue,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text("Rating updated successfully"),backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+        );
       } else {
         // Create a new marker document with the rating
         await FirebaseFirestore.instance.collection('Tags').add({
@@ -149,11 +126,11 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
             }
           ],
           'averageRating': newRating, // Initial average rating
+          'Rating': newRating.toString(), // Store the rating as a string
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Rating added successfully"),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+          SnackBar(content: Text("Rating added successfully"),backgroundColor: Color.fromARGB(255, 115, 99, 183),),
         );
       }
     } catch (e) {

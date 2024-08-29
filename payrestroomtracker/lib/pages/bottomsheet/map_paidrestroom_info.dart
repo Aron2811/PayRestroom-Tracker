@@ -55,110 +55,92 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
     return totalRating / ratings.length;
   }
 
+
 // Updated _updateRating method
-void _updateRating(double newRating) async {
+  void _updateRating(double newRating) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('You need to be logged in to rate'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+        return;
+      }
 
-  try {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('You need to be logged in to rate'),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),
-        ),
-      );
-      return;
-    }
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .where('position',
+              isEqualTo: GeoPoint(
+                  widget.destination.latitude, widget.destination.longitude))
+          .get();
 
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position',
-            isEqualTo: GeoPoint(
-                widget.destination.latitude, widget.destination.longitude))
-        .get();
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final ratings = doc.data().containsKey('ratings')
+            ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
+            : [];
 
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final ratings = doc.data().containsKey('ratings')
-          ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
-          : [];
+        // Check if the user has already rated this location
+        final userRatingIndex =
+            ratings.indexWhere((rating) => rating['userId'] == user.uid);
 
-      // Check if the user has already rated this location
-      final userRatingIndex =
-          ratings.indexWhere((rating) => rating['userId'] == user.uid);
+        if (userRatingIndex != -1) {
+          // Update existing rating
+          ratings[userRatingIndex]['rating'] = newRating;
+          ratings[userRatingIndex]['timestamp'] = Timestamp.now();
+        } else {
+          // Add new rating
+          ratings.add({
+            'userId': user.uid,
+            'rating': newRating,
+            'timestamp': Timestamp.now(),
+          });
+        }
 
-      if (userRatingIndex != -1) {
-        // Update existing rating
-        ratings[userRatingIndex]['rating'] = newRating;
-        ratings[userRatingIndex]['timestamp'] = Timestamp.now();
+        // Calculate average rating
+        double averageRatingValue =
+            calculateAverageRating(ratings);
 
         await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
           'ratings': ratings,
+          'averageRating': averageRatingValue,
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Rating updated successfully"),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+          SnackBar(content: Text("Rating updated successfully"),backgroundColor: Color.fromARGB(255, 115, 99, 183),),
         );
       } else {
-        // Add new rating
-        await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
-          'ratings': FieldValue.arrayUnion([
+        // Create a new marker document with the rating
+        await FirebaseFirestore.instance.collection('Tags').add({
+          'position': GeoPoint(
+              widget.destination.latitude, widget.destination.longitude),
+          'ratings': [
             {
               'userId': user.uid,
               'rating': newRating,
               'timestamp': Timestamp.now(),
-              
             }
-          ]),
+          ],
+          'averageRating': newRating, // Initial average rating
+          'Rating': newRating.toString(), // Store the rating as a string
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Rating added successfully"),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+          SnackBar(content: Text("Rating added successfully"),backgroundColor: Color.fromARGB(255, 115, 99, 183),),
         );
       }
-
-      // Calculate average rating and update it in Firestore
-    double averageRatingValue = calculateAverageRating(ratings);
-      if(averageRatingValue == 0.0){
-        await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
-        'averageRating': newRating,
-      });
-      } else{
-        await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
-        'averageRating': averageRatingValue,
-      });
-      }
-    } else {
-      // Create a new marker document with the rating
-      await FirebaseFirestore.instance.collection('Tags').add({
-        'position': GeoPoint(widget.destination.latitude, widget.destination.longitude),
-        'ratings': [
-          {
-            'userId': user.uid,
-            'rating': newRating,
-            'timestamp': Timestamp.now(),
-          }
-        ],
-        'averageRating': newRating, // Initial average rating
-      });
-
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Rating added successfully"),
-        backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        SnackBar(
+          content: Text('Failed to update rating: $e'),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
         ),
       );
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Failed to update rating: $e'),
-        backgroundColor: Color.fromARGB(255, 115, 99, 183),
-      ),
-    );
   }
-}
 
   Future<void> _fetchPaidRestroomName() async {
     final querySnapshot = await FirebaseFirestore.instance
