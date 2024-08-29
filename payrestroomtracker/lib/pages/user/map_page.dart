@@ -1159,7 +1159,9 @@ class MapPageState extends State<MapPage> {
         // Show a snackbar to inform the user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('The paid restroom is in the EXPRESSWAY'),
+            content: Text('The paid restroom is in the EXPRESSWAY')
+            ,
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
             duration: Duration(seconds: 3), // Adjust as needed
           ),
         );

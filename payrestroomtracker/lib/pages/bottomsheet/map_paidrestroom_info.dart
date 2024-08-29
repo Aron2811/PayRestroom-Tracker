@@ -43,19 +43,21 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
   }
 
   double calculateAverageRating(List<dynamic> ratings) {
-  if (ratings.isEmpty) {
-    return 0.0; // Return 0 if there are no ratings yet
+    if (ratings.isEmpty) {
+      return 0.0; // Return 0 if there are no ratings yet
+    }
+
+    // Calculate total sum of ratings
+    double totalRating =
+        ratings.fold(0, (sum, rating) => sum + rating['rating']);
+
+    // Calculate average rating
+    return totalRating / ratings.length;
   }
-
-  // Calculate total sum of ratings
-  double totalRating = ratings.fold(0, (sum, rating) => sum + rating['rating']);
-
-  // Calculate average rating
-  return totalRating / ratings.length;
-}
 
 // Updated _updateRating method
 void _updateRating(double newRating) async {
+
   try {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -95,7 +97,8 @@ void _updateRating(double newRating) async {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Rating updated successfully")),
+          SnackBar(content: Text("Rating updated successfully"),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
         );
       } else {
         // Add new rating
@@ -105,20 +108,28 @@ void _updateRating(double newRating) async {
               'userId': user.uid,
               'rating': newRating,
               'timestamp': Timestamp.now(),
+              
             }
           ]),
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Rating added successfully")),
+          SnackBar(content: Text("Rating added successfully"),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
         );
       }
 
       // Calculate average rating and update it in Firestore
-      double averageRatingValue = calculateAverageRating(ratings);
-      await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
+    double averageRatingValue = calculateAverageRating(ratings);
+      if(averageRatingValue == 0.0){
+        await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
+        'averageRating': newRating,
+      });
+      } else{
+        await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
         'averageRating': averageRatingValue,
       });
+      }
     } else {
       // Create a new marker document with the rating
       await FirebaseFirestore.instance.collection('Tags').add({
@@ -134,7 +145,9 @@ void _updateRating(double newRating) async {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Rating added successfully")),
+        SnackBar(content: Text("Rating added successfully"),
+        backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
       );
     }
   } catch (e) {
@@ -251,7 +264,7 @@ void _updateRating(double newRating) async {
     }
   }
 
-  Stream<double> averageRatingStream() {
+   Stream<double> averageRatingStream() {
     return FirebaseFirestore.instance
         .collection('Tags')
         .where('position',
@@ -264,10 +277,7 @@ void _updateRating(double newRating) async {
         final data = doc.data();
         final averageRating = data['averageRating'] as double? ?? 0.0;
 
-        if (averageRating == 0.0 && data.containsKey('Rating')) {
-          final stringRating = double.parse(data['Rating'].toString());
-          return stringRating;
-        }
+     
 
         return averageRating;
       } else {
@@ -331,7 +341,7 @@ void _updateRating(double newRating) async {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '${snapshot.data}',
+                      '${snapshot.data!.toStringAsFixed(1)}',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 17,
@@ -375,7 +385,6 @@ void _updateRating(double newRating) async {
                     ),
                   ),
                   onPressed: () {
-                    Navigator.pop(context);
                     Navigator.pop(context); // Close bottom sheet
                     widget.toggleVisibility();
                     widget.drawRouteToDestination(

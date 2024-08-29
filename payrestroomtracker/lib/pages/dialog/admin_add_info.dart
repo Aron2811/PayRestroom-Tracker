@@ -68,7 +68,8 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
             'ImageUrls': updatedImageUrls,
             'Name': nameController.text,
             'Location': locationController.text,
-            'Cost': costValue, // Set the cost value accordingly
+            'Cost': costValue,
+             // Set the cost value accordingly
           },
           SetOptions(merge: true),
         );
@@ -528,9 +529,28 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
               ),
             ),
             SizedBox(height: 20),
+            
             Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      '      Choose Options ', // Replace this with the appropriate label
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Color.fromARGB(255, 115, 99, 183),
+                      ),
+                    ),
+                    Text(
+                      '*',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 236, 154, 148),
+                      ),
+                    ),
+                  ],
+                ),
                 RadioListTile<String>(
                   title: const Text(
                     'Cost',
@@ -546,7 +566,6 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                       showCostField = true;
                     });
                   },
-                  
                 ),
                 if (showCostField)
                   Padding(
@@ -559,7 +578,25 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                         PesoInputFormatter(),
                       ],
                       decoration: InputDecoration(
-                        labelText: 'Enter the Cost',
+                        labelText: null,
+                        label: Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Text(
+                              'Enter the Cost ', // Replace this with the appropriate label
+                              style: TextStyle(
+                                fontSize: 15,
+                                color: Color.fromARGB(255, 115, 99, 183),
+                              ),
+                            ),
+                            Text(
+                              '*',
+                              style: TextStyle(
+                                color: Color.fromARGB(255, 236, 154, 148),
+                              ),
+                            ),
+                          ],
+                        ),
                         enabledBorder: UnderlineInputBorder(
                           borderSide: BorderSide(
                               color: Color.fromARGB(255, 115, 99, 183)),
@@ -580,9 +617,12 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                     ),
                   ),
                 RadioListTile<String>(
-                  title: const Text('Pay Options', style: TextStyle(
+                  title: const Text(
+                    'Pay Options',
+                    style: TextStyle(
                       color: Color.fromARGB(255, 115, 99, 183),
-                    ),),
+                    ),
+                  ),
                   value: 'Pay Options',
                   groupValue: dropdownValue,
                   onChanged: (String? value) {
@@ -590,7 +630,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                       dropdownValue = value!;
                       showCostField = false;
                     });
-                  }, 
+                  },
                 ),
               ],
             ),
@@ -663,6 +703,23 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                 onPressed: () {
                   _confirmedPressed();
                 },
+              ),
+            ),
+            const SizedBox(
+              height: 10,
+            ),
+            Align(
+              alignment: Alignment.center,
+              child: TextButton(
+                onPressed: () {
+                  Navigator.pop(context, false);
+                },
+                child: Text(
+                  'Cancel',
+                  style: TextStyle(
+                    color: Color.fromARGB(255, 115, 99, 183),
+                  ),
+                ),
               ),
             ),
           ],

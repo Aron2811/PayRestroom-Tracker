@@ -33,6 +33,7 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
   String _location = "Location";
   String _cost = "Cost";
 
+
   @override
   void initState() {
     super.initState();
@@ -43,109 +44,127 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
   }
 
   double calculateAverageRating(List<dynamic> ratings) {
-  if (ratings.isEmpty) {
-    return 0.0; // Return 0 if there are no ratings yet
-  }
-
-  // Calculate total sum of ratings
-  double totalRating = ratings.fold(0, (sum, rating) => sum + rating['rating']);
-
-  // Calculate average rating
-  return totalRating / ratings.length;
-}
-
-// Updated _updateRating method
-void _updateRating(double newRating) async {
-  try {
-    final user = FirebaseAuth.instance.currentUser;
-    if (user == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('You need to be logged in to rate'),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),
-        ),
-      );
-      return;
+    if (ratings.isEmpty) {
+      return 0.0; // Return 0 if there are no ratings yet
     }
 
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position',
-            isEqualTo: GeoPoint(
-                widget.destination.latitude, widget.destination.longitude))
-        .get();
+    // Calculate total sum of ratings
+    double totalRating =
+        ratings.fold(0, (sum, rating) => sum + rating['rating']);
 
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final ratings = doc.data().containsKey('ratings')
-          ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
-          : [];
+    // Calculate average rating
+    return totalRating / ratings.length;
+  }
 
-      // Check if the user has already rated this location
-      final userRatingIndex =
-          ratings.indexWhere((rating) => rating['userId'] == user.uid);
-
-      if (userRatingIndex != -1) {
-        // Update existing rating
-        ratings[userRatingIndex]['rating'] = newRating;
-        ratings[userRatingIndex]['timestamp'] = Timestamp.now();
-
-        await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
-          'ratings': ratings,
-        });
-
+// Updated _updateRating method
+  void _updateRating(double newRating) async {
+  
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Rating updated successfully")),
+          SnackBar(
+            content: Text('You need to be logged in to rate'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
         );
-      } else {
-        // Add new rating
+        return;
+      }
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .where('position',
+              isEqualTo: GeoPoint(
+                  widget.destination.latitude, widget.destination.longitude))
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final ratings = doc.data().containsKey('ratings')
+            ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
+            : [];
+
+        // Check if the user has already rated this location
+        final userRatingIndex =
+            ratings.indexWhere((rating) => rating['userId'] == user.uid);
+
+        if (userRatingIndex != -1) {
+          // Update existing rating
+          ratings[userRatingIndex]['rating'] = newRating;
+          ratings[userRatingIndex]['timestamp'] = Timestamp.now();
+
+          await FirebaseFirestore.instance
+              .collection('Tags')
+              .doc(doc.id)
+              .update({
+            'ratings': ratings,
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Rating updated successfully"),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+          );
+        } else {
+          // Add new rating
+          await FirebaseFirestore.instance
+              .collection('Tags')
+              .doc(doc.id)
+              .update({
+            'ratings': FieldValue.arrayUnion([
+              {
+                'userId': user.uid,
+                'rating': newRating,
+                'timestamp': Timestamp.now(),
+              }
+            ]),
+          });
+
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text("Rating added successfully"),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+          );
+        }
+
+        // Calculate average rating and update it in Firestore
+       double averageRatingValue = calculateAverageRating(ratings);
+      if(averageRatingValue == 0.0){
         await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
-          'ratings': FieldValue.arrayUnion([
+        'averageRating': newRating,
+      });
+      } else{
+        await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
+        'averageRating': averageRatingValue,
+      });
+      }
+      } else {
+        // Create a new marker document with the rating
+        await FirebaseFirestore.instance.collection('Tags').add({
+          'position': GeoPoint(
+              widget.destination.latitude, widget.destination.longitude),
+          'ratings': [
             {
               'userId': user.uid,
               'rating': newRating,
               'timestamp': Timestamp.now(),
             }
-          ]),
+          ],
+          'averageRating': newRating, // Initial average rating
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Rating added successfully")),
+          SnackBar(content: Text("Rating added successfully"),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
         );
       }
-
-      // Calculate average rating and update it in Firestore
-      double averageRatingValue = calculateAverageRating(ratings);
-      await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
-        'averageRating': averageRatingValue,
-      });
-    } else {
-      // Create a new marker document with the rating
-      await FirebaseFirestore.instance.collection('Tags').add({
-        'position': GeoPoint(widget.destination.latitude, widget.destination.longitude),
-        'ratings': [
-          {
-            'userId': user.uid,
-            'rating': newRating,
-            'timestamp': Timestamp.now(),
-          }
-        ],
-        'averageRating': newRating, // Initial average rating
-      });
-
+    } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Rating added successfully")),
+        SnackBar(
+          content: Text('Failed to update rating: $e'),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
       );
     }
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Failed to update rating: $e'),
-        backgroundColor: Color.fromARGB(255, 115, 99, 183),
-      ),
-    );
   }
-}
 
   Future<void> _fetchPaidRestroomName() async {
     final querySnapshot = await FirebaseFirestore.instance
@@ -264,10 +283,6 @@ void _updateRating(double newRating) async {
         final data = doc.data();
         final averageRating = data['averageRating'] as double? ?? 0.0;
 
-        if (averageRating == 0.0 && data.containsKey('Rating')) {
-          final stringRating = double.parse(data['Rating'].toString());
-          return stringRating;
-        }
 
         return averageRating;
       } else {
@@ -331,7 +346,7 @@ void _updateRating(double newRating) async {
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
-                      '${snapshot.data}',
+                      '${snapshot.data!.toStringAsFixed(1)}',
                       textAlign: TextAlign.center,
                       style: TextStyle(
                         fontSize: 17,

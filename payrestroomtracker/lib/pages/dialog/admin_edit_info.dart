@@ -286,6 +286,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             'Name': newName,
             'Location': newLocation,
             'Cost': newCost,
+            
           },
           SetOptions(merge: true),
         );
@@ -480,7 +481,25 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
                     maxLines: 2,
                     textAlign: TextAlign.center,
                     decoration: InputDecoration(
-                      labelText: 'Paid Restroom Name',
+                      labelText: null,
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Paid Restroom Name', // Replace this with the appropriate label
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Color.fromARGB(255, 115, 99, 183),
+                            ),
+                          ),
+                          Text(
+                            '*',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 236, 154, 148),
+                            ),
+                          ),
+                        ],
+                      ),
                       enabledBorder: UnderlineInputBorder(
                         borderSide: BorderSide(
                             color: Color.fromARGB(255, 115, 99, 183)),
@@ -512,7 +531,25 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
                     maxLines: 3,
                     textAlign: TextAlign.center,
                     decoration: InputDecoration(
-                      labelText: 'Location',
+                      labelText: null,
+                      label: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Text(
+                            'Paid Restroom Location', // Replace this with the appropriate label
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Color.fromARGB(255, 115, 99, 183),
+                            ),
+                          ),
+                          Text(
+                            '*',
+                            style: TextStyle(
+                              color: Color.fromARGB(255, 236, 154, 148),
+                            ),
+                          ),
+                        ],
+                      ),
                       enabledBorder: UnderlineInputBorder(
                         borderSide: BorderSide(
                             color: Color.fromARGB(255, 115, 99, 183)),
@@ -534,9 +571,28 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
                     ),
                   )),
               SizedBox(height: 20),
+              SizedBox(height: 5),
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '      Choose Options ', // Replace this with the appropriate label
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Color.fromARGB(255, 115, 99, 183),
+                        ),
+                      ),
+                      Text(
+                        '*',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 236, 154, 148),
+                        ),
+                      ),
+                    ],
+                  ),
                   RadioListTile<String>(
                     title: const Text('Cost'),
                     value: 'Cost',
@@ -547,7 +603,9 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
                         showCostField = true;
                       });
                     },
-                    activeColor: showCostField ? Color.fromARGB(255, 115, 99, 183) : Colors.grey,
+                    activeColor: showCostField
+                        ? Color.fromARGB(255, 115, 99, 183)
+                        : Colors.grey,
                   ),
                   if (showCostField)
                     Padding(
@@ -560,7 +618,25 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
                           PesoInputFormatter(),
                         ],
                         decoration: InputDecoration(
-                          labelText: 'Enter the Cost',
+                          labelText: null,
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Enter the Cost ', // Replace this with the appropriate label
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: Color.fromARGB(255, 115, 99, 183),
+                                ),
+                              ),
+                              Text(
+                                '*',
+                                style: TextStyle(
+                                  color: Color.fromARGB(255, 236, 154, 148),
+                                ),
+                              ),
+                            ],
+                          ),
                           enabledBorder: UnderlineInputBorder(
                             borderSide: BorderSide(
                                 color: Color.fromARGB(255, 115, 99, 183)),
@@ -593,31 +669,31 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               const SizedBox(height: 20),
               const SizedBox(height: 15),
               Align(
-                  alignment: Alignment.center,
-                  child: ElevatedButton.icon(
-                    style: ElevatedButton.styleFrom(
-                        enableFeedback: false,
-                        backgroundColor: Colors.white,
-                        minimumSize: const Size(100, 40),
-                        shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50)),
-                        side: BorderSide(
-                          color: Color.fromARGB(
-                              255, 149, 117, 205), // Border color
-                          width: 2,
-                        )),
-                    icon: const Icon(
-                      Icons.check_circle,
-                      color: Color.fromARGB(255, 149, 117, 205),
-                    ),
-                    label: Text(
-                      confirmPressed ? 'Please wait' : 'Confirm',
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 149, 117, 205),
+                alignment: Alignment.center,
+                child: ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    enableFeedback: false,
+                    backgroundColor: Colors.white,
+                    minimumSize: Size(150, 40),
+                    alignment: Alignment.center,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      side: BorderSide(
+                        color: Color.fromARGB(255, 149, 134, 225),
+                        width: 2.0,
                       ),
                     ),
-                    onPressed: confirmPressed ? null : _updateRestroomInfo,
-                  )),
+                    foregroundColor: Color.fromARGB(255, 149, 134, 225),
+                    textStyle:
+                        TextStyle(fontSize: 18, fontWeight: FontWeight.bold),
+                  ),
+                  child: Text(
+                    confirmPressed ? 'Please wait' : 'Confirm',
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  onPressed: confirmPressed ? null : _updateRestroomInfo,
+                ),
+              ),
               const SizedBox(
                 height: 10,
               ),

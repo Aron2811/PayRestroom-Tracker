@@ -33,18 +33,8 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       barrierDismissible: false, // Prevent dismissing by tapping outside
       builder: (context) {
         return Center(
-          child: Column(
-            mainAxisSize: MainAxisSize.min, // Center content
-            children: [
-              CircularProgressIndicator(),
-              SizedBox(height: 20), // Space between spinner and text
-              Text(
-                "Please wait...",
-                style: TextStyle(color: Colors.white),
-              ),
-            ],
-          ),
-        );
+               
+              );
       },
     );
     String username = _usernameController.text.trim();

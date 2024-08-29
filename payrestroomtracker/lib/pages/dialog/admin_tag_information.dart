@@ -213,7 +213,11 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                   ),
                 ))),
             const SizedBox(height: 30),
-           
+            Padding(
+                padding: EdgeInsets.only(left: 60, right: 30),
+                child: Row(children: [
+                ])),
+            SizedBox(height: 20),
             Align(
                 alignment: Alignment.center,
                 child: GestureDetector(
