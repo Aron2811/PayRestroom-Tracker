@@ -55,7 +55,6 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
     return totalRating / ratings.length;
   }
 
-
 // Updated _updateRating method
   void _updateRating(double newRating) async {
     try {
@@ -101,8 +100,7 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
         }
 
         // Calculate average rating
-        double averageRatingValue =
-            calculateAverageRating(ratings);
+        double averageRatingValue = calculateAverageRating(ratings);
 
         await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
           'ratings': ratings,
@@ -110,7 +108,10 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Rating updated successfully"),backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+          SnackBar(
+            content: Text("Rating updated successfully"),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
         );
       } else {
         // Create a new marker document with the rating
@@ -129,7 +130,10 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Rating added successfully"),backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+          SnackBar(
+            content: Text("Rating added successfully"),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
         );
       }
     } catch (e) {
@@ -246,7 +250,7 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
     }
   }
 
-   Stream<double> averageRatingStream() {
+  Stream<double> averageRatingStream() {
     return FirebaseFirestore.instance
         .collection('Tags')
         .where('position',
@@ -258,8 +262,6 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
         final doc = querySnapshot.docs.first;
         final data = doc.data();
         final averageRating = data['averageRating'] as double? ?? 0.0;
-
-     
 
         return averageRating;
       } else {

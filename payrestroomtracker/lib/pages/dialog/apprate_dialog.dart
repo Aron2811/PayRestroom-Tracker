@@ -52,14 +52,12 @@ class _AppRateDialogState extends State<AppRateDialog> {
             .get();
 
         if (userRating.exists) {
-         
           var data = userRating.data() as Map<String, dynamic>?;
           return data != null && data.containsKey('hasrated')
               ? data['hasrated'] as bool
               : false;
         }
       } catch (e) {
-       
         print('Error checking user rating: $e');
       }
     }

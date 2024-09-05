@@ -1,4 +1,3 @@
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/dialog/tutorial_dialog.dart';
 import 'package:flutter_button/pages/intro_page.dart';

@@ -33,7 +33,6 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
   String _location = "Location";
   String _cost = "Cost";
 
-
   @override
   void initState() {
     super.initState();
@@ -43,7 +42,7 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
     _fetchPaidRestroomCost();
   }
 
-   double calculateAverageRating(List<dynamic> ratings) {
+  double calculateAverageRating(List<dynamic> ratings) {
     if (ratings.isEmpty) {
       return 0.0; // Return 0 if there are no ratings yet
     }
@@ -55,7 +54,6 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
     // Calculate average rating
     return totalRating / ratings.length;
   }
-
 
 // Updated _updateRating method
   void _updateRating(double newRating) async {
@@ -102,8 +100,7 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
         }
 
         // Calculate average rating
-        double averageRatingValue =
-            calculateAverageRating(ratings);
+        double averageRatingValue = calculateAverageRating(ratings);
 
         await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
           'ratings': ratings,
@@ -111,7 +108,10 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Rating updated successfully"),backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+          SnackBar(
+            content: Text("Rating updated successfully"),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
         );
       } else {
         // Create a new marker document with the rating
@@ -130,7 +130,10 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text("Rating added successfully"),backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+          SnackBar(
+            content: Text("Rating added successfully"),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
         );
       }
     } catch (e) {
@@ -259,7 +262,6 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
         final doc = querySnapshot.docs.first;
         final data = doc.data();
         final averageRating = data['averageRating'] as double? ?? 0.0;
-
 
         return averageRating;
       } else {

@@ -1,8 +1,6 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_button/pages/apptour/samplepaidrestroominfo.dart';
-import 'package:flutter_button/pages/apptour/samplerecommendationlist.dart';
 import 'package:flutter_button/pages/bottomsheet/map_paidrestroom_info.dart';
 import 'package:flutter_button/pages/dialog/apprate_dialog.dart';
 import 'package:flutter_button/pages/intro_page.dart';
@@ -15,14 +13,13 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_button/pages/dialog/user_profile_dialog.dart';
 import 'package:flutter_button/pages/bottomsheet/recommendation_list.dart';
-import 'package:flutter_button/pages/bottomsheet/paidrestroom_info.dart';
 import 'package:flutter_button/algo/Astar.dart';
 import 'package:flutter_button/pages/admin/adminMap.dart';
 import 'dart:math';
 
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'package:flutter_button/pages/dialog/tutorial_dialog.dart';
+
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -55,8 +52,6 @@ class MapPageState extends State<MapPage> {
   BitmapDescriptor? _newMarkerIcon;
   BitmapDescriptor? dynamicIcon;
   Set<MarkerId> _clickedMarkerIds = Set<MarkerId>();
-  MarkerId? _selectedMarkerId;
-  final Completer<GoogleMapController> _controller = Completer();
   late String _mapStyleString;
   Set<Polyline> _polylines = {};
   LatLng? end;
@@ -122,36 +117,7 @@ class MapPageState extends State<MapPage> {
     );
   }
 
-  void _showSamplePayToiletInformation() {
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-      ),
-      backgroundColor: Colors.transparent,
-      builder: (context) => SamplePaidRestroomInfo(
-        toggleVisibility: toggleVisibility,
-        directionKey: directionKey,
-        reportKey: reportKey,
-        // Pass reportKey to SamplePaidRestroomInfo
-      ),
-    ).whenComplete(() {
-      setState(() {
-        // Restore the original icons for clicked markers
-        _markers = _markers.map((marker) {
-          if (_clickedMarkerIds.contains(marker.markerId)) {
-            // Restore the original icon
-            return marker.copyWith(
-              iconParam: _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-            );
-          }
-          return marker;
-        }).toSet();
-        _clickedMarkerIds.clear(); // Clear the clicked marker ids
-      });
-    });
-  }
+  
 
   void _showMainTutorial() {
     Future.delayed(const Duration(seconds: 2), () {
@@ -168,9 +134,7 @@ class MapPageState extends State<MapPage> {
       _showMainTutorial();
     } else {
       setState(() {
-        //isMainTutorialDisplayed = true;
-
-        // Hide the main component if the main tutorial is completed
+    
       });
     }
   }
@@ -406,91 +370,82 @@ class MapPageState extends State<MapPage> {
     return "$municipality, $province, $country";
   }
 
-  Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
-    Map<Marker, double> markerRatings = {};
+ Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
+  final Map<GeoPoint, Marker> geoPointToMarkerMap = {};
+  final List<GeoPoint> geoPoints = [];
 
-    for (Marker marker in markers) {
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('Tags')
-          .where('position',
-              isEqualTo:
-                  GeoPoint(marker.position.latitude, marker.position.longitude))
-          .get();
+  // Build mapping of GeoPoints to markers
+  for (final marker in markers) {
+    final geoPoint = GeoPoint(marker.position.latitude, marker.position.longitude);
+    geoPointToMarkerMap[geoPoint] = marker;
+    geoPoints.add(geoPoint);
+  }
 
-      if (querySnapshot.docs.isNotEmpty) {
-        final doc = querySnapshot.docs.first;
-        final data = doc.data();
-        final fetchedRating = data?['averageRating'] as double? ?? 0.0;
-        markerRatings[marker] = fetchedRating;
-      } else {
-        markerRatings[marker] = 0.0;
+  final Map<Marker, double> markerRatings = {};
+
+  // Fetch ratings in batches
+  const int batchSize = 30;
+  for (int i = 0; i < geoPoints.length; i += batchSize) {
+    final batchGeoPoints = geoPoints.skip(i).take(batchSize).toList();
+    
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position', whereIn: batchGeoPoints)
+        .get();
+
+    for (final doc in querySnapshot.docs) {
+      final data = doc.data();
+      final geoPoint = GeoPoint(
+        data['position'].latitude,
+        data['position'].longitude,
+      );
+      final marker = geoPointToMarkerMap[geoPoint];
+      if (marker != null) {
+        markerRatings[marker] = data['averageRating'] as double? ?? 0.0;
       }
     }
-
-    return markerRatings;
   }
 
-  Future<List<Marker>> getNearestMarkers(
-      LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
-    List<Marker> markers =
-        _markers.where((marker) => marker.icon == customMarkerIcon).toList();
-
-    // Fetch ratings for all markers
-    Map<Marker, double> markerRatings = await _fetchRatings(markers);
-
-    // Sort by distance first
-    markers.sort((a, b) {
-      final distanceA = _calculateDistance(userPosition, a.position);
-      final distanceB = _calculateDistance(userPosition, b.position);
-      return distanceA.compareTo(distanceB);
-    });
-
-    // Take the top 'count' markers by distance
-    markers = markers.take(count).toList();
-
-    // Sort by rating (highest rating first)
-    markers.sort((a, b) {
-      final ratingA = markerRatings[a]!;
-      final ratingB = markerRatings[b]!;
-      return ratingB.compareTo(ratingA);
-    });
-
-    return markers;
+  // Assign default rating for markers without data
+  for (final marker in markers) {
+    if (!markerRatings.containsKey(marker)) {
+      markerRatings[marker] = 0.0;
+    }
   }
 
-  double _calculateDistance(LatLng start, LatLng end) {
-    var distance = sqrt(pow(end.latitude - start.latitude, 2) +
-        pow(end.longitude - start.longitude, 2));
-    return distance;
-  }
+  return markerRatings;
+}
 
-  void _showSampleFindNearestPayToilet() async {
-    LatLng userPosition = _currentP!;
+Future<List<Marker>> getNearestMarkers(LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
+  final List<Marker> markers = _markers
+      .where((marker) => marker.icon == customMarkerIcon)
+      .toList();
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-      ),
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return DraggableScrollableSheet(
-            initialChildSize: 0.4, // Initial height of the sheet
-            minChildSize: 0.2, // Minimum height of the sheet
-            maxChildSize: 0.9, // Maximum height of the sheet
-            builder: (context, scrollController) {
-              return Container(
-                decoration: BoxDecoration(
-                  color: Color(0xFF766EBD),
-                  borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-                ),
-                child: SamplePaidRestroomRecommendationList(),
-              );
-            });
-      },
-    );
-  }
+  // Fetch ratings for all markers
+  final markerRatings = await _fetchRatings(markers);
+
+  // Calculate distances and sort markers
+  markers.sort((a, b) {
+    final distanceA = _calculateDistance(userPosition, a.position);
+    final distanceB = _calculateDistance(userPosition, b.position);
+    return distanceA.compareTo(distanceB);
+  });
+
+  // Take top 'count' markers by distance
+  final nearestMarkers = markers.take(count).toList();
+
+  // Sort the nearest markers by rating (highest first)
+  nearestMarkers.sort((a, b) => (markerRatings[b] ?? 0.0).compareTo(markerRatings[a] ?? 0.0));
+
+  return nearestMarkers;
+}
+
+double _calculateDistance(LatLng start, LatLng end) {
+  final latDiff = end.latitude - start.latitude;
+  final lngDiff = end.longitude - start.longitude;
+  return sqrt(latDiff * latDiff + lngDiff * lngDiff);
+}
+
 
   void _showFindNearestPayToilet() async {
     LatLng userPosition = _currentP!;

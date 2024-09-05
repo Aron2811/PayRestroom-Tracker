@@ -32,9 +32,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       context: context,
       barrierDismissible: false, // Prevent dismissing by tapping outside
       builder: (context) {
-        return Center(
-               
-              );
+        return Center();
       },
     );
     String username = _usernameController.text.trim();
@@ -134,7 +132,9 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(color: Colors.white,),
+                    CircularProgressIndicator(
+                      color: Colors.white,
+                    ),
                     SizedBox(height: 20),
                     Text(
                       "Please wait...",
@@ -243,7 +243,8 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                               color: Color.fromARGB(255, 211, 203, 252),
                             ),
                             suffixIcon: IconButton(
-                              padding: const EdgeInsetsDirectional.only(end: 12.0),
+                              padding:
+                                  const EdgeInsetsDirectional.only(end: 12.0),
                               icon: _isObscured
                                   ? const Icon(Icons.visibility_off_rounded)
                                   : const Icon(Icons.visibility),

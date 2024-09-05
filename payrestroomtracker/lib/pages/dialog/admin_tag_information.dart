@@ -98,7 +98,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
     }
   }
 
-   Future<void> _fetchRating() async {
+  Future<void> _fetchRating() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
         .where('position',
@@ -215,8 +215,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
             const SizedBox(height: 30),
             Padding(
                 padding: EdgeInsets.only(left: 60, right: 30),
-                child: Row(children: [
-                ])),
+                child: Row(children: [])),
             SizedBox(height: 20),
             Align(
                 alignment: Alignment.center,

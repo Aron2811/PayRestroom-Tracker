@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_button/pages/dialog/apprate_dialog.dart';
 import 'package:flutter_button/pages/intro_page.dart';
 
 class LoadingPage extends StatelessWidget {
@@ -11,7 +10,6 @@ class LoadingPage extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         home: Scaffold(
             body: Stack(children: [
-         
           // Background Image
           Container(
             decoration: BoxDecoration(
@@ -39,7 +37,8 @@ class LoadingPage extends StatelessWidget {
                 Container(
                   height: 50,
                   width: 300,
-                 /// color: Colors.black,
+
+                  /// color: Colors.black,
                   child: GestureDetector(
                     child: Text(
                       'Tap here to continue',

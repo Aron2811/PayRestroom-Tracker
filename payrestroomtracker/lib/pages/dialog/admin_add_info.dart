@@ -31,8 +31,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
   final TextEditingController costController = TextEditingController();
   String dropdownValue = 'Cost';
   bool showCostField = true;
-  int? _selectedCost;
-  String? _selectedPayOption;
+
 
   @override
   void initState() {

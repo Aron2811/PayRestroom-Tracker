@@ -1,10 +1,6 @@
-import 'package:another_carousel_pro/another_carousel_pro.dart';
-import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_button/pages/bottomsheet/draggablesheet.dart';
-import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
-import 'package:custom_rating_bar/custom_rating_bar.dart' as custom_rating_bar;
+
 
 List<TargetFocus> components({
   required GlobalKey findKey,
