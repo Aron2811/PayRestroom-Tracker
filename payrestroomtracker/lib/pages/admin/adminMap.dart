@@ -89,6 +89,8 @@ class AdminMapState extends State<AdminMap> {
             context: context,
             builder: (context) => AdminTagInformation(
               markerId: MarkerId(id ?? 'unknown'),
+              report: widget.report,
+              username: widget.username,
               deleteMarker: _deleteMarker,
               destination: latLng,
             ),
@@ -386,6 +388,8 @@ class AdminMapState extends State<AdminMap> {
           context: context,
           builder: (context) => AdminTagInformation(
             markerId: markerId_,
+            report: widget.report,
+            username: widget.username,
             deleteMarker: _deleteMarker,
             destination: latLng,
           ),

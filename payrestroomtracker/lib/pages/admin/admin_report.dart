@@ -62,17 +62,19 @@ class _AdminReportState extends State<AdminReport> {
       home: Scaffold(
         appBar: AppBar(
           leading: BackButton(
+            color: Colors.white,
             onPressed: () {
               Navigator.push(
                 context,
-                _createRoute(
-                    AdminPage(username: widget.username, report: widget.report)),
+                _createRoute(AdminPage(
+                    username: widget.username, report: widget.report)),
               );
             },
           ),
           title: const Text(
             'Report',
-            style: TextStyle(fontSize: 20, color: Colors.white, letterSpacing: 3),
+            style:
+                TextStyle(fontSize: 20, color: Colors.white, letterSpacing: 3),
           ),
           backgroundColor: const Color.fromARGB(255, 97, 84, 158),
           centerTitle: true,
@@ -91,7 +93,7 @@ class _AdminReportState extends State<AdminReport> {
                       itemCount: reports.length,
                       itemBuilder: (context, index) {
                         final report = reports[index];
-      
+
                         return ListTile(
                           contentPadding: EdgeInsets.all(15),
                           tileColor: report['read']

@@ -11,9 +11,13 @@ class AdminTagInformation extends StatefulWidget {
   final MarkerId markerId;
   final Future<void> Function(MarkerId) deleteMarker;
   final LatLng destination;
+  final String username;
+  final String report;
 
   const AdminTagInformation({
     Key? key,
+    required this.username,
+    required this.report,
     required this.markerId,
     required this.deleteMarker,
     required this.destination,
@@ -231,8 +235,10 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                   onTap: () {
                     Navigator.push(
                         context,
-                        _createRoute(
-                            AdminReviewsPage(destination: widget.destination)));
+                        _createRoute(AdminReviewsPage(
+                            username: widget.username,
+                            report: widget.report,
+                            destination: widget.destination)));
                   },
                 )),
             const SizedBox(height: 15),

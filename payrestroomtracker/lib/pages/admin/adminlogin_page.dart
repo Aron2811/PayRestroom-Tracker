@@ -250,7 +250,8 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                   : const Icon(Icons.visibility),
                               onPressed: () {
                                 setState(() {
-                                  _isObscured = !_isObscured;
+                                  _isObscured =
+                                      !_isObscured; // Toggle password visibility
                                 });
                               },
                             ),

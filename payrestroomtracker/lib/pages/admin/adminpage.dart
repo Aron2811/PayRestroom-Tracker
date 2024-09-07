@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/admin/adminMap.dart';
+import 'package:flutter_button/pages/admin/admin_allreviewpage.dart';
 import 'package:flutter_button/pages/admin/admin_report.dart';
 import 'package:flutter_button/pages/intro_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -169,7 +170,7 @@ class _AdminPageState extends State<AdminPage> {
               Column(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  const SizedBox(height: 150),
+                  const SizedBox(height: 100),
                   // Image
                   Image.asset(
                     'assets/PO_tag.png',
@@ -197,7 +198,7 @@ class _AdminPageState extends State<AdminPage> {
                       letterSpacing: 2,
                     ),
                   ),
-                  SizedBox(height: 25),
+                  SizedBox(height: 40),
                   Align(
                     alignment: Alignment.center,
                     child: ElevatedButton.icon(
@@ -243,6 +244,74 @@ class _AdminPageState extends State<AdminPage> {
                       },
                     ),
                   ),
+                  SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.center,
+                    child: StreamBuilder<QuerySnapshot>(
+                      stream: FirebaseFirestore.instance
+                          .collection('reviews')
+                          .where('read', isEqualTo: false)
+                          .snapshots(),
+                      builder: (context, snapshot) {
+                        if (snapshot.hasData) {
+                          int unreadCount = snapshot.data!.docs.length;
+                          return Badge(
+                            badgeCount: unreadCount,
+                            child: ElevatedButton.icon(
+                              style: ElevatedButton.styleFrom(
+                                enableFeedback: false,
+                                backgroundColor: Colors.white,
+                                minimumSize: const Size(170, 40),
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.only(
+                                    topLeft: Radius.circular(10),
+                                    topRight: Radius.circular(10),
+                                    bottomLeft: Radius.circular(10),
+                                    bottomRight: Radius.circular(10),
+                                  ),
+                                ),
+                                foregroundColor:
+                                    Color.fromARGB(255, 97, 84, 158),
+                                textStyle: const TextStyle(
+                                  fontSize: 16,
+                                ),
+                              ),
+                              label: const Text(
+                                "View Review",
+                                textAlign: TextAlign.center,
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.bold,
+                                  color: Color.fromARGB(255, 132, 119, 197),
+                                ),
+                              ),
+                              icon: const Icon(
+                                Icons.reviews_rounded,
+                                color: Color.fromARGB(255, 132, 119, 197),
+                                size: 20,
+                              ),
+                              onPressed: () {
+                                Navigator.push(
+                                  context,
+                                  _createRoute(AdminAllReviewsPage(
+                                    username: widget.username,
+                                    report: widget.report,
+                                    destination:
+                                        destination, // Pass the GeoPoint
+                                  )),
+                                );
+                              },
+                            ),
+                          );
+                        } else if (snapshot.hasError) {
+                          return Text('Error: ${snapshot.error}');
+                        } else {
+                          return CircularProgressIndicator();
+                        }
+                      },
+                    ),
+                  ),
+
                   SizedBox(height: 8),
                   Align(
                     alignment: Alignment.center,
