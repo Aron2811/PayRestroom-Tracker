@@ -18,7 +18,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
     super.initState();
     _fetchUserDisplayName();
   }
-
+  // Fetch the user display name from Firebase
   Future<void> _fetchUserDisplayName() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -27,7 +27,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
       });
     }
   }
-
+  // Update the user display name
   Future<void> _updateUsername(String newUsername) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -43,7 +43,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
       }
     }
   }
-
+// Update the username in Firestore
   Future<void> _updateFirestoreUsername(String newUsername) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -56,7 +56,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
       }
     }
   }
-
+  // Log out the user and navigate to the intro page
   Future<void> _logout(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut();

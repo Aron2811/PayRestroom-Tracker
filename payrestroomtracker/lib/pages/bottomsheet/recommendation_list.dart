@@ -37,6 +37,7 @@ class _PaidRestroomRecommendationListState
     _fetchPaidRestroomCost();
   }
 
+  //gets the paid restroom name from the database
   Future<void> _fetchPaidRestroomName() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -56,6 +57,7 @@ class _PaidRestroomRecommendationListState
     }
   }
 
+  //gets the paid restroom location from the database
   Future<void> _fetchPaidRestroomLocation() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -75,6 +77,7 @@ class _PaidRestroomRecommendationListState
     }
   }
 
+  //gets the paid restroom cost from the database
   Future<void> _fetchPaidRestroomCost() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -94,6 +97,7 @@ class _PaidRestroomRecommendationListState
     }
   }
 
+  //gets the average rating from the database
   Future<double> fetchAverageRating() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -163,7 +167,7 @@ class _PaidRestroomRecommendationListState
                       const SizedBox(height: 5),
                       Row(
                         children: [
-                          FutureBuilder<double>(
+                          FutureBuilder<double>(  // Builds a widget that displays the average rating and allows users to interact with the rating bar
                             future: _avarageRatingFuture,
                             builder: (context, snapshot) {
                               if (snapshot.connectionState ==
@@ -241,7 +245,7 @@ class _PaidRestroomRecommendationListState
         ),
       ),
       onTap: () {
-        
+        // Displays a modal bottom sheet with information about a paid restroom
         showModalBottomSheet(
             context: context,
             isScrollControlled: true,

@@ -5,7 +5,9 @@ class FacilitiesDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(actions: [
+    return AlertDialog(
+      // facilities report details
+      actions: [
       Center(
           child: Column(
         children: [

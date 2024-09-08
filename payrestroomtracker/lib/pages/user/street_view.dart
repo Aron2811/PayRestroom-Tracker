@@ -12,13 +12,14 @@ class StreetViewPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    // Generates a Google Maps Street View URL for the given location
     final streetViewUrl =
         'https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${location.latitude},${location.longitude}';
 
     return MaterialApp(
       debugShowCheckedModeBanner: false,
       home: Scaffold(
-        appBar: AppBar(
+        appBar: AppBar( // AppBar configuration for the Street View page
           backgroundColor: Color.fromARGB(255, 149, 134, 225),
           centerTitle: true,
           title: Text(
@@ -32,7 +33,7 @@ class StreetViewPage extends StatelessWidget {
         ),
         body: Stack(
           children: [
-            WebView(
+            WebView(  // Displays a WebView with Google Maps Street View for the specified URL
               initialUrl: streetViewUrl,
               javascriptMode: JavascriptMode.unrestricted,
               onWebViewCreated: (WebViewController webViewController) {

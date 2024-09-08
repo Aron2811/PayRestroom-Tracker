@@ -125,7 +125,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
       }
     }
   }
-
+  // Check if Cost is selected in the dropdown
   bool _validateInputs() {
     bool isCostFieldVisible = dropdownValue == 'Cost';
 
@@ -139,7 +139,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
 
     return areFieldsFilled && isCostValid;
   }
-
+  //method for uploading image
   Future<void> _uploadImages() async {
     final pickedFiles = await ImagePicker().pickMultiImage();
     if (pickedFiles == null || pickedFiles.isEmpty) return;
@@ -163,7 +163,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
         return;
       }
     }
-
+    //to limit user how many image they can upload 
     if (pickedFiles.length > 3) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -229,7 +229,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
       }
     }
   }
-
+  //to fetch image url in firestore
   Future<void> fetchImageUrls(BuildContext context) async {
     try {
       DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
@@ -260,7 +260,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
       Navigator.of(context).pop(false);
     }
   }
-
+  //method to delete an image
   Future<void> _deleteImage(int index) async {
     try {
       DocumentReference tagRef = FirebaseFirestore.instance

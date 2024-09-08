@@ -9,6 +9,8 @@ class TutorialDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       actionsAlignment: MainAxisAlignment.center,
+
+      // for tutorial dialog details
       actions: [
         SizedBox(
           height: 300,

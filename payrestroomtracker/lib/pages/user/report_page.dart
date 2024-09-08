@@ -30,7 +30,7 @@ class _ReportPageState extends State<ReportPage> {
     super.initState();
     _fetchPaidRestroomName();
   }
-
+  // Get restroom name from Firestore
   Future<void> _fetchPaidRestroomName() async {
     try {
       final querySnapshot = await FirebaseFirestore.instance
@@ -59,7 +59,7 @@ class _ReportPageState extends State<ReportPage> {
       });
     }
   }
-
+  // Save the report to Firestore
   Future<void> storeReport(String reportType, String reportContent) async {
     User? user = _auth.currentUser;
     if (user != null) {
@@ -131,7 +131,7 @@ class _ReportPageState extends State<ReportPage> {
       ),
     );
   }
-
+  // Create a report option item
   Widget reportOption(BuildContext context, String reportType,
       String reportContent, Widget dialog) {
     return ClipRRect(

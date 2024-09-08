@@ -25,7 +25,7 @@ class _OthersReportPageState extends State<OthersReportPage> {
     _fetchPaidRestroomName();
     
   }
-
+   // Fetch the restroom name from Firestore
     Future<void> _fetchPaidRestroomName() async {
     try {
       final querySnapshot = await FirebaseFirestore.instance
@@ -52,7 +52,7 @@ class _OthersReportPageState extends State<OthersReportPage> {
       });
     }
   }
-
+  // Store the report in Firestore
   Future<void> storeReport(String reportType, String reportContent) async {
     User? user = _auth.currentUser;
     if (user != null) {

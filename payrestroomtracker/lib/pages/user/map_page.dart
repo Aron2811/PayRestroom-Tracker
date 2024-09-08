@@ -68,8 +68,6 @@ class MapPageState extends State<MapPage> {
   bool isCar = false;
   bool isDisplayed = true;
 
-  late AStar _aStar;
-
   final tagKey = GlobalKey();
   final findKey = GlobalKey();
   final profileKey = GlobalKey();
@@ -86,6 +84,7 @@ class MapPageState extends State<MapPage> {
 
   int _backPressCount = 0;
 
+  // Initializes and configures the main tutorial with TutorialCoachMark
   void initMainTutorial() {
     tutorialCoachMark = TutorialCoachMark(
       targets: components(
@@ -117,14 +116,14 @@ class MapPageState extends State<MapPage> {
     );
   }
 
-  
-
+  // Displays the main tutorial with a delay
   void _showMainTutorial() {
     Future.delayed(const Duration(seconds: 2), () {
       tutorialCoachMark.show(context: context);
     });
   }
 
+  // Loads the tutorial state and shows the main tutorial if it hasn't been completed
   Future<void> _loadTutorialState() async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     bool? mainTutorialCompleted = prefs.getBool(mainTutorialKey);
@@ -139,6 +138,7 @@ class MapPageState extends State<MapPage> {
     }
   }
 
+  // Saves the state of the tutorial completion
   Future<void> _saveTutorialState(String key, bool isCompleted) async {
     SharedPreferences prefs = await SharedPreferences.getInstance();
     await prefs.setBool(key, isCompleted);
@@ -157,6 +157,7 @@ class MapPageState extends State<MapPage> {
     _loadTutorialState(); // Re-initialize and show the main tutorial
   }
 
+  // Returns the appropriate background image based on the transportation mode
   AssetImage getBackgroundImage() {
     print(isCommute);
     if (isCommute) {
@@ -199,7 +200,7 @@ class MapPageState extends State<MapPage> {
       // Fetch the username in real-time
       String username = await _getCurrentUsername();
 
-      if (username == null || username.isEmpty) {
+      if (username.isEmpty) {
         // Handle the case where username is not available
         return false; // Prevent the actual back navigation
       }
@@ -239,6 +240,7 @@ class MapPageState extends State<MapPage> {
     }
   }
 
+  // Fetches the current user's display name from Firestore
   Future<String> _getCurrentUsername() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -268,7 +270,6 @@ class MapPageState extends State<MapPage> {
     getLocationUpdates();
     _loadCustomMarkerIcon();
     _loadMarkers();
-    _aStar = AStar('YOUR_GOOGLE_MAPS_API_KEY', _updateDuration);
   }
 
   void _onMarkerTap(MarkerId markerId) {
@@ -290,6 +291,7 @@ class MapPageState extends State<MapPage> {
     _showPayToiletInformation(clickedMarker.position);
   }
 
+  // Updates the estimated time based on the selected mode of transportation
   void _updateDuration(String mode, String duration) {
     setState(() {
       if (mode == 'private') {
@@ -302,6 +304,7 @@ class MapPageState extends State<MapPage> {
     });
   }
 
+  // Loads markers from preferences and updates the UI
   Future<void> _loadMarkers() async {
     _markers = await adminMap.loadMarkersFromPrefs().then((markers) {
       return markers.map((marker) {
@@ -319,6 +322,7 @@ class MapPageState extends State<MapPage> {
     setState(() {}); // Update UI after loading markers
   }
 
+  // Loads custom marker icons from asset images
   Future<void> _loadCustomMarkerIcon() async {
     _customMarkerIcon = await BitmapDescriptor.fromAssetImage(
       ImageConfiguration(size: Size(1, 1)),
@@ -342,6 +346,7 @@ class MapPageState extends State<MapPage> {
     );
   }
 
+  // Updates the current address based on the current location
   Future<void> updateCurrentAddress() async {
     if (_currentP != null) {
       String? fullAddress =
@@ -370,6 +375,7 @@ class MapPageState extends State<MapPage> {
     return "$municipality, $province, $country";
   }
 
+// Fetches ratings for a list of markers from Firestore
  Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
   final Map<GeoPoint, Marker> geoPointToMarkerMap = {};
   final List<GeoPoint> geoPoints = [];
@@ -440,13 +446,14 @@ Future<List<Marker>> getNearestMarkers(LatLng userPosition, int count, BitmapDes
   return nearestMarkers;
 }
 
+// Calculates the Euclidean distance between two LatLng points
 double _calculateDistance(LatLng start, LatLng end) {
   final latDiff = end.latitude - start.latitude;
   final lngDiff = end.longitude - start.longitude;
   return sqrt(latDiff * latDiff + lngDiff * lngDiff);
 }
 
-
+  // Displays a bottom sheet with a list of the nearest pay toilets
   void _showFindNearestPayToilet() async {
     LatLng userPosition = _currentP!;
 
@@ -502,6 +509,7 @@ double _calculateDistance(LatLng start, LatLng end) {
     );
   }
 
+  // Displays a bottom sheet with information about the selected pay toilet
   void _showPayToiletInformation(LatLng destination) {
     showModalBottomSheet(
       context: context,
@@ -534,6 +542,7 @@ double _calculateDistance(LatLng start, LatLng end) {
 
   @override
   Widget build(BuildContext context) {
+    // Adds a marker for the user's current location if it's available
     if (_currentP != null) {
       print(_currentP);
       _markers.add(
@@ -541,7 +550,7 @@ double _calculateDistance(LatLng start, LatLng end) {
           markerId: const MarkerId('User Location'),
           position: _currentP!,
           icon: dynamicIcon ??
-              BitmapDescriptor.defaultMarkerWithHue(255.0), // Set the custom icon here
+              BitmapDescriptor.defaultMarkerWithHue(255.0),
         ),
       );
     }
@@ -913,22 +922,23 @@ double _calculateDistance(LatLng start, LatLng end) {
         ])));
   }
 
+  // makes the isVisible into true
   void toggleVisibility() {
     setState(() {
       isVisible = true;
     });
   }
 
+  // Hides the path
   void _hidePath() {
     setState(() {
       isVisible = false;
     });
   }
 
- 
-
+  // Ensures the camera is centered on the user's current location
   Future<void> _ensureUserLocationVisible() async {
-    if (_currentP != null && mapController != null) {
+    if (_currentP != null) {
       //Center the camera on the user's location
       mapController.animateCamera(
         CameraUpdate.newCameraPosition(
@@ -942,6 +952,7 @@ double _calculateDistance(LatLng start, LatLng end) {
     }
   }
 
+  // Monitors location updates and updates the map and address accordingly
   Future<void> getLocationUpdates() async {
     bool _serviceEnabled;
     PermissionStatus _permissionGranted;
@@ -982,6 +993,7 @@ double _calculateDistance(LatLng start, LatLng end) {
     });
   }
 
+  // Retrieves a formatted address from latitude and longitude
   Future<String?> getAddressFromLatLng(double lat, double lng) async {
     const apiKey = 'AIzaSyC1Ooxwod2ykAO6R99jhnXoYA3ubvkrB9M';
     final url =
@@ -1011,6 +1023,7 @@ double _calculateDistance(LatLng start, LatLng end) {
     }
   }
 
+  // Shows a confirmation dialog when the back button is pressed, allowing the user to exit the app or stay
   Future<bool> _onBackButtonPressed() async {
     return await showDialog(
         context: context,
@@ -1039,6 +1052,7 @@ double _calculateDistance(LatLng start, LatLng end) {
             ));
   }
 
+  // Fetches the name of a paid restroom from Firestore based on its location
   Future<void> _fetchPaidRestroomName(LatLng destination) async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -1057,6 +1071,7 @@ double _calculateDistance(LatLng start, LatLng end) {
     }
   }
 
+  // Draws the route to the destination based on the selected transportation option
   Future<void> _drawRouteToDestination(
       LatLng destination, String option) async {
     setState(() {
@@ -1125,26 +1140,6 @@ double _calculateDistance(LatLng start, LatLng end) {
       // Update the marker with the selected transportation option icon
       _markers.removeWhere(
           (marker) => marker.markerId == MarkerId('User Location'));
-
-      // BitmapDescriptor icon;
-      // if (isCommute) {
-      //   icon = _jeepMarkerIcon ?? BitmapDescriptor.defaultMarker;
-      // } else if (isByFoot) {
-      //   icon = _personMarkerIcon ?? BitmapDescriptor.defaultMarker;
-      // } else if (isCar) {
-      //   icon = _carMarkerIcon ?? BitmapDescriptor.defaultMarker;
-      // } else {
-      //   icon = BitmapDescriptor.defaultMarker;
-      // }
-
-      // _markers.add(
-      //   Marker(
-      //     markerId: MarkerId('User Location'),
-      //     position: _currentP!,
-      //     icon: icon,
-      //   ),
-      // )
-
       distanceInMiles = aStar.getDistanceInMiles(_currentP!, destination);
     });
   }
@@ -1174,12 +1169,14 @@ double _calculateDistance(LatLng start, LatLng end) {
     return true;
   }
 
+  // Calculates the angle in radians between two LatLng points
   double _calculateAngle(LatLng start, LatLng end) {
     double deltaX = end.longitude - start.longitude;
     double deltaY = end.latitude - start.latitude;
     return atan2(deltaY, deltaX);
   }
 
+  // Adjusts the map view to fit the route coordinates
   void _fitRouteOnMap(List<LatLng> routeCoords) {
     LatLngBounds? bounds;
     if (routeCoords.isNotEmpty) {
@@ -1202,6 +1199,7 @@ double _calculateDistance(LatLng start, LatLng end) {
   }
 }
 
+// Creates a custom route with a slide transition animation
 Route _createRoute(Widget child) {
   return PageRouteBuilder(
       pageBuilder: (BuildContext context, Animation<double> animation,

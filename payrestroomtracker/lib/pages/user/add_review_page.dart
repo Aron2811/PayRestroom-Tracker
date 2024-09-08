@@ -27,6 +27,7 @@ class _AddReviewPageState extends State<AddReviewPage> {
     _fetchPaidRestroomName();
   }
 
+  //gets the paid restroom name from the data base
   Future<void> _fetchPaidRestroomName() async {
     try {
       final querySnapshot = await FirebaseFirestore.instance
@@ -56,6 +57,7 @@ class _AddReviewPageState extends State<AddReviewPage> {
     }
   }
 
+  // Stores a user review for a specific restroom, ensuring one review per day
   Future<void> storeReview() async {
     String reviewText = _textController.text;
 

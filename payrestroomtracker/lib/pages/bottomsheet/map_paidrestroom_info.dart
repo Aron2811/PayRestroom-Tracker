@@ -55,7 +55,7 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
     return totalRating / ratings.length;
   }
 
-// Updated _updateRating method
+  // Updates or adds a rating for a location and calculates the average rating.
   void _updateRating(double newRating) async {
     try {
       final user = FirebaseAuth.instance.currentUser;
@@ -146,6 +146,7 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
     }
   }
 
+   //gets the restroom name from the database
   Future<void> _fetchPaidRestroomName() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -165,6 +166,7 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
     }
   }
 
+  //gets the restroom location from the database
   Future<void> _fetchPaidRestroomLocation() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -184,6 +186,7 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
     }
   }
 
+  //gets the restroom cost from the database
   Future<void> _fetchPaidRestroomCost() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -203,6 +206,7 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
     }
   }
 
+  //gets the image of the restroom from the database
   Future<List<String>> _fetchImageUrls() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -214,13 +218,14 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
     if (querySnapshot.docs.isNotEmpty) {
       final doc = querySnapshot.docs.first;
       final data = doc.data();
-      final imageUrls = data?['ImageUrls'] as List<dynamic>? ?? [];
+      final imageUrls = data['ImageUrls'] as List<dynamic>? ?? [];
       return List<String>.from(imageUrls);
     } else {
       return [];
     }
   }
 
+  //gets the user rating in the restroom if there is any from the data base
   Future<double> fetchUserRating() async {
     final user = FirebaseAuth.instance.currentUser;
     if (user == null) {
@@ -250,6 +255,7 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
     }
   }
 
+  // Streams the average rating for a specific location from Firestore.
   Stream<double> averageRatingStream() {
     return FirebaseFirestore.instance
         .collection('Tags')
@@ -311,7 +317,7 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
             ),
           ),
           const SizedBox(height: 10),
-          StreamBuilder<double>(
+          StreamBuilder<double>(  // Displays the average rating using a StreamBuilder with a RatingBar indicator.
             stream: averageRatingStream(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -449,7 +455,7 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
             ),
           ),
           const SizedBox(height: 30),
-          FutureBuilder<List<String>>(
+          FutureBuilder<List<String>>(  // Displays a carousel of images fetched from a future with loading and error handling.
             future: _fetchImageUrls(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -584,6 +590,7 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
   }
 }
 
+// Creates a slide transition route from the bottom of the screen to the center.
 Route _createRoute(Widget child) {
   return PageRouteBuilder(
     pageBuilder: (BuildContext context, Animation<double> animation,

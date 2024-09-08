@@ -24,6 +24,7 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
     });
   }
 
+// back button function
   Future<bool> onBackButtonPressed() async {
     // Navigate to the intro page
     Navigator.of(context).push(_createRoute(IntroPage(report: "",)));
@@ -55,7 +56,7 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
                   children: <Widget>[
                     const SizedBox(height: 130),
 
-                    // Image
+                    // Paid restroom logo
                     Image.asset(
                       'assets/PO_tag.png',
                       width: 250,
@@ -110,6 +111,7 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
                       height: 50,
                     ),
 
+                  // for showing the tutorial dialog
                     GestureDetector(
                       child: Container(
                         height: 50,

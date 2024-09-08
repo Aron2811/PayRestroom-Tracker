@@ -25,20 +25,15 @@ class LoadingPage extends StatelessWidget {
               child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                // Image
+                // Animated Logo
                 Image.asset('assets/Loading.gif'),
 
                 const SizedBox(height: 30),
-                // Text
 
-                // Padding(
-                //   padding: EdgeInsets.symmetric(horizontal: 25.0, vertical: 0.0),
-                //   child:
+              // text to continuw
                 Container(
                   height: 50,
                   width: 300,
-
-                  /// color: Colors.black,
                   child: GestureDetector(
                     child: Text(
                       'Tap here to continue',
