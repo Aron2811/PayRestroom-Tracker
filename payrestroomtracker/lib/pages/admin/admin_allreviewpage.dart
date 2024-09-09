@@ -31,6 +31,7 @@ class _AdminAllReviewsPageState extends State<AdminAllReviewsPage> {
     _fetchReviews(); // Fetch reviews when page initializes
   }
 
+  // Fetches reviews from the Firestore database, ordered by timestamp in descending order, and updates the state with the results.
   Future<void> _fetchReviews() async {
     final querySnapshot = await _firestore
         .collection('reviews')
@@ -47,11 +48,13 @@ class _AdminAllReviewsPageState extends State<AdminAllReviewsPage> {
     });
   }
 
+  //formats the timestamp to dd, MMM, yyyy, hh:mm, a
   String _formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
     return DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
   }
 
+  //checks if the timestamp of the review is older the one day
   bool _isReviewOlderThanOneDay(Timestamp timestamp) {
     final reviewDate = timestamp.toDate();
     final currentDate = DateTime.now();
@@ -59,6 +62,7 @@ class _AdminAllReviewsPageState extends State<AdminAllReviewsPage> {
     return difference.inHours >= 24;
   }
 
+  // Posts a review to Firestore, either updating an existing marker's comments or creating a new marker document with the review.
   Future<void> _postReview(String review, String username, String photo,
       GeoPoint position, String userId) async {
     String reviewText = review;
@@ -298,6 +302,7 @@ class _AdminAllReviewsPageState extends State<AdminAllReviewsPage> {
     }
   }
 
+  // Displays a confirmation dialog for deleting a review, and calls the delete function if confirmed.
   void _showDeleteDialog(String reviewId, int index) {
     showDialog(
       context: context,
@@ -331,6 +336,7 @@ class _AdminAllReviewsPageState extends State<AdminAllReviewsPage> {
     );
   }
 
+  // Creates a custom route with a slide transition from the bottom to the top.
   Route _createRoute(Widget child) {
     return PageRouteBuilder(
       pageBuilder: (BuildContext context, Animation<double> animation,

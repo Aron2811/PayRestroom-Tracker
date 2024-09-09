@@ -7,6 +7,8 @@ class PrivacyDialog extends StatelessWidget {
   Widget build(BuildContext context) {
     return AlertDialog(
       actionsAlignment: MainAxisAlignment.center,
+
+      // privacy dialog details
       actions: [
         const Text(
           "Your privacy is important to us and we want to make it easy for you to understand your data settings. You can check them now or at any time within the app. We will collect and use your personal data in accordance with our privacy policy. Please read this to understand the data we collect and why and your rights regarding this data.",

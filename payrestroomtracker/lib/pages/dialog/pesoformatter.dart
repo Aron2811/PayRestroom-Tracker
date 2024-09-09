@@ -2,6 +2,8 @@ import 'package:flutter/services.dart';
 
 class PesoInputFormatter extends TextInputFormatter {
   @override
+
+  // for automatic peso sign typer in cost field
   TextEditingValue formatEditUpdate(
       TextEditingValue oldValue, TextEditingValue newValue) {
     if (newValue.text.isEmpty) {

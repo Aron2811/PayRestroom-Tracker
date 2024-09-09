@@ -5,7 +5,9 @@ class LackDetailsDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(actions: [
+    return AlertDialog(
+      //lack details report 
+      actions: [
       Center(
           child: Column(
         children: [

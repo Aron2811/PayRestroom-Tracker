@@ -47,7 +47,7 @@ class IntroPage extends StatelessWidget {
                 children: <Widget>[
                   const SizedBox(height: 50),
 
-                  // Image
+                  // Paid restroom Logo
                   Image.asset(
                     'assets/PO_tag.png',
                     width: 250,
@@ -71,6 +71,7 @@ class IntroPage extends StatelessWidget {
 
                   const SizedBox(height: 10),
 
+                // for Logging in as admin
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                         enableFeedback: false,
@@ -102,6 +103,7 @@ class IntroPage extends StatelessWidget {
 
                   const SizedBox(height: 15),
 
+                // for logging in as user
                   ElevatedButton.icon(
                     style: ElevatedButton.styleFrom(
                         enableFeedback: false,

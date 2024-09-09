@@ -5,7 +5,9 @@ class TagLocationDialog extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(actions: [
+    return AlertDialog(
+      // for tag location report
+      actions: [
       Center(
           child: Column(
         children: [

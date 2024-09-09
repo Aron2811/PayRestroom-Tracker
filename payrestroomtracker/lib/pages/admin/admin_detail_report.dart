@@ -7,6 +7,7 @@ class ReportDetailPage extends StatelessWidget {
 
   ReportDetailPage({required this.report});
 
+  //formats the timestamp to dd, MMM, yyyy, hh:mm, a
   String _formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
     return DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
@@ -40,6 +41,7 @@ class ReportDetailPage extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const SizedBox(height: 20),
+                    // Creates a row displaying a user profile picture, username, and timestamp, with appropriate styling and spacing.
                     Row(
                       children: [
                         CircleAvatar(
@@ -74,6 +76,7 @@ class ReportDetailPage extends StatelessWidget {
                       ],
                     ),
                     const SizedBox(height: 70),
+                    // Displays a centered column with restroom name and report details, styled with specific colors and fonts.
                     Center(
                       child: Column(
                         children: [
@@ -100,6 +103,7 @@ class ReportDetailPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 20),
+                    //displays the report content of the user
                     Text(
                       report['reportContent'] ?? '',
                       textAlign: TextAlign.justify,
@@ -110,6 +114,7 @@ class ReportDetailPage extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(height: 150),
+                    //dispalys the confirmation of the report
                     Text(
                       'Thank you for your attention to this matter. We appreciate your prompt action in addressing the issues reported. Your efforts are greatly valued.',
                       textAlign: TextAlign.center,

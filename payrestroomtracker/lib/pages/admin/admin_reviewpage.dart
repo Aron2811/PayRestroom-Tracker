@@ -1,7 +1,6 @@
 import 'package:custom_rating_bar/custom_rating_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/admin/adminpage.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:readmore/readmore.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -32,6 +31,7 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
     _fetchReviews(); // Fetch reviews when page initializes
   }
 
+  // Fetches reviews and ratings for a specific location from Firestore, updating the state with the results.
   Future<void> _fetchReviews() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -66,6 +66,7 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
     }
   }
 
+  //formats the timestamp to dd, MMM, yyyy, hh:mm, a
   String _formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
     return DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
@@ -158,7 +159,7 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
                                   ),
                                   const SizedBox(width: 20),
                                   Text(
-                                    review['userName'] ?? 'Anonymous',
+                                    review['userName'] ?? 'Anonymous',  //displays the user name
                                     textAlign: TextAlign.start,
                                     style: const TextStyle(
                                       fontSize: 17,
@@ -227,6 +228,7 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
     );
   }
 
+  // Displays a confirmation dialog for deleting a review, and calls the delete function if confirmed.
   void _showDeleteDialog(int index) {
     showDialog(
       context: context,
@@ -259,6 +261,7 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
     );
   }
 
+  // Creates a custom route with a slide transition animation from the bottom to the top.
   Route _createRoute(Widget child) {
     return PageRouteBuilder(
       pageBuilder: (BuildContext context, Animation<double> animation,

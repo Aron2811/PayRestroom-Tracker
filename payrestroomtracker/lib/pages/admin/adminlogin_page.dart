@@ -17,6 +17,8 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
   final TextEditingController _passwordController = TextEditingController();
   String _usernameError = '';
   String _passwordError = '';
+  bool _isLoading = false; // For handling loading
+  bool _isCheckingLoginStatus = true; // For checking login status
 
   @override
   void initState() {
@@ -27,7 +29,12 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     });
   }
 
+  //method for login
   Future<void> _login() async {
+    setState(() {
+      _isLoading = true; // Start showing loading indicator
+    });
+
     showDialog(
       context: context,
       barrierDismissible: false, // Prevent dismissing by tapping outside
@@ -41,6 +48,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     bool passwordValid = false;
 
     try {
+      // Check if username exists
       QuerySnapshot querySnapshot = await FirebaseFirestore.instance
           .collection('admin')
           .where('username', isEqualTo: username)
@@ -78,15 +86,18 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
     setState(() {
       _usernameError = usernameValid ? '' : 'Username not found';
       _passwordError = passwordValid ? '' : 'Incorrect password';
+      _isLoading = false; // Stop loading indicator
     });
   }
 
+  //method for saving the login details
   Future<void> _saveLoginDetails(String username, String password) async {
     final prefs = await SharedPreferences.getInstance();
     await prefs.setString('username', username);
     await prefs.setString('password', password);
   }
 
+  //method for checking the login status
   Future<void> _checkLoginStatus() async {
     final prefs = await SharedPreferences.getInstance();
     String? username = prefs.getString('username');
@@ -110,12 +121,18 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                 report: widget.report,
               )),
             );
+            return; // Exit the method if user is logged in
           }
         }
       } catch (e) {
         debugPrint('Error: $e');
       }
     }
+
+    // If not logged in, set this flag to false
+    setState(() {
+      _isCheckingLoginStatus = false;
+    });
   }
 
   @override
@@ -124,17 +141,12 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
       debugShowCheckedModeBanner: false,
       home: Scaffold(
         backgroundColor: const Color.fromARGB(255, 115, 99, 183),
-        body: FutureBuilder(
-          future: _checkLoginStatus(),
-          builder: (context, snapshot) {
-            if (snapshot.connectionState == ConnectionState.waiting) {
-              return Center(
+        body: _isCheckingLoginStatus
+            ? const Center(
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    CircularProgressIndicator(
-                      color: Colors.white,
-                    ),
+                    CircularProgressIndicator(color: Colors.white),
                     SizedBox(height: 20),
                     Text(
                       "Please wait...",
@@ -142,189 +154,150 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                     ),
                   ],
                 ),
-              );
-            } else if (snapshot.hasError) {
-              return Center(
-                child: Text('Error: ${snapshot.error}'),
-              );
-            } else {
-              return SingleChildScrollView(
-                child: Center(
-                  child: Column(
-                    children: [
-                      const SizedBox(height: 100),
-                      // Image
-                      Image.asset(
-                        'assets/PO_tag.png',
-                        width: 200,
-                        height: 200,
-                      ),
-                      const SizedBox(height: 10),
-                      // Text
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 25.0,
-                          vertical: 20.0,
+              )
+            : _isLoading
+                ? const Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        CircularProgressIndicator(color: Colors.white),
+                        SizedBox(height: 20),
+                        Text(
+                          "Please wait...",
+                          style: TextStyle(color: Colors.white),
                         ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: const [
-                            Text(
+                      ],
+                    ),
+                  )
+                : SingleChildScrollView(
+                    child: Center(
+                      child: Column(
+                        children: [
+                          const SizedBox(height: 100),
+                          Image.asset('assets/PO_tag.png',
+                              width: 200, height: 200),
+                          const SizedBox(height: 10),
+                          const Padding(
+                            padding: EdgeInsets.symmetric(
+                                horizontal: 25.0, vertical: 20.0),
+                            child: Text(
                               'Login as Admin',
-                              style: TextStyle(
-                                fontSize: 15,
-                                color: Colors.white,
+                              style:
+                                  TextStyle(fontSize: 15, color: Colors.white),
+                            ),
+                          ),
+                          const SizedBox(height: 15),
+                          // Username Field
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 25.0),
+                            child: TextField(
+                              controller: _usernameController,
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(Icons.person_2_rounded,
+                                    color: Color.fromARGB(255, 211, 203, 252)),
+                                labelText: 'Username',
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide:
+                                      const BorderSide(color: Colors.white),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide:
+                                      const BorderSide(color: Colors.white),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                labelStyle: const TextStyle(
+                                    fontSize: 15, color: Colors.white),
+                                fillColor:
+                                    const Color.fromARGB(255, 115, 99, 183),
+                                filled: true,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 15),
-                      // Username
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                        child: TextField(
-                          controller: _usernameController,
-                          decoration: InputDecoration(
-                            prefixIcon: Icon(
-                              Icons.person_2_rounded,
-                              color: Color.fromARGB(255, 211, 203, 252),
-                            ),
-                            labelText: 'Username',
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(color: Colors.white),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(color: Colors.white),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            labelStyle: const TextStyle(
-                              fontSize: 15,
-                              color: Colors.white,
-                            ),
-                            floatingLabelStyle: const TextStyle(
-                              fontSize: 15,
-                              color: Colors.white,
-                            ),
-                            fillColor: Color.fromARGB(255, 115, 99, 183),
-                            filled: true,
                           ),
-                        ),
-                      ),
-                      // Username Error Message
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 25.0,
-                          vertical: 5.0,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 25.0, vertical: 5.0),
+                            child: Text(
                               _usernameError,
                               style: const TextStyle(
-                                fontSize: 12,
-                                color: Color.fromARGB(255, 236, 154, 148),
+                                  fontSize: 12,
+                                  color: Color.fromARGB(255, 236, 154, 148)),
+                            ),
+                          ),
+                          // Password Field
+                          Padding(
+                            padding:
+                                const EdgeInsets.symmetric(horizontal: 25.0),
+                            child: TextField(
+                              controller: _passwordController,
+                              obscureText: _isObscured,
+                              decoration: InputDecoration(
+                                prefixIcon: const Icon(
+                                    Icons.lock_outline_rounded,
+                                    color: Color.fromARGB(255, 211, 203, 252)),
+                                suffixIcon: IconButton(
+                                  icon: _isObscured
+                                      ? const Icon(Icons.visibility_off_rounded)
+                                      : const Icon(Icons.visibility),
+                                  onPressed: () {
+                                    setState(() {
+                                      _isObscured = !_isObscured;
+                                    });
+                                  },
+                                ),
+                                labelText: 'Password',
+                                enabledBorder: OutlineInputBorder(
+                                  borderSide:
+                                      const BorderSide(color: Colors.white),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderSide:
+                                      const BorderSide(color: Colors.white),
+                                  borderRadius: BorderRadius.circular(20),
+                                ),
+                                labelStyle: const TextStyle(
+                                    fontSize: 15, color: Colors.white),
+                                fillColor:
+                                    const Color.fromARGB(255, 115, 99, 183),
+                                filled: true,
                               ),
                             ),
-                          ],
-                        ),
-                      ),
-                      // Password
-                      Padding(
-                        padding: const EdgeInsets.symmetric(horizontal: 25.0),
-                        child: TextField(
-                          controller: _passwordController,
-                          obscureText: _isObscured,
-                          decoration: InputDecoration(
-                            prefixIcon: Icon(
-                              Icons.lock_outline_rounded,
-                              color: Color.fromARGB(255, 211, 203, 252),
-                            ),
-                            suffixIcon: IconButton(
-                              padding:
-                                  const EdgeInsetsDirectional.only(end: 12.0),
-                              icon: _isObscured
-                                  ? const Icon(Icons.visibility_off_rounded)
-                                  : const Icon(Icons.visibility),
-                              onPressed: () {
-                                setState(() {
-                                  _isObscured =
-                                      !_isObscured; // Toggle password visibility
-                                });
-                              },
-                            ),
-                            suffixIconColor: Color.fromARGB(255, 211, 203, 252),
-                            labelText: 'Password',
-                            enabledBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(color: Colors.white),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            focusedBorder: OutlineInputBorder(
-                              borderSide: const BorderSide(color: Colors.white),
-                              borderRadius: BorderRadius.circular(20),
-                            ),
-                            labelStyle: const TextStyle(
-                              fontSize: 15,
-                              color: Colors.white,
-                            ),
-                            floatingLabelStyle: const TextStyle(
-                              fontSize: 15,
-                              color: Colors.white,
-                            ),
-                            fillColor: Color.fromARGB(255, 115, 99, 183),
-                            filled: true,
                           ),
-                        ),
-                      ),
-                      // Password Error Message
-                      Padding(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 25.0,
-                          vertical: 5.0,
-                        ),
-                        child: Row(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Text(
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 25.0, vertical: 5.0),
+                            child: Text(
                               _passwordError,
                               style: const TextStyle(
-                                fontSize: 12,
-                                color: Color.fromARGB(255, 236, 154, 148),
+                                  fontSize: 12,
+                                  color: Color.fromARGB(255, 236, 154, 148)),
+                            ),
+                          ),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Colors.white,
+                              minimumSize: const Size(315, 60),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(50),
+                              ),
+                              side: const BorderSide(
+                                color: Color.fromARGB(255, 115, 99, 183),
+                                width: 4.0,
+                              ),
+                              textStyle: const TextStyle(
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
                               ),
                             ),
-                          ],
-                        ),
+                            onPressed: _login,
+                            child: const Text("Login"),
+                          ),
+                        ],
                       ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          enableFeedback: false,
-                          backgroundColor: Colors.white,
-                          minimumSize: const Size(315, 60),
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(50),
-                          ),
-                          side: const BorderSide(
-                            color: Color.fromARGB(
-                                255, 115, 99, 183), // Set the border color
-                            width: 4.0,
-                          ),
-                          textStyle: const TextStyle(
-                            fontSize: 20,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        onPressed: _login,
-                        child: const Text("Login"),
-                      ),
-                    ],
+                    ),
                   ),
-                ),
-              );
-            }
-          },
-        ),
       ),
     );
   }

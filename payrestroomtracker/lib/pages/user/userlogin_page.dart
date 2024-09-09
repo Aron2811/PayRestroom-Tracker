@@ -31,7 +31,7 @@ class UserLoginPage extends StatelessWidget {
                 children: <Widget>[
                   const SizedBox(height: 70),
 
-                  // Image
+                  // Paid Restroom logo
                   Image.asset(
                     'assets/PO_tag.png',
                     width: 250,
@@ -90,6 +90,8 @@ class UserLoginPage extends StatelessWidget {
                                     color: Colors.white,
                                   ),
                                 ),
+
+                                // for showing the privacy dialog 
                                 GestureDetector(
                                   child: const Text("Privacy Policy",
                                       style: TextStyle(

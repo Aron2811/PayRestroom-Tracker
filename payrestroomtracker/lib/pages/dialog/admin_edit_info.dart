@@ -73,7 +73,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       Navigator.of(context).pop(false);
     }
   }
-
+  //method for uploading an image
   Future<void> _uploadImages() async {
     final pickedFiles = await ImagePicker().pickMultiImage();
     if (pickedFiles == null || pickedFiles.isEmpty) return;
@@ -175,7 +175,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       }
     }
   }
-
+  //method to fetch image urls in firestore
   Future<void> fetchImageUrls(BuildContext context) async {
     try {
       DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
@@ -204,7 +204,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       Navigator.of(context).pop(false);
     }
   }
-
+  //method for deleting an image
   Future<void> _deleteImage(int index) async {
     try {
       DocumentReference tagRef = FirebaseFirestore.instance
@@ -264,7 +264,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       }
     }
   }
-
+  //method to update restroom info
   Future<void> _updateRestroomInfo() async {
     if (_validateInputs()) {
       confirmPressed = true; // Set confirmation status

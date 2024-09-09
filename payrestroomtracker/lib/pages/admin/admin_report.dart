@@ -29,6 +29,7 @@ class _AdminReportState extends State<AdminReport> {
     _fetchReports();
   }
 
+  //getting the report and the timestamp of the user in the database
   Future<void> _fetchReports() async {
     final querySnapshot = await _firestore
         .collection('reports')
@@ -45,11 +46,13 @@ class _AdminReportState extends State<AdminReport> {
     });
   }
 
+  //updates the read status of the report ones the admin see it
   Future<void> _updateReadStatus(String reportId) async {
     await _firestore.collection('reports').doc(reportId).update({'read': true});
     _fetchReports();
   }
 
+  //formats the timestamp to MMM dd
   String _formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
     return DateFormat('MMM dd').format(dateTime);
@@ -57,112 +60,108 @@ class _AdminReportState extends State<AdminReport> {
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          leading: BackButton(
-            color: Colors.white,
-            onPressed: () {
-              Navigator.push(
-                context,
-                _createRoute(AdminPage(
-                    username: widget.username, report: widget.report)),
-              );
-            },
-          ),
-          title: const Text(
-            'Report',
-            style:
-                TextStyle(fontSize: 20, color: Colors.white, letterSpacing: 3),
-          ),
-          backgroundColor: const Color.fromARGB(255, 97, 84, 158),
-          centerTitle: true,
+    return Scaffold(
+      appBar: AppBar(
+        leading: BackButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              _createRoute(
+                  AdminPage(username: widget.username, report: widget.report)),
+            );
+          },
         ),
-        body: Column(
-          children: [
-            Expanded(
-              child: reports.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No reports found.',
-                        style: TextStyle(fontSize: 18, color: Colors.grey),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: reports.length,
-                      itemBuilder: (context, index) {
-                        final report = reports[index];
-
-                        return ListTile(
-                          contentPadding: EdgeInsets.all(15),
-                          tileColor: report['read']
-                              ? const Color.fromARGB(0, 255, 255, 255)
-                              : Color.fromARGB(209, 221, 214, 255),
-                          title: Text(
-                            report['username'] ?? 'Anonymous',
-                            overflow: TextOverflow.ellipsis,
-                            maxLines: 1,
-                            textAlign: TextAlign.start,
-                            style: TextStyle(
-                              color: report['read']
-                                  ? Color.fromARGB(255, 97, 84, 158)
-                                  : const Color.fromARGB(230, 80, 77, 81),
-                              fontWeight: FontWeight.bold,
-                            ),
-                          ),
-                          subtitle: Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                Text(
-                                  report['restroomName'] ?? 'Unknown Restroom',
-                                  style: TextStyle(
-                                    color: report['read']
-                                        ? Color.fromARGB(255, 97, 84, 158)
-                                        : const Color.fromARGB(230, 80, 77, 81),
-                                  ),
-                                ),
-                                Text(
-                                  report['report'] ?? '',
-                                  style: TextStyle(
-                                    color: report['read']
-                                        ? Color.fromARGB(255, 97, 84, 158)
-                                        : const Color.fromARGB(230, 80, 77, 81),
-                                  ),
-                                ),
-                              ]),
-                          onTap: () {
-                            _updateReadStatus(report['id']);
-                            Navigator.push(
-                              context,
-                              _createRoute(ReportDetailPage(report: report)),
-                            );
-                          },
-                          leading: Container(
-                            width: 50, // Adjust the width as needed
-                            child: CircleAvatar(
-                              radius: 20,
-                              backgroundImage:
-                                  NetworkImage(report['photo'] ?? ''),
-                            ),
-                          ),
-                          trailing: Text(
-                            report['timestamp'] != null
-                                ? _formatTimestamp(
-                                    report['timestamp'] as Timestamp)
-                                : '',
-                            style: Theme.of(context).textTheme.bodyMedium,
-                          ),
-                        );
-                      },
+        title: const Text(
+          'Report',
+          style: TextStyle(fontSize: 20, color: Colors.white, letterSpacing: 3),
+        ),
+        backgroundColor: const Color.fromARGB(255, 97, 84, 158),
+        centerTitle: true,
+      ),
+      body: Column(
+        children: [
+          Expanded(
+            child: reports.isEmpty
+                ? Center(
+                    child: Text(
+                      'No reports found.',  //updates the admin that there is no report
+                      style: TextStyle(fontSize: 18, color: Colors.grey),
                     ),
-            ),
-          ],
-        ),
+                  )
+                : ListView.builder(
+                    itemCount: reports.length,
+                    itemBuilder: (context, index) {
+                      final report = reports[index];
+
+                      return ListTile(
+                        contentPadding: EdgeInsets.all(15),
+                        tileColor: report['read']
+                            ? const Color.fromARGB(0, 255, 255, 255)
+                            : Color.fromARGB(209, 221, 214, 255),
+                        title: Text(
+                          report['username'] ?? 'Anonymous',  //displays the username of the user
+                          overflow: TextOverflow.ellipsis,
+                          maxLines: 1,
+                          textAlign: TextAlign.start,
+                          style: TextStyle(
+                            color: report['read']
+                                ? Color.fromARGB(255, 97, 84, 158)
+                                : const Color.fromARGB(230, 80, 77, 81),
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        subtitle: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                report['restroomName'] ?? 'Unknown Restroom',   //displays the restroom name
+                                style: TextStyle(
+                                  color: report['read']
+                                      ? Color.fromARGB(255, 97, 84, 158)
+                                      : const Color.fromARGB(230, 80, 77, 81),
+                                ),
+                              ),
+                              Text(
+                                report['report'] ?? '',
+                                style: TextStyle(
+                                  color: report['read']
+                                      ? Color.fromARGB(255, 97, 84, 158)
+                                      : const Color.fromARGB(230, 80, 77, 81),
+                                ),
+                              ),
+                            ]),
+                        onTap: () {
+                          _updateReadStatus(report['id']);
+                          Navigator.push(
+                            context,
+                            _createRoute(ReportDetailPage(report: report)),
+                          );
+                        },
+                        leading: Container(
+                          width: 50, // Adjust the width as needed
+                          child: CircleAvatar(
+                            radius: 20,
+                            backgroundImage:
+                                NetworkImage(report['photo'] ?? ''),
+                          ),
+                        ),
+                        trailing: Text(
+                          report['timestamp'] != null
+                              ? _formatTimestamp(
+                                  report['timestamp'] as Timestamp)
+                              : '',
+                          style: Theme.of(context).textTheme.bodyMedium,
+                        ),
+                      );
+                    },
+                  ),
+          ),
+        ],
       ),
     );
   }
 
+  // Creates a custom route with a slide transition animation from the bottom to the top.
   Route _createRoute(Widget child) {
     return PageRouteBuilder(
       pageBuilder: (BuildContext context, Animation<double> animation,
