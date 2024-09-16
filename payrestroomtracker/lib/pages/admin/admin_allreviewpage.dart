@@ -32,34 +32,27 @@ class _AdminAllReviewsPageState extends State<AdminAllReviewsPage> {
   }
 
   // Fetches reviews from the Firestore database, ordered by timestamp in descending order, and updates the state with the results.
-  Future<void> _fetchReviews() async {
-    final querySnapshot = await _firestore
-        .collection('reviews')
-        .orderBy('timestamp', descending: true)
-        .get();
+Future<void> _fetchReviews() async {
+  final querySnapshot = await _firestore
+      .collection('reviews')
+      .where('status', isNotEqualTo: 'deleted') // Exclude reviews with status "deleted"
+      .orderBy('timestamp', descending: true)
+      .get();
 
-    setState(() {
-      reviews = querySnapshot.docs
-          .map((doc) => {
-                ...doc.data() as Map<String, dynamic>,
-                'id': doc.id,
-              })
-          .toList();
-    });
-  }
+  setState(() {
+    reviews = querySnapshot.docs
+        .map((doc) => {
+              ...doc.data() as Map<String, dynamic>,
+              'id': doc.id,
+            })
+        .toList();
+  });
+}
 
   //formats the timestamp to dd, MMM, yyyy, hh:mm, a
   String _formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
     return DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
-  }
-
-  //checks if the timestamp of the review is older the one day
-  bool _isReviewOlderThanOneDay(Timestamp timestamp) {
-    final reviewDate = timestamp.toDate();
-    final currentDate = DateTime.now();
-    final difference = currentDate.difference(reviewDate);
-    return difference.inHours >= 24;
   }
 
   // Posts a review to Firestore, either updating an existing marker's comments or creating a new marker document with the review.
@@ -157,8 +150,6 @@ class _AdminAllReviewsPageState extends State<AdminAllReviewsPage> {
                       itemCount: reviews.length,
                       itemBuilder: (context, index) {
                         final review = reviews[index];
-                        final isOldReview = _isReviewOlderThanOneDay(
-                            review['timestamp'] as Timestamp);
                         return Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: Column(
@@ -201,29 +192,18 @@ class _AdminAllReviewsPageState extends State<AdminAllReviewsPage> {
                                           review['photo'],
                                           review['position'],
                                           review['userId']);
-                                      _deleteReview(review['id'], index);
+                                      _removeFromDatabase(review['id'], index);
                                     },
                                   ),
                                   IconButton(
                                     icon: Icon(
                                       Icons.cancel_outlined,
-                                      color: isOldReview ? Color.fromARGB(255, 97, 84, 158) : Colors.grey,
+                                      color: Color.fromARGB(255, 97, 84, 158),
                                     ),
-                                    onPressed: isOldReview
-                                        ? () {
+                                    onPressed:() {
                                             _showDeleteDialog(
                                                 review['id'], index);
                                           }
-                                        : () {
-                                            ScaffoldMessenger.of(context)
-                                                .showSnackBar(
-                                              SnackBar(
-                                                content: Text(
-                                                    "The reject button will enable after one day"),
-                                                duration: Duration(seconds: 2),
-                                              ),
-                                            );
-                                          },
                                   ),
                                 ],
                               ),
@@ -281,7 +261,35 @@ class _AdminAllReviewsPageState extends State<AdminAllReviewsPage> {
     );
   }
 
-  Future<void> _deleteReview(String reviewId, int index) async {
+// Updates the review status to "deleted" in Firestore and removes it from the UI
+Future<void> _deleteReview(int index) async {
+  final review = reviews[index]; // Get the review to be deleted
+
+  try {
+    // Update the existing Firestore document with status = "deleted"
+    await _firestore.collection('reviews').doc(review['id']).update({
+      'status': 'deleted', // Add the status field with the value "deleted"
+      'read': true,
+    });
+
+    // Remove the review from the local list and update the UI
+    setState(() {
+      reviews.removeAt(index);
+    });
+
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Review marked as deleted and removed from UI")),
+    );
+  } catch (e) {
+    print('Error updating review status: $e');
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text("Failed to mark review as deleted")),
+    );
+  }
+}
+
+
+  Future<void> _removeFromDatabase(String reviewId, int index) async {
     try {
       // Delete the review from Firestore using the document ID
       await _firestore.collection('reviews').doc(reviewId).delete();
@@ -326,7 +334,8 @@ class _AdminAllReviewsPageState extends State<AdminAllReviewsPage> {
           TextButton(
             onPressed: () {
               // Call delete function
-              _deleteReview(reviewId, index);
+              //_deleteReview(reviewId, index);
+              _deleteReview(index);
               Navigator.of(context).pop(false);
             },
             child: const Text("Yes"),

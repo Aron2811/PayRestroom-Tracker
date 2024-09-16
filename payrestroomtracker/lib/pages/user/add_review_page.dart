@@ -151,6 +151,7 @@ class _AddReviewPageState extends State<AddReviewPage> {
         'timestamp': FieldValue.serverTimestamp(),
         'read': false,
         'restroomName': _restroomName,
+        'status': "not deleted",
         'position':
             GeoPoint(widget.destination.latitude, widget.destination.longitude),
       });
