@@ -97,8 +97,6 @@ class _AdminPageState extends State<AdminPage> {
       context,
       _createRoute(IntroPage(report: '')),
     );
-
-
   }
 
   Future<bool> _onLogOutPressed() async {
@@ -116,6 +114,7 @@ class _AdminPageState extends State<AdminPage> {
           ),
           TextButton(
             onPressed: () {
+              Navigator.of(context).pop(true);
               _logout();
             },
             child: const Text("Yes"),

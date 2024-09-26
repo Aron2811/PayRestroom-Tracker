@@ -122,11 +122,7 @@ class _AdminAllReviewsPageState extends State<AdminAllReviewsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return WillPopScope(
-        onWillPop: () async {
-          return false;
-        },
-        child: MaterialApp(
+    return MaterialApp(
           debugShowCheckedModeBanner: false,
           home: Scaffold(
             appBar: AppBar(
@@ -273,7 +269,7 @@ class _AdminAllReviewsPageState extends State<AdminAllReviewsPage> {
                 ),
               ],
             ),
-          ),
+          
         ));
   }
 

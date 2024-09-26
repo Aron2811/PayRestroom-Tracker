@@ -26,19 +26,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
   Widget build(BuildContext context) {
     GeoPoint geoPoint = GeoPoint(destination.latitude, destination.longitude);
 
-    return WillPopScope(
-      onWillPop: () async {
-        // Navigate back to the AdminReport page instead of just popping
-        // Navigator.of(context).pop();
-        // Navigator.of(context).pushReplacement(
-        //   MaterialPageRoute(
-        //       builder: (context) => AdminReport(username: '', report: '',destination: geoPoint,)),
-        // );
-
-        return false;
-        // Prevent default back button behavior// Prevents default back button behavior
-      },
-      child: MaterialApp(
+    return MaterialApp(
         debugShowCheckedModeBanner: false,
         home: Scaffold(
           backgroundColor: const Color.fromARGB(255, 193, 184, 236),
@@ -179,7 +167,7 @@ class _ReportDetailPageState extends State<ReportDetailPage> {
             ),
           ),
         ),
-      ),
+      
     );
   }
 }
