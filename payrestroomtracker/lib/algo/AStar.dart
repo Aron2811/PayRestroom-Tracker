@@ -22,7 +22,7 @@ class AStar {
     }
     if (pathPoints.isEmpty) {
       print('No valid route found from Google Maps Directions API.');
-      return [start, goal]; 
+      return [start, goal];
     }
 
     PriorityQueue<Node> openSet =
@@ -151,8 +151,23 @@ class AStar {
           durationString =
               '${(durationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(durationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}min';
         } else if (options == 'commute') {
-          // Subtract 11 minutes from the byFoot duration
-          int commuteDurationSeconds = durationSeconds - (8 * 60);
+          // Calculate the distance between start and goal in miles
+          String distanceMilesString = getDistanceInMiles(start, goal);
+
+          double distanceMiles =
+              double.parse(distanceMilesString.split(' ')[0]);
+
+          // Calculate the number of 0.43-mile segments
+          double segments = distanceMiles / 0.43;
+
+          // Subtract 8 minutes (480 seconds) for each segment
+          int commuteDurationSeconds =
+              durationSeconds - (segments.floor() * 480);
+
+          // Ensure that the duration doesn't go below zero
+          commuteDurationSeconds =
+              commuteDurationSeconds > 0 ? commuteDurationSeconds : 0;
+
           durationString =
               '${(commuteDurationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(commuteDurationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}min';
         } else if (options == 'private') {

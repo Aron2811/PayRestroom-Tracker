@@ -63,6 +63,7 @@ class _AdminReportState extends State<AdminReport> {
     return Scaffold(
       appBar: AppBar(
         leading: BackButton(
+          color: Colors.white,
           onPressed: () {
             Navigator.push(
               context,

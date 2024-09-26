@@ -63,7 +63,10 @@ class _AddReviewPageState extends State<AddReviewPage> {
 
     if (reviewText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please enter a review")),
+        SnackBar(
+          content: Text("Please enter a review"),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
       );
       return;
     }
@@ -95,8 +98,10 @@ class _AddReviewPageState extends State<AddReviewPage> {
         if (lastReviewDate.isAfter(startOfToday)) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(
-                    "You can only post one review per day for this restroom")),
+              content: Text(
+                  "You can only post one review per day for this restroom"),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
           );
           _textController.clear();
           return;
@@ -134,8 +139,10 @@ class _AddReviewPageState extends State<AddReviewPage> {
         if (hasRecentReview) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(
-                   "You can only post one review per day for this restroom")),
+              content: Text(
+                  "You can only post one review per day for this restroom"),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
           );
           _textController.clear();
           return;
@@ -157,7 +164,10 @@ class _AddReviewPageState extends State<AddReviewPage> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Your Review Will Be Checked By The Admin")),
+        SnackBar(
+          content: Text("Your Review Will Be Checked By The Admin"),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
       );
       _textController.clear();
     }
@@ -201,13 +211,13 @@ class _AddReviewPageState extends State<AddReviewPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    const SizedBox(height: 100),
+                    const SizedBox(height: 10),
                     Padding(
                       padding: const EdgeInsets.all(30),
                       child: TextField(
                         controller: _textController,
-                        minLines: 1,
-                        maxLines: 4,
+                        minLines: 5,
+                        maxLines: 10,
                         style: const TextStyle(fontSize: 17),
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(

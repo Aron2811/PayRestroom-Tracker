@@ -32,22 +32,23 @@ class _AdminAllReviewsPageState extends State<AdminAllReviewsPage> {
   }
 
   // Fetches reviews from the Firestore database, ordered by timestamp in descending order, and updates the state with the results.
-Future<void> _fetchReviews() async {
-  final querySnapshot = await _firestore
-      .collection('reviews')
-      .where('status', isNotEqualTo: 'deleted') // Exclude reviews with status "deleted"
-      .orderBy('timestamp', descending: true)
-      .get();
+  Future<void> _fetchReviews() async {
+    final querySnapshot = await _firestore
+        .collection('reviews')
+        .where('status',
+            isNotEqualTo: 'deleted') // Exclude reviews with status "deleted"
+        .orderBy('timestamp', descending: true)
+        .get();
 
-  setState(() {
-    reviews = querySnapshot.docs
-        .map((doc) => {
-              ...doc.data() as Map<String, dynamic>,
-              'id': doc.id,
-            })
-        .toList();
-  });
-}
+    setState(() {
+      reviews = querySnapshot.docs
+          .map((doc) => {
+                ...doc.data() as Map<String, dynamic>,
+                'id': doc.id,
+              })
+          .toList();
+    });
+  }
 
   //formats the timestamp to dd, MMM, yyyy, hh:mm, a
   String _formatTimestamp(Timestamp timestamp) {
@@ -62,7 +63,10 @@ Future<void> _fetchReviews() async {
 
     if (reviewText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please enter a review")),
+        SnackBar(
+          content: Text("Please enter a review"),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
       );
       return;
     }
@@ -108,186 +112,203 @@ Future<void> _fetchReviews() async {
     } catch (e) {
       print('Error posting review: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to post review")),
+        SnackBar(
+          content: Text("Failed to post review"),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
       );
     }
   }
 
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      home: Scaffold(
-        appBar: AppBar(
-          title: const Text(
-            'Reviews',
-            style: TextStyle(fontSize: 20, color: Colors.white),
-          ),
-          leading: BackButton(
-            color: Colors.white,
-            onPressed: () {
-              Navigator.push(
-                context,
-                _createRoute(AdminPage(
-                    username: widget.username, report: widget.report)),
-              );
-            },
-          ),
-          backgroundColor: const Color.fromARGB(255, 97, 84, 158),
-          centerTitle: true,
-        ),
-        body: Column(
-          children: [
-            Expanded(
-              child: reviews.isEmpty
-                  ? Center(
-                      child: Text(
-                        'No Review Available',
-                        style: TextStyle(fontSize: 18, color: Colors.grey),
-                      ),
-                    )
-                  : ListView.builder(
-                      itemCount: reviews.length,
-                      itemBuilder: (context, index) {
-                        final review = reviews[index];
-                        return Padding(
-                          padding: const EdgeInsets.all(20.0),
-                          child: Column(
-                            crossAxisAlignment: CrossAxisAlignment
-                                .start, // Align children to the start (left)
-                            children: [
-                              Row(
+    return WillPopScope(
+        onWillPop: () async {
+          return false;
+        },
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: Scaffold(
+            appBar: AppBar(
+              title: const Text(
+                'Reviews',
+                style: TextStyle(fontSize: 20, color: Colors.white),
+              ),
+              leading: BackButton(
+                color: Colors.white,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    _createRoute(AdminPage(
+                        username: widget.username, report: widget.report)),
+                  );
+                },
+              ),
+              backgroundColor: const Color.fromARGB(255, 97, 84, 158),
+              centerTitle: true,
+            ),
+            body: Column(
+              children: [
+                Expanded(
+                  child: reviews.isEmpty
+                      ? Center(
+                          child: Text(
+                            'No Review Available',
+                            style: TextStyle(fontSize: 18, color: Colors.grey),
+                          ),
+                        )
+                      : ListView.builder(
+                          itemCount: reviews.length,
+                          itemBuilder: (context, index) {
+                            final review = reviews[index];
+                            return Padding(
+                              padding: const EdgeInsets.all(20.0),
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment
+                                    .start, // Align children to the start (left)
                                 children: [
-                                  // Avatar and username on the left
-                                  Expanded(
-                                    child: Row(
-                                      children: [
-                                        CircleAvatar(
-                                          radius: 20,
-                                          backgroundImage: NetworkImage(
-                                              review['photo'] ?? ''),
+                                  Row(
+                                    children: [
+                                      // Avatar and username on the left
+                                      Expanded(
+                                        child: Row(
+                                          children: [
+                                            CircleAvatar(
+                                              radius: 20,
+                                              backgroundImage: NetworkImage(
+                                                  review['photo'] ?? ''),
+                                            ),
+                                            const SizedBox(width: 20),
+                                            Text(
+                                              review['username'] ?? 'Anonymous',
+                                              style: const TextStyle(
+                                                fontSize: 17,
+                                                color: Color.fromARGB(
+                                                    255, 97, 84, 158),
+                                              ),
+                                            ),
+                                          ],
                                         ),
-                                        const SizedBox(width: 20),
-                                        Text(
-                                          review['username'] ?? 'Anonymous',
-                                          style: const TextStyle(
-                                            fontSize: 17,
+                                      ),
+                                      // Icon buttons on the right
+                                      IconButton(
+                                        icon: const Icon(
+                                          Icons.check_circle_outline_rounded,
+                                          color:
+                                              Color.fromARGB(255, 97, 84, 158),
+                                        ),
+                                        onPressed: () {
+                                          _postReview(
+                                              review['comment'],
+                                              review['username'],
+                                              review['photo'],
+                                              review['position'],
+                                              review['userId']);
+                                          _removeFromDatabase(
+                                              review['id'], index);
+                                        },
+                                      ),
+                                      IconButton(
+                                          icon: Icon(
+                                            Icons.cancel_outlined,
                                             color: Color.fromARGB(
                                                 255, 97, 84, 158),
                                           ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                  // Icon buttons on the right
-                                  IconButton(
-                                    icon: const Icon(
-                                      Icons.check_circle_outline_rounded,
-                                      color: Color.fromARGB(255, 97, 84, 158),
-                                    ),
-                                    onPressed: () {
-                                      _postReview(
-                                          review['comment'],
-                                          review['username'],
-                                          review['photo'],
-                                          review['position'],
-                                          review['userId']);
-                                      _removeFromDatabase(review['id'], index);
-                                    },
-                                  ),
-                                  IconButton(
-                                    icon: Icon(
-                                      Icons.cancel_outlined,
-                                      color: Color.fromARGB(255, 97, 84, 158),
-                                    ),
-                                    onPressed:() {
+                                          onPressed: () {
                                             _showDeleteDialog(
                                                 review['id'], index);
-                                          }
+                                          }),
+                                    ],
                                   ),
-                                ],
-                              ),
-                              const SizedBox(height: 10),
-                              Text(
-                                review['restroomName'] ?? 'Unknown location',
-                                style: const TextStyle(
-                                  fontSize: 16,
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                              const SizedBox(height: 5),
-                              Row(
-                                mainAxisAlignment:
-                                    MainAxisAlignment.spaceBetween,
-                                children: [
-                                  const SizedBox(width: 10),
+                                  const SizedBox(height: 10),
                                   Text(
-                                    review['timestamp'] != null
-                                        ? _formatTimestamp(
-                                            review['timestamp'] as Timestamp)
-                                        : '',
-                                    style:
-                                        Theme.of(context).textTheme.bodyMedium,
+                                    review['restroomName'] ??
+                                        'Unknown location',
+                                    style: const TextStyle(
+                                      fontSize: 16,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const SizedBox(height: 5),
+                                  Row(
+                                    mainAxisAlignment:
+                                        MainAxisAlignment.spaceBetween,
+                                    children: [
+                                      const SizedBox(width: 10),
+                                      Text(
+                                        review['timestamp'] != null
+                                            ? _formatTimestamp(
+                                                review['timestamp']
+                                                    as Timestamp)
+                                            : '',
+                                        style: Theme.of(context)
+                                            .textTheme
+                                            .bodyMedium,
+                                      ),
+                                    ],
+                                  ),
+                                  const SizedBox(height: 10),
+                                  ReadMoreText(
+                                    review['comment'] ?? 'No comment provided',
+                                    textAlign: TextAlign
+                                        .left, // Align text to the left
+                                    trimLines: 2,
+                                    trimMode: TrimMode.Line,
+                                    trimExpandedText: ' Show less',
+                                    moreStyle: const TextStyle(
+                                      color: Color.fromARGB(255, 97, 84, 158),
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                    trimCollapsedText: ' Show more',
+                                    lessStyle: const TextStyle(
+                                      color: Color.fromARGB(255, 97, 84, 158),
+                                      fontWeight: FontWeight.bold,
+                                    ),
                                   ),
                                 ],
                               ),
-                              const SizedBox(height: 10),
-                              ReadMoreText(
-                                review['comment'] ?? 'No comment provided',
-                                textAlign:
-                                    TextAlign.left, // Align text to the left
-                                trimLines: 2,
-                                trimMode: TrimMode.Line,
-                                trimExpandedText: ' Show less',
-                                moreStyle: const TextStyle(
-                                  color: Color.fromARGB(255, 97, 84, 158),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                                trimCollapsedText: ' Show more',
-                                lessStyle: const TextStyle(
-                                  color: Color.fromARGB(255, 97, 84, 158),
-                                  fontWeight: FontWeight.bold,
-                                ),
-                              ),
-                            ],
-                          ),
-                        );
-                      },
-                    ),
+                            );
+                          },
+                        ),
+                ),
+              ],
             ),
-          ],
-        ),
-      ),
-    );
+          ),
+        ));
   }
 
 // Updates the review status to "deleted" in Firestore and removes it from the UI
-Future<void> _deleteReview(int index) async {
-  final review = reviews[index]; // Get the review to be deleted
+  Future<void> _deleteReview(int index) async {
+    final review = reviews[index]; // Get the review to be deleted
 
-  try {
-    // Update the existing Firestore document with status = "deleted"
-    await _firestore.collection('reviews').doc(review['id']).update({
-      'status': 'deleted', // Add the status field with the value "deleted"
-      'read': true,
-    });
+    try {
+      // Update the existing Firestore document with status = "deleted"
+      await _firestore.collection('reviews').doc(review['id']).update({
+        'status': 'deleted', // Add the status field with the value "deleted"
+        'read': true,
+      });
 
-    // Remove the review from the local list and update the UI
-    setState(() {
-      reviews.removeAt(index);
-    });
+      // Remove the review from the local list and update the UI
+      setState(() {
+        reviews.removeAt(index);
+      });
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Review marked as deleted and removed from UI")),
-    );
-  } catch (e) {
-    print('Error updating review status: $e');
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text("Failed to mark review as deleted")),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Review marked as deleted and removed from UI"),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
+      );
+    } catch (e) {
+      print('Error updating review status: $e');
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text("Failed to mark review as deleted"),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
+      );
+    }
   }
-}
-
 
   Future<void> _removeFromDatabase(String reviewId, int index) async {
     try {
@@ -305,7 +326,10 @@ Future<void> _deleteReview(int index) async {
     } catch (e) {
       print('Error deleting review: $e');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Failed to delete review")),
+        SnackBar(
+          content: Text("Failed to delete review"),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
       );
     }
   }

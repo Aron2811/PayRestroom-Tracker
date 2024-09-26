@@ -97,9 +97,11 @@ class _AdminPageState extends State<AdminPage> {
       context,
       _createRoute(IntroPage(report: '')),
     );
+
+
   }
 
-  Future<bool> _onBackButtonPressed() async {
+  Future<bool> _onLogOutPressed() async {
     return await showDialog(
       context: context,
       builder: (context) => AlertDialog(
@@ -129,261 +131,265 @@ class _AdminPageState extends State<AdminPage> {
     GeoPoint geoPoint = GeoPoint(destination.latitude, destination.longitude);
 
     return WillPopScope(
-      onWillPop: _onBackButtonPressed,
-      child: MaterialApp(
-        debugShowCheckedModeBanner: false,
-        home: Scaffold(
-          body: Stack(
-            children: [
-              // Background Image
-              Container(
-                decoration: const BoxDecoration(
-                  image: DecorationImage(
-                    image: AssetImage('assets/background.jpg'),
-                    fit: BoxFit.cover,
+        onWillPop: () async {
+          return false;
+        },
+        child: MaterialApp(
+          debugShowCheckedModeBanner: false,
+          home: Scaffold(
+            body: Stack(
+              children: [
+                // Background Image
+                Container(
+                  decoration: const BoxDecoration(
+                    image: DecorationImage(
+                      image: AssetImage('assets/background.jpg'),
+                      fit: BoxFit.cover,
+                    ),
                   ),
                 ),
-              ),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: <Widget>[
-                  const Padding(
-                    padding:
-                        EdgeInsets.symmetric(horizontal: 20, vertical: 60.0),
-                    child: SizedBox.shrink(), // Placeholder for an empty child
-                  ),
-                  Container(
-                    margin: const EdgeInsets.only(
-                        top: 50, right: 25), // Adjust the value to your needs
-                    child: Align(
-                      alignment: Alignment.topRight,
-                      child: GestureDetector(
-                        onTap: () {
-                          _logout();
-                        },
-                        child: Icon(Icons.logout_rounded, color: Colors.white),
+                Row(
+                  mainAxisAlignment: MainAxisAlignment.end,
+                  children: <Widget>[
+                    const Padding(
+                      padding:
+                          EdgeInsets.symmetric(horizontal: 20, vertical: 60.0),
+                      child:
+                          SizedBox.shrink(), // Placeholder for an empty child
+                    ),
+                    Container(
+                      margin: const EdgeInsets.only(
+                          top: 50, right: 25), // Adjust the value to your needs
+                      child: Align(
+                        alignment: Alignment.topRight,
+                        child: GestureDetector(
+                          onTap: () {
+                            _onLogOutPressed();
+                          },
+                          child:
+                              Icon(Icons.logout_rounded, color: Colors.white),
+                        ),
                       ),
                     ),
-                  ),
-                ],
-              ),
-              Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const SizedBox(height: 100),
-                  // Image
-                  Image.asset(
-                    'assets/PO_tag.png',
-                    width: 230,
-                    height: 230,
-                  ),
-                  SizedBox(height: 30),
-                  Text(
-                    'Hello',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 40,
-                      fontWeight: FontWeight.bold,
-                      color: Colors.white,
-                      letterSpacing: 3,
+                  ],
+                ),
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    const SizedBox(height: 100),
+                    // Image
+                    Image.asset(
+                      'assets/PO_tag.png',
+                      width: 230,
+                      height: 230,
                     ),
-                  ),
-                  SizedBox(height: 5),
-                  Text(
-                    '${widget.username}',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: Colors.white,
-                      letterSpacing: 2,
+                    SizedBox(height: 30),
+                    Text(
+                      'Hello',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 40,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
+                        letterSpacing: 3,
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 40),
-                  Align(
-                    alignment: Alignment.center,
-                    child: ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        enableFeedback: false,
-                        backgroundColor: Colors.white,
-                        minimumSize: const Size(170, 40),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.only(
-                            topLeft: Radius.circular(10),
-                            topRight: Radius.circular(10),
-                            bottomLeft: Radius.circular(10),
-                            bottomRight: Radius.circular(10),
+                    SizedBox(height: 5),
+                    Text(
+                      '${widget.username}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 17,
+                        color: Colors.white,
+                        letterSpacing: 2,
+                      ),
+                    ),
+                    SizedBox(height: 40),
+                    Align(
+                      alignment: Alignment.center,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          enableFeedback: false,
+                          backgroundColor: Colors.white,
+                          minimumSize: const Size(170, 40),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(10),
+                              topRight: Radius.circular(10),
+                              bottomLeft: Radius.circular(10),
+                              bottomRight: Radius.circular(10),
+                            ),
+                          ),
+                          foregroundColor: Color.fromARGB(255, 97, 84, 158),
+                          textStyle: const TextStyle(
+                            fontSize: 18,
                           ),
                         ),
-                        foregroundColor: Color.fromARGB(255, 97, 84, 158),
-                        textStyle: const TextStyle(
-                          fontSize: 18,
+                        label: const Text(
+                          "View Map",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 132, 119, 197),
+                          ),
                         ),
-                      ),
-                      label: const Text(
-                        "View Map",
-                        textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 16,
-                          fontWeight: FontWeight.bold,
+                        icon: const Icon(
+                          Icons.map_rounded,
                           color: Color.fromARGB(255, 132, 119, 197),
+                          size: 20,
                         ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            _createRoute(AdminMap(
+                              username: widget.username,
+                              report: widget.report,
+                            )),
+                          );
+                        },
                       ),
-                      icon: const Icon(
-                        Icons.map_rounded,
-                        color: Color.fromARGB(255, 132, 119, 197),
-                        size: 20,
-                      ),
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          _createRoute(AdminMap(
-                            username: widget.username,
-                            report: widget.report,
-                          )),
-                        );
-                      },
                     ),
-                  ),
-                  SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.center,
-                    child: StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('reviews')
-                          .where('read', isEqualTo: false)
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          int unreadCount = snapshot.data!.docs.length;
-                          return Badge(
-                            badgeCount: unreadCount,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                enableFeedback: false,
-                                backgroundColor: Colors.white,
-                                minimumSize: const Size(170, 40),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(10),
-                                    topRight: Radius.circular(10),
-                                    bottomLeft: Radius.circular(10),
-                                    bottomRight: Radius.circular(10),
+                    SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.center,
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('reviews')
+                            .where('read', isEqualTo: false)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            int unreadCount = snapshot.data!.docs.length;
+                            return Badge(
+                              badgeCount: unreadCount,
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  enableFeedback: false,
+                                  backgroundColor: Colors.white,
+                                  minimumSize: const Size(170, 40),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(10),
+                                      topRight: Radius.circular(10),
+                                      bottomLeft: Radius.circular(10),
+                                      bottomRight: Radius.circular(10),
+                                    ),
+                                  ),
+                                  foregroundColor:
+                                      Color.fromARGB(255, 97, 84, 158),
+                                  textStyle: const TextStyle(
+                                    fontSize: 16,
                                   ),
                                 ),
-                                foregroundColor:
-                                    Color.fromARGB(255, 97, 84, 158),
-                                textStyle: const TextStyle(
-                                  fontSize: 16,
+                                label: const Text(
+                                  "View Review",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color.fromARGB(255, 132, 119, 197),
+                                  ),
                                 ),
-                              ),
-                              label: const Text(
-                                "View Review",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                icon: const Icon(
+                                  Icons.reviews_rounded,
                                   color: Color.fromARGB(255, 132, 119, 197),
+                                  size: 20,
                                 ),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    _createRoute(AdminAllReviewsPage(
+                                      username: widget.username,
+                                      report: widget.report,
+                                      destination:
+                                          destination, // Pass the GeoPoint
+                                    )),
+                                  );
+                                },
                               ),
-                              icon: const Icon(
-                                Icons.reviews_rounded,
-                                color: Color.fromARGB(255, 132, 119, 197),
-                                size: 20,
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  _createRoute(AdminAllReviewsPage(
-                                    username: widget.username,
-                                    report: widget.report,
-                                    destination:
-                                        destination, // Pass the GeoPoint
-                                  )),
-                                );
-                              },
-                            ),
-                          );
-                        } else if (snapshot.hasError) {
-                          return Text('Error: ${snapshot.error}');
-                        } else {
-                          return CircularProgressIndicator();
-                        }
-                      },
+                            );
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}');
+                          } else {
+                            return CircularProgressIndicator();
+                          }
+                        },
+                      ),
                     ),
-                  ),
 
-                  SizedBox(height: 8),
-                  Align(
-                    alignment: Alignment.center,
-                    child: StreamBuilder<QuerySnapshot>(
-                      stream: FirebaseFirestore.instance
-                          .collection('reports')
-                          .where('read', isEqualTo: false)
-                          .snapshots(),
-                      builder: (context, snapshot) {
-                        if (snapshot.hasData) {
-                          int unreadCount = snapshot.data!.docs.length;
-                          return Badge(
-                            badgeCount: unreadCount,
-                            child: ElevatedButton.icon(
-                              style: ElevatedButton.styleFrom(
-                                enableFeedback: false,
-                                backgroundColor: Colors.white,
-                                minimumSize: const Size(170, 40),
-                                shape: RoundedRectangleBorder(
-                                  borderRadius: BorderRadius.only(
-                                    topLeft: Radius.circular(10),
-                                    topRight: Radius.circular(10),
-                                    bottomLeft: Radius.circular(10),
-                                    bottomRight: Radius.circular(10),
+                    SizedBox(height: 8),
+                    Align(
+                      alignment: Alignment.center,
+                      child: StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('reports')
+                            .where('read', isEqualTo: false)
+                            .snapshots(),
+                        builder: (context, snapshot) {
+                          if (snapshot.hasData) {
+                            int unreadCount = snapshot.data!.docs.length;
+                            return Badge(
+                              badgeCount: unreadCount,
+                              child: ElevatedButton.icon(
+                                style: ElevatedButton.styleFrom(
+                                  enableFeedback: false,
+                                  backgroundColor: Colors.white,
+                                  minimumSize: const Size(170, 40),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.only(
+                                      topLeft: Radius.circular(10),
+                                      topRight: Radius.circular(10),
+                                      bottomLeft: Radius.circular(10),
+                                      bottomRight: Radius.circular(10),
+                                    ),
+                                  ),
+                                  foregroundColor:
+                                      Color.fromARGB(255, 97, 84, 158),
+                                  textStyle: const TextStyle(
+                                    fontSize: 16,
                                   ),
                                 ),
-                                foregroundColor:
-                                    Color.fromARGB(255, 97, 84, 158),
-                                textStyle: const TextStyle(
-                                  fontSize: 16,
+                                label: const Text(
+                                  "View Report",
+                                  textAlign: TextAlign.center,
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: FontWeight.bold,
+                                    color: Color.fromARGB(255, 132, 119, 197),
+                                  ),
                                 ),
-                              ),
-                              label: const Text(
-                                "View Report",
-                                textAlign: TextAlign.center,
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: FontWeight.bold,
+                                icon: const Icon(
+                                  Icons.report_problem_rounded,
                                   color: Color.fromARGB(255, 132, 119, 197),
+                                  size: 20,
                                 ),
+                                onPressed: () {
+                                  Navigator.push(
+                                    context,
+                                    _createRoute(AdminReport(
+                                      username: widget.username,
+                                      report: widget.report,
+                                      destination:
+                                          geoPoint, // Pass the GeoPoint
+                                    )),
+                                  );
+                                },
                               ),
-                              icon: const Icon(
-                                Icons.report_problem_rounded,
-                                color: Color.fromARGB(255, 132, 119, 197),
-                                size: 20,
-                              ),
-                              onPressed: () {
-                                Navigator.push(
-                                  context,
-                                  _createRoute(AdminReport(
-                                    username: widget.username,
-                                    report: widget.report,
-                                    destination: geoPoint, // Pass the GeoPoint
-                                  )),
-                                );
-                              },
-                            ),
-                          );
-                        } else if (snapshot.hasError) {
-                          return Text('Error: ${snapshot.error}');
-                        } else {
-                          return CircularProgressIndicator();
-                        }
-                      },
+                            );
+                          } else if (snapshot.hasError) {
+                            return Text('Error: ${snapshot.error}');
+                          } else {
+                            return CircularProgressIndicator();
+                          }
+                        },
+                      ),
                     ),
-                  ),
-                ],
-              ),
-            ],
+                  ],
+                ),
+              ],
+            ),
           ),
-        ),
-      ),
-    );
+        ));
   }
 }
