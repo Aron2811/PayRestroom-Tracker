@@ -3,8 +3,8 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/bottomsheet/map_paidrestroom_info.dart';
 import 'package:flutter_button/pages/dialog/apprate_dialog.dart';
-import 'package:flutter_button/pages/intro_page.dart';
 import 'package:flutter_button/pages/user/in_app_tutorial.dart';
+import 'package:flutter_button/pages/user/user_loggedin_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'dart:convert';
@@ -1042,8 +1042,8 @@ double _calculateDistance(LatLng start, LatLng end) {
                     Navigator.of(context).pop(true);
                     Navigator.push(
                         context,
-                        _createRoute(IntroPage(
-                          report: '',
+                        _createRoute(UserLoggedInPage(
+                          
                         )));
                   },
                   child: const Text("Yes"),

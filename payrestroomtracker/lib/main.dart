@@ -4,7 +4,6 @@ import 'package:flutter/services.dart';
 import 'package:flutter_button/pages/admin/adminMap.dart';
 import 'package:flutter_button/pages/admin/adminpage.dart';
 import 'package:flutter_button/pages/loading_page.dart';
-import 'package:flutter_button/pages/intro_page.dart';
 import 'package:flutter_button/pages/user/map_page.dart';
 import 'package:flutter_button/pages/user/userlogin_page.dart';
 import 'package:flutter_button/pages/admin/adminlogin_page.dart';
@@ -32,7 +31,6 @@ class Main extends StatelessWidget {
         home: const LoadingPage(),
         routes: {
           '/Loadingpage': (context) => const LoadingPage(),
-          '/intropage': (context) => const IntroPage(report: '',),
           '/userloginpage': (context) => const UserLoginPage(),
           '/userloggedinpage': (context) => const UserLoggedInPage(),
           '/adminloginpage': (context) => const AdminLoginPage(report: '',),

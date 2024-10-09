@@ -61,7 +61,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
     try {
       await FirebaseAuth.instance.signOut();
       Navigator.pushNamedAndRemoveUntil(
-          context, '/intropage', (route) => false);
+          context, '/userloginpage', (route) => false);
     } catch (e) {
       // Handle the error accordingly, e.g., show a dialog
       ScaffoldMessenger.of(context).showSnackBar(

@@ -1,8 +1,26 @@
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_button/pages/intro_page.dart';
+import 'package:flutter_button/pages/user/userlogin_page.dart';
 
 class LoadingPage extends StatelessWidget {
   const LoadingPage({super.key});
+
+  //check if user is logged in if user is then if user click the user it will direct them to map but if logged out it will direct to userloginpage
+  void _handleUserButton(BuildContext context) {
+    User? currentUser = FirebaseAuth.instance.currentUser;
+
+    if (currentUser != null) {
+      // User is logged in, navigate to the map page
+      Navigator.pushNamed(context, '/mappage');
+    } else {
+      // User is not logged in, navigate to the login page
+      Navigator.push(context, _createRoute(UserLoginPage()));
+    }
+  }
+
+  Route _createRoute(Widget page) {
+    return MaterialPageRoute(builder: (context) => page);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -10,7 +28,6 @@ class LoadingPage extends StatelessWidget {
         debugShowCheckedModeBanner: false,
         home: Scaffold(
             body: Stack(children: [
-              
           // Background Image
           Container(
             decoration: BoxDecoration(
@@ -31,7 +48,7 @@ class LoadingPage extends StatelessWidget {
 
                 const SizedBox(height: 30),
 
-              // text to continuw
+                // text to continuw
                 Container(
                   height: 50,
                   width: 300,
@@ -45,19 +62,15 @@ class LoadingPage extends StatelessWidget {
                       ),
                     ),
                     onTap: () {
-                      Navigator.push(
-                          context,
-                          _createRoute(IntroPage(
-                            report: '',
-                          )));
+                      _handleUserButton(context);
                     },
                   ),
                 ),
-                //  ),
               ]))
         ])));
   }
 }
+
 // transition frame
 Route _createRoute(Widget child) {
   return PageRouteBuilder(

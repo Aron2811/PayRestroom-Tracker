@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/dialog/tutorial_dialog.dart';
-import 'package:flutter_button/pages/intro_page.dart';
 import 'package:flutter_button/pages/user/map_page.dart';
 // Import the intro page
 
@@ -27,7 +26,7 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
 // back button function
   Future<bool> onBackButtonPressed() async {
     // Navigate to the intro page
-    Navigator.of(context).push(_createRoute(IntroPage(report: "",)));
+    Navigator.of(context).push(_createRoute(UserLoggedInPage()));
     return false; // Prevents the app from closing
   }
 

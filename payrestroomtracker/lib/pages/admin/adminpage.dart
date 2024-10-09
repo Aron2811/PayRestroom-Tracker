@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/admin/adminMap.dart';
 import 'package:flutter_button/pages/admin/admin_allreviewpage.dart';
 import 'package:flutter_button/pages/admin/admin_report.dart';
-import 'package:flutter_button/pages/intro_page.dart';
+import 'package:flutter_button/pages/user/userlogin_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:shared_preferences/shared_preferences.dart'; // Import to use GeoPoint
@@ -95,7 +95,7 @@ class _AdminPageState extends State<AdminPage> {
 
     Navigator.pushReplacement(
       context,
-      _createRoute(IntroPage(report: '')),
+      _createRoute(UserLoginPage()),
     );
   }
 

@@ -189,6 +189,10 @@ class _AddReviewPageState extends State<AddReviewPage> {
             style: ElevatedButton.styleFrom(
               enableFeedback: false,
               backgroundColor: Color.fromARGB(255, 97, 84, 158),
+              side: BorderSide(
+                color: Colors.white,
+                width: 1.0,
+              ),
               minimumSize: const Size(10, 30),
               textStyle:
                   const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),

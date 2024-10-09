@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:another_carousel_pro/another_carousel_pro.dart';
-import 'package:flutter_button/pages/user/user_loggedin_page.dart';
 
 class TutorialDialog extends StatelessWidget {
   const TutorialDialog({super.key});
