@@ -20,11 +20,27 @@ class _AddReviewPageState extends State<AddReviewPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String _restroomName = "Paid Restroom Name";
+  bool _isButtonEnabled = false; // variable for button enabled state
 
   @override
   void initState() {
     super.initState();
     _fetchPaidRestroomName();
+    _textController.addListener(_handleTextChange); // Add listener
+  }
+
+  @override
+  void dispose() {
+    _textController.removeListener(_handleTextChange); // Remove listener
+    _textController.dispose(); // Dispose controller
+    super.dispose();
+  }
+
+  // Listener to handle text changes
+  void _handleTextChange() {
+    setState(() {
+      _isButtonEnabled = _textController.text.trim().isNotEmpty;
+    });
   }
 
   //gets the paid restroom name from the data base
@@ -169,7 +185,7 @@ class _AddReviewPageState extends State<AddReviewPage> {
           backgroundColor: Color.fromARGB(255, 115, 99, 183),
         ),
       );
-      _textController.clear();
+      _textController.clear(); //trigger the listener to disable the button
     }
   }
 
@@ -186,21 +202,48 @@ class _AddReviewPageState extends State<AddReviewPage> {
         actions: <Widget>[
           const SizedBox(width: 10),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              enableFeedback: false,
-              backgroundColor: Color.fromARGB(255, 97, 84, 158),
-              side: BorderSide(
-                color: Colors.white,
-                width: 1.0,
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                (Set<MaterialState> states) {
+                  if (states.contains(MaterialState.disabled)) {
+                    return Color.fromARGB(
+                      255, 97, 84, 158); // Disabled background color
+                  }
+                  return Color.fromARGB(
+                      255, 97, 84, 158); // Enabled background color
+                },
               ),
-              minimumSize: const Size(10, 30),
-              textStyle:
-                  const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              foregroundColor: MaterialStateProperty.resolveWith<Color>(
+                (Set<MaterialState> states) {
+                  if (states.contains(MaterialState.disabled)) {
+                    return Colors.grey; // Disabled text color
+                  }
+                  return Colors.white; // Enabled text color
+                },
+              ),
+              side: MaterialStateProperty.resolveWith<BorderSide>(
+                (Set<MaterialState> states) {
+                  if (states.contains(MaterialState.disabled)) {
+                    return BorderSide(
+                      color: Colors.grey, // Disabled border color
+                      width: 1.0,
+                    );
+                  }
+                  return BorderSide(
+                    color: Colors.white, // Enabled border color
+                    width: 1.0,
+                  );
+                },
+              ),
+              minimumSize: MaterialStateProperty.all<Size>(Size(10, 30)),
+              textStyle: MaterialStateProperty.all<TextStyle>(
+                TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
             ),
-            onPressed: storeReview,
+            onPressed:
+                _isButtonEnabled ? storeReview : null, // Enable/disable button
             child: const Text(
               "Post",
-              style: TextStyle(color: Colors.white),
             ),
           ),
           const SizedBox(width: 20),
