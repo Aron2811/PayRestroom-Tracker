@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_button/pages/bottomsheet/paidrestroom_info.dart';
-import 'package:custom_rating_bar/custom_rating_bar.dart' as custom_rating_bar;
+import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 
 class PaidRestroomRecommendationList extends StatefulWidget {
   final Function(LatLng, String) drawRouteToDestination;
@@ -23,7 +23,6 @@ class PaidRestroomRecommendationList extends StatefulWidget {
 
 class _PaidRestroomRecommendationListState
     extends State<PaidRestroomRecommendationList> {
-  late Future<double> _avarageRatingFuture;
   String _name = "Paid Restroom Name";
   String _location = "Location";
   String _cost = "Cost";
@@ -31,7 +30,6 @@ class _PaidRestroomRecommendationListState
   @override
   void initState() {
     super.initState();
-    _avarageRatingFuture = fetchAverageRating();
     _fetchPaidRestroomName();
     _fetchPaidRestroomLocation();
     _fetchPaidRestroomCost();
@@ -98,28 +96,24 @@ class _PaidRestroomRecommendationListState
   }
 
   //gets the average rating from the database
-  Future<double> fetchAverageRating() async {
-    final querySnapshot = await FirebaseFirestore.instance
+Stream<double> averageRatingStream() {
+    return FirebaseFirestore.instance
         .collection('Tags')
         .where('position',
             isEqualTo: GeoPoint(
                 widget.destination.latitude, widget.destination.longitude))
-        .get();
+        .snapshots()
+        .map((querySnapshot) {
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final data = doc.data();
+        final averageRating = data['averageRating'] as double? ?? 0.0;
 
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final data = doc.data();
-      final averageRating = data['averageRating'] as double? ?? 0.0;
-
-      if (averageRating == 0.0 && data.containsKey('Rating')) {
-        final stringRating = double.parse(data['Rating'].toString());
-        return stringRating;
+        return averageRating;
+      } else {
+        return 0.0;
       }
-
-      return averageRating;
-    } else {
-      return 0.0;
-    }
+    });
   }
 
   @override
@@ -167,49 +161,45 @@ class _PaidRestroomRecommendationListState
                       const SizedBox(height: 5),
                       Row(
                         children: [
-                          FutureBuilder<double>(  // Builds a widget that displays the average rating and allows users to interact with the rating bar
-                            future: _avarageRatingFuture,
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const CircularProgressIndicator();
-                              } else if (snapshot.hasError) {
-                                return const Text('Error loading rating');
-                              } else if (!snapshot.hasData) {
-                                return const Text('No rating available');
-                              } else {
-                                return Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      '${snapshot.data}',
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    custom_rating_bar.RatingBar(
-                                      filledIcon: Icons.star,
-                                      emptyIcon: Icons.star_border,
-                                      emptyColor: Colors.white24,
-                                      filledColor: const Color.fromARGB(
-                                          255, 97, 84, 158),
-                                      halfFilledColor: const Color.fromARGB(
-                                          255, 186, 176, 228),
-                                      size: 18.0,
-                                      alignment: Alignment.bottomLeft,
-                                      initialRating: snapshot.data!,
-                                      maxRating: 5,
-                                      onRatingChanged: (rate) {
-                                        snapshot.data!;
-                                      },
-                                    )
-                                  ],
-                                );
-                              }
-                            },
-                          ),
+                          StreamBuilder<double>(  // Displays the average rating using a StreamBuilder with a RatingBar indicator.
+            stream: averageRatingStream(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              } else if (snapshot.hasError) {
+                return Text('Error loading rating: ${snapshot.error}');
+              } else if (!snapshot.hasData) {
+                return Text('No rating available');
+              } else {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${snapshot.data!.toStringAsFixed(1)}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 17,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    RatingBarIndicator(
+                      
+                      rating: snapshot.data!,
+                      itemBuilder: (context, index) => Icon(
+                        Icons.star,
+                        color: const Color.fromARGB(255, 97, 84, 158),
+                      ),
+                      itemCount: 5,
+                      itemSize: 20.0,
+                      unratedColor: Colors.white24,
+                      direction: Axis.horizontal,
+                    ),
+                  ],
+                );
+              }
+            },
+          ),
                         ],
                       ),
                     ],

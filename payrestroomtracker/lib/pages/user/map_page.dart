@@ -1103,7 +1103,7 @@ double _calculateDistance(LatLng start, LatLng end) {
     _fetchPaidRestroomName(destination);
 
     AStar aStar =
-        AStar('AIzaSyC1Ooxwod2ykAO6R99jhnXoYA3ubvkrB9M', _updateDuration);
+        AStar('AIzaSyC9GUj8pepeNXF2vPapbvoAS3sMVpu96H4', _updateDuration);
 
     // Calculate the path asynchronously
     List<LatLng> path =
