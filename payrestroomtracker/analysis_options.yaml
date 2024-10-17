@@ -9,6 +9,11 @@
 # packages, and plugins designed to encourage good coding practices.
 analyzer:
   errors:
+    # Ignore specific warnings
+    # Ignore 'avoid_print' warning
+    avoid_print: ignore
+analyzer:
+  errors:
     unused_element: ignore
 include: package:flutter_lints/flutter.yaml
 

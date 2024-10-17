@@ -253,6 +253,7 @@ class MapPageState extends State<MapPage> {
     return '';
   }
 
+
   @override
   void initState() {
     rootBundle.loadString('assets/map_style.json').then((string) {
@@ -260,13 +261,8 @@ class MapPageState extends State<MapPage> {
     });
     // TODO: implement initState
     super.initState();
-    // _checkAndShowTutorial();
-
     isMainTutorialDisplayed = false;
     _loadTutorialState();
-    // initAddInAppTour();
-    // _showAppTour();
-
     getLocationUpdates();
     _loadCustomMarkerIcon();
     _loadMarkers();
@@ -346,7 +342,7 @@ class MapPageState extends State<MapPage> {
     );
   }
 
-  // Updates the current address based on the current location
+   // Updates the current address based on the current location
   Future<void> updateCurrentAddress() async {
     if (_currentP != null) {
       String? fullAddress =
