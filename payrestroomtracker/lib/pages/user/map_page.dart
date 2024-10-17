@@ -991,7 +991,7 @@ double _calculateDistance(LatLng start, LatLng end) {
 
   // Retrieves a formatted address from latitude and longitude
   Future<String?> getAddressFromLatLng(double lat, double lng) async {
-    const apiKey = 'AIzaSyC1Ooxwod2ykAO6R99jhnXoYA3ubvkrB9M';
+    const apiKey = 'AIzaSyC9GUj8pepeNXF2vPapbvoAS3sMVpu96H4';
     final url =
         'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$apiKey';
 
