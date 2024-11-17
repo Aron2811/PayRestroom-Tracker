@@ -667,6 +667,45 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               const SizedBox(height: 15),
               _buildCarousel(),
               const SizedBox(height: 20),
+              Align(
+              alignment: Alignment.center,
+              child: ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  enableFeedback: false,
+                  backgroundColor: Colors.white,
+                  minimumSize: const Size(100, 40),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(50),
+                  ),
+                  side: BorderSide(
+                    color: Color.fromARGB(255, 149, 134, 225),
+                    width: 2.0,
+                  ),
+                  textStyle: const TextStyle(fontSize: 16),
+                ),
+                onPressed: _uploadImages,
+                icon: Icon(Icons.upload_rounded,
+                    color: Color.fromARGB(255, 149, 134, 225)),
+                label: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Upload Image ', // Replace this with the appropriate label
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Color.fromARGB(255, 115, 99, 183),
+                      ),
+                    ),
+                    Text(
+                      '*',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 236, 154, 148),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
               const SizedBox(height: 15),
               Align(
                 alignment: Alignment.center,

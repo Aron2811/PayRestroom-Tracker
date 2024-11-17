@@ -127,8 +127,9 @@ class AStar {
     final String travelMode =
         (options == 'byFoot' || options == 'commute') ? 'walking' : 'driving';
 
-    final String url =
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${goal.latitude},${goal.longitude}&mode=$travelMode&key=$googleMapsApiKey';
+  final String url =
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${goal.latitude},${goal.longitude}&mode=$travelMode&alternatives=true&key=$googleMapsApiKey';
+
 
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
