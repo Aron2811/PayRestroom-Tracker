@@ -144,9 +144,9 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
     final pickedFiles = await ImagePicker().pickMultiImage();
     if (pickedFiles == null || pickedFiles.isEmpty) return;
 
-    const int maxFileSizeInBytes = 3 * 1024 * 1024; // 3MB in bytes
+    const int maxFileSizeInBytes = 15 * 1024 * 1024; // 3MB in bytes
 
-    // Check if any image exceeds 3MB
+    // Check if any image exceeds 15MB
     for (var pickedFile in pickedFiles) {
       final file = File(pickedFile.path);
       final fileSize = await file.length();
@@ -155,7 +155,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Image must be less than 3MB'),
+              content: Text('Image must be less than 15MB'),
               backgroundColor: Color.fromARGB(255, 115, 99, 183),
             ),
           );
@@ -668,13 +668,22 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
                     Text(
                       '*',
                       style: TextStyle(
-                        color: Color.fromARGB(255, 236, 154, 148),
+                         color: Color.fromARGB(255, 236, 154, 148),
                       ),
                     ),
                   ],
                 ),
               ),
             ),
+          SizedBox(height: 3),
+          Text(
+                      'Maximum combined image size: 15MB',
+                      style: TextStyle(
+                       
+                        color: Color.fromARGB(255, 115, 99, 183),
+                      ),
+                    ),
+              
             SizedBox(height: 10),
             Align(
               alignment: Alignment.center,

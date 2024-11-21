@@ -884,7 +884,7 @@ double _calculateDistance(LatLng start, LatLng end) {
                     style: ElevatedButton.styleFrom(
                       enableFeedback: false,
                       backgroundColor: Colors.white,
-                      minimumSize: const Size(115, 50),
+                      minimumSize: const Size(130, 50),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(30),
                         side: const BorderSide(
@@ -895,11 +895,11 @@ double _calculateDistance(LatLng start, LatLng end) {
                       ),
                       foregroundColor: Color.fromARGB(255, 97, 84, 158),
                       textStyle: const TextStyle(
-                        fontSize: 16,
+                        fontSize: 14,
                       ),
                     ),
                     label: const Text(
-                      "FIND NEAREST PAY TOILET",
+                      "FIND NEARBY HIGH-RATED PAID TOILETS",
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     icon: const Icon(
