@@ -1,17 +1,20 @@
 import 'package:custom_rating_bar/custom_rating_bar.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_button/pages/admin/adminMap.dart';
-import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:flutter_button/pages/admin/adminpage.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:readmore/readmore.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 
 class AdminReviewsPage extends StatefulWidget {
+  final String username;
+  final String report;
   final LatLng destination;
 
   const AdminReviewsPage({
     Key? key,
+    required this.username,
+    required this.report,
     required this.destination,
   }) : super(key: key);
 
@@ -28,6 +31,7 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
     _fetchReviews(); // Fetch reviews when page initializes
   }
 
+  // Fetches reviews and ratings for a specific location from Firestore, updating the state with the results.
   Future<void> _fetchReviews() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -62,6 +66,7 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
     }
   }
 
+  //formats the timestamp to dd, MMM, yyyy, hh:mm, a
   String _formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
     return DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
@@ -103,46 +108,42 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: const Text(
-          'Reviews',
-          style: TextStyle(fontSize: 20, color: Colors.white),
+    return MaterialApp(
+      debugShowCheckedModeBanner: false,
+      home: Scaffold(
+        appBar: AppBar(
+          title: const Text(
+            'Reviews',
+            style: TextStyle(fontSize: 20, color: Colors.white),
+          ),
+          leading: BackButton(
+            color: Colors.white,
+            onPressed: () {
+              Navigator.push(
+                context,
+                _createRoute(AdminPage(
+                    username: widget.username, report: widget.report)),
+              );
+            },
+          ),
+          backgroundColor: const Color.fromARGB(255, 97, 84, 158),
+          centerTitle: true,
         ),
-        backgroundColor: const Color.fromARGB(255, 97, 84, 158),
-        centerTitle: true,
-      ),
-      body: Column(
-        children: [
-          Expanded(
-            child: reviews.isEmpty
-                ? Center(
-                    child: Text(
-                      'No Review Available',
-                      style: TextStyle(fontSize: 18, color: Colors.grey),
-                    ),
-                  )
-                : ListView.builder(
-                    itemCount: reviews.length,
-                    itemBuilder: (context, index) {
-                      final review = reviews[index];
-                      return Slidable(
-                        endActionPane: ActionPane(
-                          motion: const BehindMotion(),
-                          children: [
-                            SlidableAction(
-                              foregroundColor:
-                                  const Color.fromARGB(255, 255, 255, 255),
-                              backgroundColor:
-                                  const Color.fromARGB(255, 162, 151, 211),
-                              icon: Icons.delete_outline_rounded,
-                              onPressed: (context) {
-                                _showDeleteDialog(index);
-                              },
-                            ),
-                          ],
-                        ),
-                        child: Padding(
+        body: Column(
+          children: [
+            Expanded(
+              child: reviews.isEmpty
+                  ? Center(
+                      child: Text(
+                        'No Review Available',
+                        style: TextStyle(fontSize: 18, color: Colors.grey),
+                      ),
+                    )
+                  : ListView.builder(
+                      itemCount: reviews.length,
+                      itemBuilder: (context, index) {
+                        final review = reviews[index];
+                        return Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment
@@ -158,7 +159,7 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
                                   ),
                                   const SizedBox(width: 20),
                                   Text(
-                                    review['userName'] ?? 'Anonymous',
+                                    review['userName'] ?? 'Anonymous',  //displays the user name
                                     textAlign: TextAlign.start,
                                     style: const TextStyle(
                                       fontSize: 17,
@@ -196,6 +197,7 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
                                 ],
                               ),
                               SizedBox(height: 10),
+                              
                               ReadMoreText(
                                 review['comment'] ?? '',
                                 textAlign:
@@ -213,18 +215,20 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
                                   fontWeight: FontWeight.bold,
                                 ),
                               ),
+                            
                             ],
                           ),
-                        ),
-                      );
-                    },
-                  ),
-          ),
-        ],
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
       ),
     );
   }
 
+  // Displays a confirmation dialog for deleting a review, and calls the delete function if confirmed.
   void _showDeleteDialog(int index) {
     showDialog(
       context: context,
@@ -257,6 +261,7 @@ class _AdminReviewsPageState extends State<AdminReviewsPage> {
     );
   }
 
+  // Creates a custom route with a slide transition animation from the bottom to the top.
   Route _createRoute(Widget child) {
     return PageRouteBuilder(
       pageBuilder: (BuildContext context, Animation<double> animation,

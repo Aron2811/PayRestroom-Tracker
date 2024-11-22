@@ -29,6 +29,7 @@ class _AdminReportState extends State<AdminReport> {
     _fetchReports();
   }
 
+  //getting the report and the timestamp of the user in the database
   Future<void> _fetchReports() async {
     final querySnapshot = await _firestore
         .collection('reports')
@@ -45,11 +46,13 @@ class _AdminReportState extends State<AdminReport> {
     });
   }
 
+  //updates the read status of the report ones the admin see it
   Future<void> _updateReadStatus(String reportId) async {
     await _firestore.collection('reports').doc(reportId).update({'read': true});
     _fetchReports();
   }
 
+  //formats the timestamp to MMM dd
   String _formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
     return DateFormat('MMM dd').format(dateTime);
@@ -81,7 +84,7 @@ class _AdminReportState extends State<AdminReport> {
             child: reports.isEmpty
                 ? Center(
                     child: Text(
-                      'No reports found.',
+                      'No reports found.',  //updates the admin that there is no report
                       style: TextStyle(fontSize: 18, color: Colors.grey),
                     ),
                   )
@@ -96,7 +99,7 @@ class _AdminReportState extends State<AdminReport> {
                             ? const Color.fromARGB(0, 255, 255, 255)
                             : Color.fromARGB(209, 221, 214, 255),
                         title: Text(
-                          report['username'] ?? 'Anonymous',
+                          report['username'] ?? 'Anonymous',  //displays the username of the user
                           overflow: TextOverflow.ellipsis,
                           maxLines: 1,
                           textAlign: TextAlign.start,
@@ -111,7 +114,7 @@ class _AdminReportState extends State<AdminReport> {
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
                               Text(
-                                report['restroomName'] ?? 'Unknown Restroom',
+                                report['restroomName'] ?? 'Unknown Restroom',   //displays the restroom name
                                 style: TextStyle(
                                   color: report['read']
                                       ? Color.fromARGB(255, 97, 84, 158)
@@ -158,6 +161,7 @@ class _AdminReportState extends State<AdminReport> {
     );
   }
 
+  // Creates a custom route with a slide transition animation from the bottom to the top.
   Route _createRoute(Widget child) {
     return PageRouteBuilder(
       pageBuilder: (BuildContext context, Animation<double> animation,

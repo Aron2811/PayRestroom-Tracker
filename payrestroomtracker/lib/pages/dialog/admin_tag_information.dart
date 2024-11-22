@@ -1,5 +1,4 @@
 import 'package:another_carousel_pro/another_carousel_pro.dart';
-import 'package:custom_rating_bar/custom_rating_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/admin/admin_reviewpage.dart';
 import 'package:flutter_button/pages/dialog/admin_edit_info.dart';
@@ -11,9 +10,13 @@ class AdminTagInformation extends StatefulWidget {
   final MarkerId markerId;
   final Future<void> Function(MarkerId) deleteMarker;
   final LatLng destination;
+  final String username;
+  final String report;
 
   const AdminTagInformation({
     Key? key,
+    required this.username,
+    required this.report,
     required this.markerId,
     required this.deleteMarker,
     required this.destination,
@@ -98,7 +101,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
     }
   }
 
-   Future<void> _fetchRating() async {
+  Future<void> _fetchRating() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
         .where('position',
@@ -215,25 +218,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
             const SizedBox(height: 30),
             Padding(
                 padding: EdgeInsets.only(left: 60, right: 30),
-                child: Row(children: [
-                  Text(
-                    ratingText,
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: Color.fromARGB(255, 97, 84, 158),
-                    ),
-                  ),
-                  RatingBar.readOnly(
-                    size: 20,
-                    filledIcon: Icons.star,
-                    emptyIcon: Icons.star_border,
-                    emptyColor: const Color.fromARGB(255, 153, 149, 149),
-                    filledColor: Color.fromARGB(255, 97, 84, 158),
-                    halfFilledColor: Color.fromARGB(255, 148, 139, 185),
-                    initialRating: rating,
-                    maxRating: 5,
-                  ),
-                ])),
+                child: Row(children: [])),
             SizedBox(height: 20),
             Align(
                 alignment: Alignment.center,
@@ -249,8 +234,10 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
                   onTap: () {
                     Navigator.push(
                         context,
-                        _createRoute(
-                            AdminReviewsPage(destination: widget.destination)));
+                        _createRoute(AdminReviewsPage(
+                            username: widget.username,
+                            report: widget.report,
+                            destination: widget.destination)));
                   },
                 )),
             const SizedBox(height: 15),

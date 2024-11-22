@@ -1,6 +1,7 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_button/pages/admin/adminlogin_page.dart';
 import 'package:flutter_button/pages/dialog/privacy_dialog.dart';
 import 'package:flutter_button/pages/user/user_loggedin_page.dart';
 import 'package:google_sign_in/google_sign_in.dart';
@@ -11,6 +12,7 @@ class UserLoginPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      debugShowCheckedModeBanner: false,
       home: Scaffold(
         body: Stack(
           children: [
@@ -30,7 +32,7 @@ class UserLoginPage extends StatelessWidget {
                 children: <Widget>[
                   const SizedBox(height: 70),
 
-                  // Image
+                  // Paid Restroom logo
                   Image.asset(
                     'assets/PO_tag.png',
                     width: 250,
@@ -65,6 +67,28 @@ class UserLoginPage extends StatelessWidget {
 
                   const SizedBox(height: 50),
 
+                    Container(
+                  height: 50,
+                  width: 300,
+                  child: GestureDetector(
+                    child: Text(
+                      'Login as Admin',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.white,
+                      ),
+                    ),
+                    onTap: () {
+                      Navigator.push(
+                          context,
+                          _createRoute(AdminLoginPage(
+                            report: "",
+                          )));
+                    },
+                  ),
+                ),
+
                   Center(
                     child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
@@ -89,6 +113,8 @@ class UserLoginPage extends StatelessWidget {
                                     color: Colors.white,
                                   ),
                                 ),
+
+                                // for showing the privacy dialog
                                 GestureDetector(
                                   child: const Text("Privacy Policy",
                                       style: TextStyle(

@@ -4,15 +4,14 @@ import 'package:flutter_button/pages/admin/adminpage.dart';
 import 'package:flutter_button/pages/dialog/admin_tag_information.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
-import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_button/pages/dialog/admin_add_info.dart';
 
 class AdminMap extends StatefulWidget {
-  const AdminMap({Key? key, required this.username, required this.report}) : super(key: key);
+  const AdminMap({Key? key, required this.username, required this.report})
+      : super(key: key);
   final String username;
   final String report;
 
@@ -25,15 +24,15 @@ class AdminMapState extends State<AdminMap> {
       LatLng(14.303142147986497, 121.07613374318477);
   late GoogleMapController mapController;
   LatLng? _currentP;
-  String? _currentAddress;
   Set<Marker> _markers = {};
   Location _locationController = Location();
   BitmapDescriptor? _customMarkerIcon;
   BitmapDescriptor? _personMarkerIcon;
+
   late String _mapStyleString;
   Set<Polyline> _polylines = {};
 
-   bool isUserLocationVisible = false;
+  bool isUserLocationVisible = false;
 
   @override
   void initState() {
@@ -52,6 +51,7 @@ class AdminMapState extends State<AdminMap> {
     setState(() {}); // Update UI after loading markers
   }
 
+  // Loads custom marker icons for the map from asset images.
   Future<void> _loadCustomMarkerIcon() async {
     _customMarkerIcon = await BitmapDescriptor.fromAssetImage(
       ImageConfiguration(size: Size(1, 1)),
@@ -63,6 +63,7 @@ class AdminMapState extends State<AdminMap> {
     );
   }
 
+  // Loads markers from Firestore and converts them into a set of Marker objects for the map.
   Future<Set<Marker>> loadMarkersFromPrefs() async {
     final firestoreMarkers =
         await FirebaseFirestore.instance.collection('Tags').get();
@@ -87,6 +88,8 @@ class AdminMapState extends State<AdminMap> {
             context: context,
             builder: (context) => AdminTagInformation(
               markerId: MarkerId(id ?? 'unknown'),
+              report: widget.report,
+              username: widget.username,
               deleteMarker: _deleteMarker,
               destination: latLng,
             ),
@@ -98,6 +101,7 @@ class AdminMapState extends State<AdminMap> {
     return loadedMarkers;
   }
 
+  // Saves the current markers' data to SharedPreferences.
   Future<void> _saveMarkersToPrefs() async {
     final prefs = await SharedPreferences.getInstance();
     final markerData = _markers.map((marker) {
@@ -106,6 +110,7 @@ class AdminMapState extends State<AdminMap> {
     await prefs.setStringList('markers', markerData);
   }
 
+  // Deletes a marker from the map and Firestore, and updates the saved markers in SharedPreferences.
   Future<void> _deleteMarker(MarkerId markerId) async {
     setState(() {
       _markers.removeWhere((marker) => marker.markerId == markerId);
@@ -119,21 +124,12 @@ class AdminMapState extends State<AdminMap> {
         .delete();
   }
 
-  Future<void> updateCurrentAddress() async {
-    if (_currentP != null) {
-      _currentAddress =
-          await getAddressFromLatLng(_currentP!.latitude, _currentP!.longitude);
-      setState(() {});
-    } else {
-      _currentAddress = null;
-    }
-  }
-
   @override
   Widget build(BuildContext context) {
     final markerId_ =
         MarkerId('marker_${DateTime.now().millisecondsSinceEpoch}');
 
+    // Adds a marker at the user's current location and prompts the user to confirm adding a tag.
     if (_currentP != null) {
       _markers.add(
         Marker(
@@ -164,7 +160,8 @@ class AdminMapState extends State<AdminMap> {
                             showDialog(
                               context: context,
                               builder: (context) => AddInfoDialog(
-                                markerId: markerId_,  destination: _currentP!,
+                                markerId: markerId_,
+                                destination: _currentP!,
                               ),
                             ).then((confirmed) {
                               print(confirmed);
@@ -226,8 +223,10 @@ class AdminMapState extends State<AdminMap> {
                                 Navigator.of(context).pop(true);
                                 showDialog(
                                   context: context,
-                                  builder: (context) =>
-                                      AddInfoDialog(markerId: markerId_, destination: latLng,),
+                                  builder: (context) => AddInfoDialog(
+                                    markerId: markerId_,
+                                    destination: latLng,
+                                  ),
                                 ).then((confirmed) {
                                   print(confirmed);
                                   if (confirmed == true) {
@@ -256,6 +255,7 @@ class AdminMapState extends State<AdminMap> {
     );
   }
 
+  // Shows a confirmation dialog when the back button is pressed and navigates to the AdminPage if confirmed.
   Future<bool> _onBackButtonPressed() async {
     return await showDialog(
       context: context,
@@ -274,7 +274,10 @@ class AdminMapState extends State<AdminMap> {
               Navigator.of(context).pop(true);
               Navigator.push(
                 context,
-                _createRoute(AdminPage(username: widget.username, report: widget.report,)),
+                _createRoute(AdminPage(
+                  username: widget.username,
+                  report: widget.report,
+                )),
               );
             },
             child: const Text("Yes"),
@@ -284,35 +287,7 @@ class AdminMapState extends State<AdminMap> {
     );
   }
 
-  Future<String?> getAddressFromLatLng(double lat, double lng) async {
-    const apiKey = 'AIzaSyATlFmBj-83JvPniLILsfpyawS8NlKIEDc';
-    final url =
-        'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$apiKey';
-
-    try {
-      final response = await http.get(Uri.parse(url));
-
-      if (response.statusCode == 200) {
-        final decoded = json.decode(response.body) as Map<String, dynamic>;
-        final results = decoded['results'] as List<dynamic>;
-
-        if (results.isNotEmpty) {
-          final formattedAddress = results[0]['formatted_address'] as String?;
-          return formattedAddress;
-        } else {
-          print('No results found for the provided coordinates.');
-          return null;
-        }
-      } else {
-        print('Failed to load address: ${response.statusCode}');
-        return null;
-      }
-    } catch (e) {
-      print('Error fetching address: $e');
-      return null;
-    }
-  }
-
+  // Requests location permissions and service enablement, then listens for location updates.
   Future<void> getLocationUpdates() async {
     bool _serviceEnabled;
     PermissionStatus _permissionGranted;
@@ -343,7 +318,6 @@ class AdminMapState extends State<AdminMap> {
           _currentP =
               LatLng(currentLocation.latitude!, currentLocation.longitude!);
         });
-        updateCurrentAddress();
 
         if (!isUserLocationVisible) {
           _ensureUserLocationVisible();
@@ -353,20 +327,23 @@ class AdminMapState extends State<AdminMap> {
     });
   }
 
-    Future<void> _ensureUserLocationVisible() async {
-    if (_currentP != null && mapController != null) {
-     //Center the camera on the user's location
-     mapController.animateCamera(
-      CameraUpdate.newCameraPosition(
-        CameraPosition(
-          target: _currentP!, //center on the user's current position
-          zoom: await mapController.getZoomLevel(), //Maintain the current zoom level
+  // Centers the camera on the user's current location and maintains the current zoom level.
+  Future<void> _ensureUserLocationVisible() async {
+    if (_currentP != null) {
+      // Center the camera on the user's location
+      mapController.animateCamera(
+        CameraUpdate.newCameraPosition(
+          CameraPosition(
+            target: _currentP!, // center on the user's current position
+            zoom: await mapController
+                .getZoomLevel(), // Maintain the current zoom level
+          ),
         ),
-      ),
-     );
+      );
     }
   }
 
+  // Adds a marker to the map, updates the markers list, and saves it to Firestore and SharedPreferences.
   void _addMarker(LatLng latLng, MarkerId markerId_) {
     Marker newMarker = Marker(
       markerId: markerId_,
@@ -377,6 +354,8 @@ class AdminMapState extends State<AdminMap> {
           context: context,
           builder: (context) => AdminTagInformation(
             markerId: markerId_,
+            report: widget.report,
+            username: widget.username,
             deleteMarker: _deleteMarker,
             destination: latLng,
           ),
@@ -395,6 +374,7 @@ class AdminMapState extends State<AdminMap> {
     });
   }
 
+  // Creates a custom route with a slide transition from the bottom to the top.
   Route _createRoute(Widget child) {
     return PageRouteBuilder(
       pageBuilder: (BuildContext context, Animation<double> animation,

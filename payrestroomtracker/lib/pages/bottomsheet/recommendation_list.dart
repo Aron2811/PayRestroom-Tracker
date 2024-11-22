@@ -23,7 +23,6 @@ class PaidRestroomRecommendationList extends StatefulWidget {
 
 class _PaidRestroomRecommendationListState
     extends State<PaidRestroomRecommendationList> {
-  late Future<double> _avarageRatingFuture;
   String _name = "Paid Restroom Name";
   String _location = "Location";
   String _cost = "Cost";
@@ -31,12 +30,12 @@ class _PaidRestroomRecommendationListState
   @override
   void initState() {
     super.initState();
-    _avarageRatingFuture = fetchAverageRating();
     _fetchPaidRestroomName();
     _fetchPaidRestroomLocation();
     _fetchPaidRestroomCost();
   }
 
+  //gets the paid restroom name from the database
   Future<void> _fetchPaidRestroomName() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -48,8 +47,7 @@ class _PaidRestroomRecommendationListState
     if (querySnapshot.docs.isNotEmpty) {
       final doc = querySnapshot.docs.first;
       final data = doc.data();
-      final fetchedName =
-          data['Name'] as String? ?? "Paid Restroom Name";
+      final fetchedName = data['Name'] as String? ?? "Paid Restroom Name";
 
       setState(() {
         _name = fetchedName;
@@ -57,6 +55,7 @@ class _PaidRestroomRecommendationListState
     }
   }
 
+  //gets the paid restroom location from the database
   Future<void> _fetchPaidRestroomLocation() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -76,6 +75,7 @@ class _PaidRestroomRecommendationListState
     }
   }
 
+  //gets the paid restroom cost from the database
   Future<void> _fetchPaidRestroomCost() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -95,29 +95,25 @@ class _PaidRestroomRecommendationListState
     }
   }
 
-Future<double> fetchAverageRating() async {
-    final querySnapshot = await FirebaseFirestore.instance
+  //gets the average rating from the database
+Stream<double> averageRatingStream() {
+    return FirebaseFirestore.instance
         .collection('Tags')
         .where('position',
             isEqualTo: GeoPoint(
                 widget.destination.latitude, widget.destination.longitude))
-        .get();
+        .snapshots()
+        .map((querySnapshot) {
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final data = doc.data();
+        final averageRating = data['averageRating'] as double? ?? 0.0;
 
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final data = doc.data();
-      final averageRating = data['averageRating'] as double? ?? 0.0;
-
-      if (averageRating == 0.0 && data.containsKey('Rating')) {
-          final stringRating = double.parse(data['Rating'].toString());
-          return stringRating;
-        }
-
-        
-      return averageRating;
-    } else {
-      return 0.0;
-    }
+        return averageRating;
+      } else {
+        return 0.0;
+      }
+    });
   }
 
   @override
@@ -165,45 +161,45 @@ Future<double> fetchAverageRating() async {
                       const SizedBox(height: 5),
                       Row(
                         children: [
-                          FutureBuilder<double>(
-                            future: _avarageRatingFuture,
-                            builder: (context, snapshot) {
-                              if (snapshot.connectionState ==
-                                  ConnectionState.waiting) {
-                                return const CircularProgressIndicator();
-                              } else if (snapshot.hasError) {
-                                return const Text('Error loading rating');
-                              } else if (!snapshot.hasData) {
-                                return const Text('No rating available');
-                              } else {
-                                return Row(
-                                  mainAxisAlignment: MainAxisAlignment.center,
-                                  children: [
-                                    Text(
-                                      '${snapshot.data}',
-                                      textAlign: TextAlign.center,
-                                      style: const TextStyle(
-                                        fontSize: 16,
-                                        color: Colors.white,
-                                      ),
-                                    ),
-                                    RatingBarIndicator(
-                                      rating: snapshot.data!,
-                                      itemBuilder: (context, index) => Icon(
-                                        Icons.star,
-                                        color: const Color.fromARGB(
-                                            255, 97, 84, 158),
-                                      ),
-                                      itemCount: 5,
-                                      itemSize: 18.0,
-                                      unratedColor: Colors.white24,
-                                      direction: Axis.horizontal,
-                                    ),
-                                  ],
-                                );
-                              }
-                            },
-                          ),
+                          StreamBuilder<double>(  // Displays the average rating using a StreamBuilder with a RatingBar indicator.
+            stream: averageRatingStream(),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CircularProgressIndicator();
+              } else if (snapshot.hasError) {
+                return Text('Error loading rating: ${snapshot.error}');
+              } else if (!snapshot.hasData) {
+                return Text('No rating available');
+              } else {
+                return Row(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Text(
+                      '${snapshot.data!.toStringAsFixed(1)}',
+                      textAlign: TextAlign.center,
+                      style: TextStyle(
+                        fontSize: 17,
+                        color: Colors.white,
+                      ),
+                    ),
+                    SizedBox(width: 5),
+                    RatingBarIndicator(
+                      
+                      rating: snapshot.data!,
+                      itemBuilder: (context, index) => Icon(
+                        Icons.star,
+                        color: const Color.fromARGB(255, 97, 84, 158),
+                      ),
+                      itemCount: 5,
+                      itemSize: 20.0,
+                      unratedColor: Colors.white24,
+                      direction: Axis.horizontal,
+                    ),
+                  ],
+                );
+              }
+            },
+          ),
                         ],
                       ),
                     ],
@@ -239,6 +235,7 @@ Future<double> fetchAverageRating() async {
         ),
       ),
       onTap: () {
+        // Displays a modal bottom sheet with information about a paid restroom
         showModalBottomSheet(
             context: context,
             isScrollControlled: true,

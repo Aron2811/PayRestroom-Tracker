@@ -1,24 +1,24 @@
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_button/firebase_options.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_button/pages/admin/adminMap.dart';
+import 'package:flutter_button/pages/admin/adminpage.dart';
 import 'package:flutter_button/pages/loading_page.dart';
-import 'package:flutter_button/pages/intro_page.dart';
 import 'package:flutter_button/pages/user/map_page.dart';
 import 'package:flutter_button/pages/user/userlogin_page.dart';
 import 'package:flutter_button/pages/admin/adminlogin_page.dart';
 import 'package:flutter_button/pages/user/user_loggedin_page.dart';
-import 'package:flutter_button/pages/user/add_review_page.dart';
-import 'package:flutter_button/pages/user/reviews_page.dart';
-import 'package:flutter_button/pages/user/report_page.dart';
-import 'package:flutter_button/pages/user/others_report_page.dart';
 import 'package:flutter_button/pages/dialog/privacy_dialog.dart';
 import 'package:flutter_button/pages/dialog/user_profile_dialog.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await Firebase.initializeApp();
-  runApp(Main());
+  SystemChrome.setPreferredOrientations([
+    DeviceOrientation.portraitUp,
+    DeviceOrientation.portraitDown,
+  ]);
+  runApp(const Main());
 }
 
 class Main extends StatelessWidget {
@@ -31,7 +31,6 @@ class Main extends StatelessWidget {
         home: const LoadingPage(),
         routes: {
           '/Loadingpage': (context) => const LoadingPage(),
-          '/intropage': (context) => const IntroPage(report: '',),
           '/userloginpage': (context) => const UserLoginPage(),
           '/userloggedinpage': (context) => const UserLoggedInPage(),
           '/adminloginpage': (context) => const AdminLoginPage(report: '',),
@@ -39,6 +38,7 @@ class Main extends StatelessWidget {
           '/adminmappage' : (context) => const AdminMap(username: '', report: '',),
           '/privacydialog': (context) => const PrivacyDialog(),
           '/userprofiledialog': (context) => const UserProfileDialog(),
+          '/admin': (context) => const AdminPage(username: '', report: ''),
         });
   }
 }

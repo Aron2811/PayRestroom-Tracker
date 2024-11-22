@@ -11,12 +11,12 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_button/pages/user/street_view.dart';
 
-class PaidRestroomInfo extends StatefulWidget {
+class MapPaidRestroomInfo extends StatefulWidget {
   final Function(LatLng, String) drawRouteToDestination;
   final LatLng destination;
   final Function toggleVisibility;
 
-  const PaidRestroomInfo({
+  const MapPaidRestroomInfo({
     Key? key,
     required this.drawRouteToDestination,
     required this.destination,
@@ -24,10 +24,10 @@ class PaidRestroomInfo extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _PaidRestroomInfoState createState() => _PaidRestroomInfoState();
+  _MapPaidRestroomInfoState createState() => _MapPaidRestroomInfoState();
 }
 
-class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
+class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
   late Future<double> _userRatingFuture;
   String _name = "Paid Restroom Name";
   String _location = "Location";
@@ -146,7 +146,7 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
     }
   }
 
-  //gets the restroom name from the database
+   //gets the restroom name from the database
   Future<void> _fetchPaidRestroomName() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -375,7 +375,6 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                     ),
                   ),
                   onPressed: () {
-                    Navigator.pop(context);
                     Navigator.pop(context); // Close bottom sheet
                     widget.toggleVisibility();
                     widget.drawRouteToDestination(

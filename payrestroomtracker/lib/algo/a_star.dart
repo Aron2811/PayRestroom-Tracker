@@ -22,7 +22,7 @@ class AStar {
     }
     if (pathPoints.isEmpty) {
       print('No valid route found from Google Maps Directions API.');
-      return [start, goal]; // or handle the case appropriately
+      return [start, goal];
     }
 
     PriorityQueue<Node> openSet =
@@ -49,9 +49,6 @@ class AStar {
       Node current = openSet.removeFirst();
       openSetPositions.remove(current.position);
 
-      // Print the current node being processed
-      print('Processing node: ${current.position}');
-
       // Step b: Move the Current Node from the Open List to the Closed List
       closedSet.add(current.position);
 
@@ -68,7 +65,7 @@ class AStar {
 
         // Calculate tentative g score
         double tentativeGScore =
-            gScore[current.position]! + _distance(current.position, neighbor);
+            gScore[current.position]! + _heuristic(current.position, neighbor);
 
         // Step e: Update Scores if Better Path Found
         if (!openSetPositions.contains(neighbor)) {
@@ -97,6 +94,7 @@ class AStar {
     return [start, goal]; // or handle the case appropriately
   }
 
+  // Snaps a given LatLng point or the goal to the nearest road
   Future<LatLng> _snapToRoad(LatLng point) async {
     final String url =
         'https://roads.googleapis.com/v1/snapToRoads?path=${point.latitude},${point.longitude}&key=$googleMapsApiKey';
@@ -127,7 +125,7 @@ class AStar {
         (options == 'byFoot' || options == 'commute') ? 'walking' : 'driving';
 
     final String url =
-        'https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${goal.latitude},${goal.longitude}&mode=$travelMode&key=$googleMapsApiKey';
+        'https://maps.googleapis.com/maps/api/directions/json?origin=${start.latitude},${start.longitude}&destination=${goal.latitude},${goal.longitude}&mode=$travelMode&alternatives=true&key=$googleMapsApiKey';
 
     final response = await http.get(Uri.parse(url));
     if (response.statusCode == 200) {
@@ -150,8 +148,23 @@ class AStar {
           durationString =
               '${(durationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(durationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}min';
         } else if (options == 'commute') {
-          // Subtract 11 minutes from the byFoot duration
-          int commuteDurationSeconds = durationSeconds - (8 * 60);
+          // Calculate the distance between start and goal in miles
+          String distanceMilesString = getDistanceInMiles(start, goal);
+
+          double distanceMiles =
+              double.parse(distanceMilesString.split(' ')[0]);
+
+          // Calculate the number of 0.43-mile segments
+          double segments = distanceMiles / 0.43;
+
+          // Subtract 8 minutes (480 seconds) for each segment
+          int commuteDurationSeconds =
+              durationSeconds - (segments.floor() * 480);
+
+          // Ensure that the duration doesn't go below zero
+          commuteDurationSeconds =
+              commuteDurationSeconds > 0 ? commuteDurationSeconds : 0;
+
           durationString =
               '${(commuteDurationSeconds ~/ 3600).toString().padLeft(2, '0')}hr ${(commuteDurationSeconds ~/ 60 % 60).toString().padLeft(2, '0')}min';
         } else if (options == 'private') {
@@ -174,6 +187,7 @@ class AStar {
     }
   }
 
+  // Decodes an encoded polyline string into a list of LatLng points.
   List<LatLng> _decodeDetailedPolyline(String encoded) {
     List<LatLng> polyline = [];
     int index = 0, len = encoded.length;
@@ -208,6 +222,7 @@ class AStar {
     return polyline;
   }
 
+  // Interpolates between consecutive LatLng points by fetching detailed route points and adds them to the list.
   Future<List<LatLng>> _interpolate(List<LatLng> points, String options) async {
     List<LatLng> interpolatedPoints = [];
 
@@ -228,6 +243,7 @@ class AStar {
     return interpolatedPoints;
   }
 
+  // Fetches a detailed route between two LatLng points, or returns the original points if no route is found.
   Future<List<LatLng>> _fetchDetailedRoute(
       LatLng start, LatLng end, String options) async {
     var detailedRoute = await _fetchRouteFromGoogleMaps(start, end, options);
@@ -238,6 +254,7 @@ class AStar {
     }
   }
 
+  // Calculates the heuristic distance (Haversine formula) between two LatLng points in kilometers.
   double _heuristic(LatLng a, LatLng b) {
     const double radiusEarthKm = 6371.0; // Earth's radius in kilometers
 
@@ -256,6 +273,7 @@ class AStar {
     return distance;
   }
 
+  // Calculates the great-circle distance between two LatLng points using the Haversine formula.
   double _distance(LatLng a, LatLng b) {
     const double earthRadiusKm = 6371.0; // Earth's radius in kilometers
 
@@ -274,6 +292,7 @@ class AStar {
     return distance;
   }
 
+  // Reconstructs the path by backtracking from the current LatLng point using the 'cameFrom' map.
   List<LatLng> _reconstructPath(Map<LatLng, LatLng> cameFrom, LatLng current) {
     List<LatLng> totalPath = [current];
     while (cameFrom.containsKey(current)) {
@@ -306,6 +325,7 @@ class AStar {
   }
 }
 
+// A class representing a node with a LatLng position and an 'f' value (used for pathfinding algorithms like A*).
 class Node {
   LatLng position;
   double f;
