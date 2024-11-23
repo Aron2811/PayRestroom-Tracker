@@ -15,22 +15,22 @@ class _MyDraggableSheetState extends State<MyDraggableSheet> {
   @override
   void initState() {
     super.initState();
-    controller.addListener(onChanged);
+    controller.addListener(onChanged); //Listen for sheet size changes
   }
-
+  // Called when the sheet size changes
   void onChanged() {
     final currentSize = controller.size;
-    if (currentSize <= 0.05) collapse();
+    if (currentSize <= 0.05) collapse(); // Collapse if too small
   }
-
+  // Collapse the sheet to the first snap size
   void collapse() => animateSheet(getSheet.snapSizes!.first);
-
+  // Move sheet to its anchored position
   void anchor() => animateSheet(getSheet.snapSizes!.last);
-
+  // Fully expand the sheet
   void expand() => animateSheet(getSheet.maxChildSize);
-
+  // Hide the sheet
   void hide() => animateSheet(getSheet.minChildSize);
-
+  // Animate the sheet to the given size
   void animateSheet(double size) {
     controller.animateTo(
       size,
@@ -42,9 +42,9 @@ class _MyDraggableSheetState extends State<MyDraggableSheet> {
   @override
   void dispose() {
     super.dispose();
-    controller.dispose();
+    controller.dispose(); 
   }
-
+  // Get the current DraggableScrollableSheet widget
   DraggableScrollableSheet get getSheet =>
       (sheet.currentWidget as DraggableScrollableSheet);
 
@@ -86,28 +86,43 @@ class _MyDraggableSheetState extends State<MyDraggableSheet> {
       );
     });
   }
-
+  // Widget for top drag indicator and close button
   SliverToBoxAdapter topButtonIndicator() {
     return SliverToBoxAdapter(
       child: Container(
-          child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: <Widget>[
-            Container(
-                child: Center(
-                    child: Wrap(children: <Widget>[
-              Container(
-                  width: 100,
-                  margin: const EdgeInsets.only(top: 10, bottom: 10),
-                  height: 5,
-                  decoration: const BoxDecoration(
-                    color: Colors.white,
-                    shape: BoxShape.rectangle,
-                    borderRadius: BorderRadius.all(Radius.circular(8.0)),
-                  )),
-            ]))),
-          ])),
+        child: Stack(
+          children: [
+            // Centered indicator
+            Align(
+              alignment: Alignment.center,
+              child: Container(
+                width: 100,
+                margin: const EdgeInsets.only(top: 10, bottom: 10),
+                height: 5,
+                decoration: const BoxDecoration(
+                  color: Colors.white,
+                  shape: BoxShape.rectangle,
+                  borderRadius: BorderRadius.all(Radius.circular(8.0)),
+                ),
+              ),
+            ),
+            // Close button at the top right
+            Padding(
+                padding: EdgeInsets.only(top: 5, right: 5),
+                child: Align(
+                    alignment: Alignment.topRight,
+                    child: FloatingActionButton.small(
+                      onPressed: () {
+                        Navigator.pop(context); 
+                      },
+                      child: Icon(Icons.close_rounded),
+                      backgroundColor: Colors.white,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(50)),
+                    ))),
+          ],
+        ),
+      ),
     );
   }
 }

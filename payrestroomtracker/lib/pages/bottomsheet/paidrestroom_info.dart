@@ -6,6 +6,8 @@ import 'package:flutter_button/pages/user/add_review_page.dart';
 import 'package:flutter_button/pages/user/report_page.dart';
 import 'package:flutter_button/pages/user/reviews_page.dart';
 import 'package:flutter_button/pages/bottomsheet/draggablesheet.dart';
+import 'package:photo_view/photo_view.dart';
+import 'package:photo_view/photo_view_gallery.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_rating_bar/flutter_rating_bar.dart';
@@ -317,7 +319,8 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
             ),
           ),
           const SizedBox(height: 10),
-          StreamBuilder<double>(  // Displays the average rating using a StreamBuilder with a RatingBar indicator.
+          StreamBuilder<double>(
+            // Displays the average rating using a StreamBuilder with a RatingBar indicator.
             stream: averageRatingStream(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -456,7 +459,8 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
             ),
           ),
           const SizedBox(height: 30),
-          FutureBuilder<List<String>>(  // Displays a carousel of images fetched from a future with loading and error handling.
+         FutureBuilder<List<String>>(
+            // Displays a carousel of images fetched from a future with loading and error handling.
             future: _fetchImageUrls(),
             builder: (context, snapshot) {
               if (snapshot.connectionState == ConnectionState.waiting) {
@@ -473,8 +477,36 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                     borderRadius: true,
                     boxFit: BoxFit.cover,
                     radius: const Radius.circular(10),
-                    images:
-                        snapshot.data!.map((url) => NetworkImage(url)).toList(),
+                    images: snapshot.data!.map((url) {
+                      return GestureDetector(
+                        onTap: () {
+                          // Open the image in full screen with zoom functionality when tapped
+                          Navigator.push(
+                            context,
+                            MaterialPageRoute(
+                              builder: (context) => FullScreenImageGallery(
+                                
+                                imageUrls:
+                                    snapshot.data!, // Pass the list of URLs
+                                initialIndex: snapshot.data!
+                                    .indexOf(url), // Set the initial index
+                              ),
+                            ),
+                          );
+                        },
+                        child: ClipRRect(
+                          borderRadius: BorderRadius.circular(
+                              10), // Apply border radius here for carousel
+                          child: Hero(
+                            tag: url, // Ensure the `url` is unique
+                            child: Image.network(
+                              url,
+                              fit: BoxFit.cover,
+                            ),
+                          ),
+                        ),
+                      );
+                    }).toList(),
                     showIndicator: false,
                   ),
                 );
@@ -610,4 +642,36 @@ Route _createRoute(Widget child) {
       );
     },
   );
+}
+
+class FullScreenImageGallery extends StatelessWidget {
+  final List<String> imageUrls;
+  final int initialIndex;
+
+  const FullScreenImageGallery({
+    Key? key,
+    required this.imageUrls,
+    required this.initialIndex,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      backgroundColor: Colors.black,
+      body: PhotoViewGallery.builder(
+        itemCount: imageUrls.length,
+        builder: (context, index) {
+          return PhotoViewGalleryPageOptions(
+            imageProvider: NetworkImage(imageUrls[index]),
+            minScale: PhotoViewComputedScale.contained,
+            maxScale: PhotoViewComputedScale.covered * 2,
+          );
+        },
+        scrollPhysics: BouncingScrollPhysics(),
+        backgroundDecoration: BoxDecoration(color: Colors.black),
+        pageController: PageController(initialPage: initialIndex),
+        onPageChanged: (index) {},
+      ),
+    );
+  }
 }

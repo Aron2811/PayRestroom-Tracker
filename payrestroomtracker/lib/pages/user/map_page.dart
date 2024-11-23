@@ -13,13 +13,12 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:flutter_button/pages/dialog/user_profile_dialog.dart';
 import 'package:flutter_button/pages/bottomsheet/recommendation_list.dart';
-import 'package:flutter_button/algo/a_star.dart';
+import 'package:flutter_button/algo/Astar.dart';
 import 'package:flutter_button/pages/admin/adminMap.dart';
 import 'dart:math';
 
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-
 
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
@@ -110,6 +109,7 @@ class MapPageState extends State<MapPage> {
         });
       },
       onFinish: () async {
+        print("Main Tutorial Completed");
         await _saveTutorialState(mainTutorialKey, true);
       },
     );
@@ -131,9 +131,7 @@ class MapPageState extends State<MapPage> {
       initMainTutorial();
       _showMainTutorial();
     } else {
-      setState(() {
-    
-      });
+      setState(() {});
     }
   }
 
@@ -258,13 +256,8 @@ class MapPageState extends State<MapPage> {
       _mapStyleString = string;
     });
     super.initState();
-    // _checkAndShowTutorial();
-
     isMainTutorialDisplayed = false;
     _loadTutorialState();
-    // initAddInAppTour();
-    // _showAppTour();
-
     getLocationUpdates();
     _loadCustomMarkerIcon();
     _loadMarkers();
@@ -374,84 +367,158 @@ class MapPageState extends State<MapPage> {
   }
 
 // Fetches ratings for a list of markers from Firestore
- Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
-  final Map<GeoPoint, Marker> geoPointToMarkerMap = {};
-  final List<GeoPoint> geoPoints = [];
+  Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
+    final Map<GeoPoint, Marker> geoPointToMarkerMap = {};
+    final List<GeoPoint> geoPoints = [];
 
-  // Build mapping of GeoPoints to markers
-  for (final marker in markers) {
-    final geoPoint = GeoPoint(marker.position.latitude, marker.position.longitude);
-    geoPointToMarkerMap[geoPoint] = marker;
-    geoPoints.add(geoPoint);
-  }
+    // Build mapping of GeoPoints to markers
+    for (final marker in markers) {
+      final geoPoint =
+          GeoPoint(marker.position.latitude, marker.position.longitude);
+      geoPointToMarkerMap[geoPoint] = marker;
+      geoPoints.add(geoPoint);
+    }
 
-  final Map<Marker, double> markerRatings = {};
+    final Map<Marker, double> markerRatings = {};
 
-  // Fetch ratings in batches
-  const int batchSize = 30;
-  for (int i = 0; i < geoPoints.length; i += batchSize) {
-    final batchGeoPoints = geoPoints.skip(i).take(batchSize).toList();
-    
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position', whereIn: batchGeoPoints)
-        .get();
+    // Fetch ratings in batches
+    const int batchSize = 30;
+    for (int i = 0; i < geoPoints.length; i += batchSize) {
+      final batchGeoPoints = geoPoints.skip(i).take(batchSize).toList();
 
-    for (final doc in querySnapshot.docs) {
-      final data = doc.data();
-      final geoPoint = GeoPoint(
-        data['position'].latitude,
-        data['position'].longitude,
-      );
-      final marker = geoPointToMarkerMap[geoPoint];
-      if (marker != null) {
-        markerRatings[marker] = data['averageRating'] as double? ?? 0.0;
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .where('position', whereIn: batchGeoPoints)
+          .get();
+
+      for (final doc in querySnapshot.docs) {
+        final data = doc.data();
+        final geoPoint = GeoPoint(
+          data['position'].latitude,
+          data['position'].longitude,
+        );
+        final marker = geoPointToMarkerMap[geoPoint];
+        if (marker != null) {
+          markerRatings[marker] = data['averageRating'] as double? ?? 0.0;
+        }
       }
     }
-  }
 
-  // Assign default rating for markers without data
-  for (final marker in markers) {
-    if (!markerRatings.containsKey(marker)) {
-      markerRatings[marker] = 0.0;
+    // Assign default rating for markers without data
+    for (final marker in markers) {
+      if (!markerRatings.containsKey(marker)) {
+        markerRatings[marker] = 0.0;
+      }
     }
+
+    return markerRatings;
   }
 
-  return markerRatings;
-}
+  Future<List<Marker>> getNearestMarkers(
+      LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
+    // Filter markers by the specified custom icon
+    final List<Marker> markers =
+        _markers.where((marker) => marker.icon == customMarkerIcon).toList();
 
-Future<List<Marker>> getNearestMarkers(LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
-  final List<Marker> markers = _markers
-      .where((marker) => marker.icon == customMarkerIcon)
-      .toList();
+    // Sort markers based on distance from the user's position
+    markers.sort((a, b) {
+      final distanceA = _calculateDistance(userPosition, a.position);
+      final distanceB = _calculateDistance(userPosition, b.position);
+      return distanceA.compareTo(distanceB);
+    });
 
-  // Fetch ratings for all markers
-  final markerRatings = await _fetchRatings(markers);
+    // Take the top 'count' nearest markers
+    return markers.take(count).toList();
+  }
 
-  // Calculate distances and sort markers
-  markers.sort((a, b) {
-    final distanceA = _calculateDistance(userPosition, a.position);
-    final distanceB = _calculateDistance(userPosition, b.position);
-    return distanceA.compareTo(distanceB);
-  });
+  Future<List<Marker>> getHighRatingNearestMarkers(
+      LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
+    final List<Marker> markers =
+        _markers.where((marker) => marker.icon == customMarkerIcon).toList();
 
-  // Take top 'count' markers by distance
-  final nearestMarkers = markers.take(count).toList();
+    // Fetch ratings for all markers
+    final markerRatings = await _fetchRatings(markers);
 
-  // Sort the nearest markers by rating (highest first)
-  nearestMarkers.sort((a, b) => (markerRatings[b] ?? 0.0).compareTo(markerRatings[a] ?? 0.0));
+    // Calculate distances and sort markers
+    markers.sort((a, b) {
+      final distanceA = _calculateDistance(userPosition, a.position);
+      final distanceB = _calculateDistance(userPosition, b.position);
+      return distanceA.compareTo(distanceB);
+    });
 
-  return nearestMarkers;
-}
+    // Take top 'count' markers by distance
+    final nearestMarkers = markers.take(count).toList();
+
+    // Sort the nearest markers by rating (highest first)
+    nearestMarkers.sort(
+        (a, b) => (markerRatings[b] ?? 0.0).compareTo(markerRatings[a] ?? 0.0));
+
+    return nearestMarkers;
+  }
 
 // Calculates the Euclidean distance between two LatLng points
-double _calculateDistance(LatLng start, LatLng end) {
-  final latDiff = end.latitude - start.latitude;
-  final lngDiff = end.longitude - start.longitude;
-  return sqrt(latDiff * latDiff + lngDiff * lngDiff);
-}
+  double _calculateDistance(LatLng start, LatLng end) {
+    final latDiff = end.latitude - start.latitude;
+    final lngDiff = end.longitude - start.longitude;
+    return sqrt(latDiff * latDiff + lngDiff * lngDiff);
+  }
 
   // Displays a bottom sheet with a list of the nearest pay toilets
+  void _showFindNearbyHighRatedPayToilet() async {
+    LatLng userPosition = _currentP!;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return DraggableScrollableSheet(
+          initialChildSize: 0.4, // Initial height of the sheet
+          minChildSize: 0.2, // Minimum height of the sheet
+          maxChildSize: 0.9, // Maximum height of the sheet
+          builder: (context, scrollController) {
+            return FutureBuilder<List<Marker>>(
+              future: getHighRatingNearestMarkers(userPosition, 10,
+                  _customMarkerIcon ?? BitmapDescriptor.defaultMarker),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.waiting) {
+                  return Center(child: CircularProgressIndicator());
+                }
+
+                if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                  return Center(child: Text('No restrooms found.'));
+                }
+
+                final nearestMarkers = snapshot.data!;
+
+                return Container(
+                  decoration: BoxDecoration(
+                    color: Color.fromARGB(255, 148, 139, 192),
+                    borderRadius:
+                        BorderRadius.vertical(top: Radius.circular(30)),
+                  ),
+                  child: ListView(
+                    controller: scrollController,
+                    children: nearestMarkers.map((marker) {
+                      return PaidRestroomRecommendationList(
+                        drawRouteToDestination: _drawRouteToDestination,
+                        destination: marker.position,
+                        toggleVisibility: toggleVisibility,
+                      );
+                    }).toList(),
+                  ),
+                );
+              },
+            );
+          },
+        );
+      },
+    );
+  }
+
   void _showFindNearestPayToilet() async {
     LatLng userPosition = _currentP!;
 
@@ -547,8 +614,7 @@ double _calculateDistance(LatLng start, LatLng end) {
         Marker(
           markerId: const MarkerId('User Location'),
           position: _currentP!,
-          icon: dynamicIcon ??
-              BitmapDescriptor.defaultMarkerWithHue(255.0),
+          icon: dynamicIcon ?? BitmapDescriptor.defaultMarkerWithHue(255.0),
         ),
       );
     }
@@ -713,7 +779,7 @@ double _calculateDistance(LatLng start, LatLng end) {
                     ),
                   ]))),
           Padding(
-              padding: EdgeInsets.only(bottom: 80, left: 20),
+              padding: EdgeInsets.only(bottom: 130, left: 20),
               child: Visibility(
                 visible: isVisible,
                 maintainSize: true,
@@ -755,7 +821,6 @@ double _calculateDistance(LatLng start, LatLng end) {
                                                       _isLoading = false;
                                                       _drawRouteToDestination(
                                                           end!, 'private');
-
                                                     },
                                                   ),
                                                   SizedBox(height: 5),
@@ -864,57 +929,86 @@ double _calculateDistance(LatLng start, LatLng end) {
                               _hidePath();
                               _polylines.clear();
                               dynamicIcon = null;
-
                             },
                           ),
                         ])),
               )),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
+          Column(
+            mainAxisAlignment:
+                MainAxisAlignment.end, // Center buttons vertically
+            crossAxisAlignment:
+                CrossAxisAlignment.center, // Center buttons horizontally
             children: <Widget>[
-              const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 5, vertical: 60.0),
-                child: SizedBox.shrink(), // Placeholder for an empty child
-              ),
               Container(
                 margin: const EdgeInsets.only(
-                    bottom: 20.0), // Adjust the value to your needs
-                child: Align(
-                  alignment: Alignment.bottomCenter,
-                  child: ElevatedButton.icon(
-                    key: findKey,
-                    style: ElevatedButton.styleFrom(
-                      enableFeedback: false,
-                      backgroundColor: Colors.white,
-                      minimumSize: const Size(115, 50),
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(30),
-                        side: const BorderSide(
-                          color: Color.fromARGB(
-                              255, 149, 134, 225), // Set the border color
-                          width: 4.0, // Set the border width
-                        ),
-                      ),
-                      foregroundColor: Color.fromARGB(255, 97, 84, 158),
-                      textStyle: const TextStyle(
-                        fontSize: 16,
+                    bottom: 5.0), // Adjust to add spacing between buttons
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    enableFeedback: false,
+                    backgroundColor: Colors.white,
+                    minimumSize:
+                        const Size(200, 50), // Adjust size to your preference
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      side: const BorderSide(
+                        color: Color.fromARGB(
+                            255, 149, 134, 225), // Set the border color
+                        width: 4.0, // Set the border width
                       ),
                     ),
-                    label: const Text(
-                      "FIND NEAREST PAY TOILET",
-                      style: TextStyle(fontWeight: FontWeight.bold),
+                    foregroundColor: Color.fromARGB(255, 97, 84, 158),
+                    textStyle: const TextStyle(
+                      fontSize: 14,
                     ),
-                    icon: const Icon(
-                      Icons.search_rounded,
-                      color: Color.fromARGB(255, 97, 84, 158),
-                    ),
-                    onPressed: () {
-                      _showFindNearestPayToilet();
-                    },
                   ),
+                  label: const Text(
+                    "FIND NEAREST PAY TOILET",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  icon: const Icon(
+                    Icons.place_rounded,
+                    color: Color.fromARGB(255, 97, 84, 158),
+                  ),
+                  onPressed: () {
+                    _showFindNearestPayToilet();
+                  },
                 ),
               ),
-              const SizedBox(height: 30),
+              Container(
+                margin: const EdgeInsets.only(bottom: 20.0),
+                child: ElevatedButton.icon(
+                  key: findKey,
+                  style: ElevatedButton.styleFrom(
+                    enableFeedback: false,
+                    backgroundColor: Colors.white,
+                    minimumSize:
+                        const Size(200, 50), // Adjust size to your preference
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(30),
+                      side: const BorderSide(
+                        color: Color.fromARGB(
+                            255, 149, 134, 225), // Set the border color
+                        width: 4.0, // Set the border width
+                      ),
+                    ),
+                    foregroundColor: Color.fromARGB(255, 97, 84, 158),
+                    textStyle: const TextStyle(
+                      fontSize: 14,
+                    ),
+                  ),
+                  label: const Text(
+                    "FIND NEARBY HIGH-RATED PAID TOILETS",
+                    style: TextStyle(fontWeight: FontWeight.bold),
+                  ),
+                  icon: const Icon(
+                    Icons.search_rounded,
+                    color: Color.fromARGB(255, 97, 84, 158),
+                  ),
+                  onPressed: () {
+                    _showFindNearbyHighRatedPayToilet();
+                  },
+                ),
+              ),
             ],
           )
         ])));
@@ -993,7 +1087,7 @@ double _calculateDistance(LatLng start, LatLng end) {
 
   // Retrieves a formatted address from latitude and longitude
   Future<String?> getAddressFromLatLng(double lat, double lng) async {
-    const apiKey = 'AIzaSyC1Ooxwod2ykAO6R99jhnXoYA3ubvkrB9M';
+    const apiKey = 'AIzaSyC9GUj8pepeNXF2vPapbvoAS3sMVpu96H4';
     final url =
         'https://maps.googleapis.com/maps/api/geocode/json?latlng=$lat,$lng&key=$apiKey';
 
@@ -1038,11 +1132,7 @@ double _calculateDistance(LatLng start, LatLng end) {
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop(true);
-                    Navigator.push(
-                        context,
-                        _createRoute(UserLoggedInPage(
-                          
-                        )));
+                    Navigator.push(context, _createRoute(UserLoggedInPage()));
                   },
                   child: const Text("Yes"),
                 ),
@@ -1127,9 +1217,8 @@ double _calculateDistance(LatLng start, LatLng end) {
         // Show a snackbar to inform the user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('The paid restroom is in the EXPRESSWAY')
-            ,
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            content: Text('The paid restroom is in the EXPRESSWAY'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
             duration: Duration(seconds: 3), // Adjust as needed
           ),
         );

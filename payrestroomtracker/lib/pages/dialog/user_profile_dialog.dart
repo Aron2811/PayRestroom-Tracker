@@ -18,7 +18,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
     super.initState();
     _fetchUserDisplayName();
   }
-
+  // Fetch the user display name from Firebase
   Future<void> _fetchUserDisplayName() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -27,7 +27,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
       });
     }
   }
-
+  // Update the user display name
   Future<void> _updateUsername(String newUsername) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -43,7 +43,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
       }
     }
   }
-
+// Update the username in Firestore
   Future<void> _updateFirestoreUsername(String newUsername) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -54,6 +54,21 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
       } catch (e) {
         print("Error updating Firestore username: $e");
       }
+    }
+  }
+  // Log out the user and navigate to the intro page
+  Future<void> _logout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      Navigator.pushNamedAndRemoveUntil(
+          context, '/userloginpage', (route) => false);
+    } catch (e) {
+      // Handle the error accordingly, e.g., show a dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error logging out: $e'),
+        ),
+      );
     }
   }
 
@@ -157,7 +172,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
               color: Color.fromARGB(255, 97, 84, 158),
             ),
             onPressed: () {
-              Navigator.pushNamed(context, '/intropage');
+              _logout(context);
             },
           ),
         ),

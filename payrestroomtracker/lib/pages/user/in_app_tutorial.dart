@@ -14,7 +14,7 @@ List<TargetFocus> components({
 
 
 
-// tag
+// Tag tutorial
   targets.add(TargetFocus(
     keyTarget: tagKey,
     alignSkip: Alignment.topRight,
@@ -69,7 +69,7 @@ List<TargetFocus> components({
             })
       ]));
 
-// user profile
+// User profile tutorial
   targets.add(TargetFocus(
       keyTarget: profileKey,
       alignSkip: Alignment.topLeft,
@@ -94,7 +94,7 @@ List<TargetFocus> components({
             })
       ]));
 
-  // app tour
+  // App tour tutorial
   targets.add(TargetFocus(
       keyTarget: apptourKey,
       alignSkip: Alignment.topRight,

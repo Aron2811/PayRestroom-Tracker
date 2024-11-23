@@ -69,7 +69,7 @@ class _StreetViewPageState extends State<StreetViewPage> {
               child: FractionallySizedBox(
                 widthFactor: 5,
                 child: Container(
-                  height: 46,
+                  height: 85,
                   decoration: BoxDecoration(
                     color: const Color.fromARGB(255, 149, 134, 225),
                     borderRadius: BorderRadius.circular(0),
@@ -84,7 +84,7 @@ class _StreetViewPageState extends State<StreetViewPage> {
                       widget.locationGuide,
                       textAlign: TextAlign.center,
                       style: const TextStyle(
-                        fontSize: 14.0,
+                        fontSize: 15.0,
                         fontWeight: FontWeight.w500,
                         color: Colors.white,
                       ),

@@ -20,11 +20,27 @@ class _AddReviewPageState extends State<AddReviewPage> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
   String _restroomName = "Paid Restroom Name";
+  bool _isButtonEnabled = false; // variable for button enabled state
 
   @override
   void initState() {
     super.initState();
     _fetchPaidRestroomName();
+    _textController.addListener(_handleTextChange); // Add listener
+  }
+
+  @override
+  void dispose() {
+    _textController.removeListener(_handleTextChange); // Remove listener
+    _textController.dispose(); // Dispose controller
+    super.dispose();
+  }
+
+  // Listener to handle text changes
+  void _handleTextChange() {
+    setState(() {
+      _isButtonEnabled = _textController.text.trim().isNotEmpty;
+    });
   }
 
   //gets the paid restroom name from the data base
@@ -63,7 +79,10 @@ class _AddReviewPageState extends State<AddReviewPage> {
 
     if (reviewText.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Please enter a review")),
+        SnackBar(
+          content: Text("Please enter a review"),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
       );
       return;
     }
@@ -95,8 +114,10 @@ class _AddReviewPageState extends State<AddReviewPage> {
         if (lastReviewDate.isAfter(startOfToday)) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(
-                    "You can only post one review per day for this restroom")),
+              content: Text(
+                  "You can only post one review per day for this restroom"),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
           );
           _textController.clear();
           return;
@@ -134,8 +155,10 @@ class _AddReviewPageState extends State<AddReviewPage> {
         if (hasRecentReview) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
-                content: Text(
-                   "You can only post one review per day for this restroom")),
+              content: Text(
+                  "You can only post one review per day for this restroom"),
+              backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            ),
           );
           _textController.clear();
           return;
@@ -157,9 +180,12 @@ class _AddReviewPageState extends State<AddReviewPage> {
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text("Your Review Will Be Checked By The Admin")),
+        SnackBar(
+          content: Text("Your Review Will Be Checked By The Admin"),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
       );
-      _textController.clear();
+      _textController.clear(); //trigger the listener to disable the button
     }
   }
 
@@ -176,17 +202,48 @@ class _AddReviewPageState extends State<AddReviewPage> {
         actions: <Widget>[
           const SizedBox(width: 10),
           ElevatedButton(
-            style: ElevatedButton.styleFrom(
-              enableFeedback: false,
-              backgroundColor: Color.fromARGB(255, 97, 84, 158),
-              minimumSize: const Size(10, 30),
-              textStyle:
-                  const TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+            style: ButtonStyle(
+              backgroundColor: MaterialStateProperty.resolveWith<Color>(
+                (Set<MaterialState> states) {
+                  if (states.contains(MaterialState.disabled)) {
+                    return Color.fromARGB(
+                      255, 97, 84, 158); // Disabled background color
+                  }
+                  return Color.fromARGB(
+                      255, 97, 84, 158); // Enabled background color
+                },
+              ),
+              foregroundColor: MaterialStateProperty.resolveWith<Color>(
+                (Set<MaterialState> states) {
+                  if (states.contains(MaterialState.disabled)) {
+                    return Colors.grey; // Disabled text color
+                  }
+                  return Colors.white; // Enabled text color
+                },
+              ),
+              side: MaterialStateProperty.resolveWith<BorderSide>(
+                (Set<MaterialState> states) {
+                  if (states.contains(MaterialState.disabled)) {
+                    return BorderSide(
+                      color: Colors.grey, // Disabled border color
+                      width: 1.0,
+                    );
+                  }
+                  return BorderSide(
+                    color: Colors.white, // Enabled border color
+                    width: 1.0,
+                  );
+                },
+              ),
+              minimumSize: MaterialStateProperty.all<Size>(Size(10, 30)),
+              textStyle: MaterialStateProperty.all<TextStyle>(
+                TextStyle(fontSize: 15, fontWeight: FontWeight.bold),
+              ),
             ),
-            onPressed: storeReview,
+            onPressed:
+                _isButtonEnabled ? storeReview : null, // Enable/disable button
             child: const Text(
               "Post",
-              style: TextStyle(color: Colors.white),
             ),
           ),
           const SizedBox(width: 20),
@@ -201,13 +258,13 @@ class _AddReviewPageState extends State<AddReviewPage> {
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: <Widget>[
-                    const SizedBox(height: 100),
+                    const SizedBox(height: 10),
                     Padding(
                       padding: const EdgeInsets.all(30),
                       child: TextField(
                         controller: _textController,
-                        minLines: 1,
-                        maxLines: 4,
+                        minLines: 5,
+                        maxLines: 10,
                         style: const TextStyle(fontSize: 17),
                         decoration: const InputDecoration(
                           border: OutlineInputBorder(

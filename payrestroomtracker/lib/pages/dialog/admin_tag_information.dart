@@ -43,7 +43,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
     _fetchPaidRestroomCost();
     _fetchRating(); // Fetch rating
   }
-
+  // Fetch and update restroom name
   Future<void> _fetchPaidRestroomName() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -62,7 +62,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
       });
     }
   }
-
+  // Fetch and update restroom location
   Future<void> _fetchPaidRestroomLocation() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -81,7 +81,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
       });
     }
   }
-
+  // Fetch and update restroom cost
   Future<void> _fetchPaidRestroomCost() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -100,7 +100,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
       });
     }
   }
-
+  // Fetch and update restroom rating
   Future<void> _fetchRating() async {
     final querySnapshot = await FirebaseFirestore.instance
         .collection('Tags')
@@ -120,7 +120,7 @@ class _AdminTagInformationState extends State<AdminTagInformation> {
       });
     }
   }
-
+  // Fetch image URLs for carousel
   Future<void> fetchImageUrls(BuildContext context) async {
     try {
       DocumentSnapshot tagSnapshot = await FirebaseFirestore.instance
