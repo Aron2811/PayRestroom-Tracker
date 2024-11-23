@@ -103,7 +103,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
                     'Change Username',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 19,
+                      fontSize: 17,
                       fontWeight: FontWeight.bold,
                       color: Color.fromARGB(255, 97, 84, 158),
                     ),

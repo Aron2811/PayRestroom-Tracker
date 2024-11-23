@@ -58,7 +58,7 @@ class _AddInfoDialogState extends State<AddInfoDialog> {
 
         // Handle cost based on dropdown value
         String costValue = dropdownValue == 'Pay Options'
-            ? 'Pay Options' // Store 'Pay Options' directly
+            ? 'with pay options' // Store 'Pay Options' directly
             : '${costController.text}'; // Add peso sign for other options
 
         await tagRef.set(

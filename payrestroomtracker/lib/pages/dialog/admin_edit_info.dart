@@ -277,7 +277,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
         String newLocation =
             locationController.text.isEmpty ? '' : locationController.text;
         String newCost = dropdownValue == 'Pay Options'
-            ? 'Pay Options'
+            ? 'with pay options'
             : costController.text;
 
         await tagRef.set(
