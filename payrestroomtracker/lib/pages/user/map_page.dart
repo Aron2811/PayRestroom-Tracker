@@ -423,8 +423,6 @@ Future<List<Marker>> getNearestMarkers(LatLng userPosition, int count, BitmapDes
       .where((marker) => marker.icon == customMarkerIcon)
       .toList();
 
-  // Fetch ratings for all markers
-  final markerRatings = await _fetchRatings(markers);
 
   // Calculate distances and sort markers
   markers.sort((a, b) {
@@ -436,8 +434,6 @@ Future<List<Marker>> getNearestMarkers(LatLng userPosition, int count, BitmapDes
   // Take top 'count' markers by distance
   final nearestMarkers = markers.take(count).toList();
 
-  // Sort the nearest markers by rating (highest first)
-  nearestMarkers.sort((a, b) => (markerRatings[b] ?? 0.0).compareTo(markerRatings[a] ?? 0.0));
 
   return nearestMarkers;
 }
@@ -449,61 +445,277 @@ double _calculateDistance(LatLng start, LatLng end) {
   return sqrt(latDiff * latDiff + lngDiff * lngDiff);
 }
 
-  // Displays a bottom sheet with a list of the nearest pay toilets
-  void _showFindNearestPayToilet() async {
-    LatLng userPosition = _currentP!;
 
-    showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-      ),
-      backgroundColor: Colors.transparent,
-      builder: (context) {
-        return DraggableScrollableSheet(
-          initialChildSize: 0.4, // Initial height of the sheet
-          minChildSize: 0.2, // Minimum height of the sheet
-          maxChildSize: 0.9, // Maximum height of the sheet
-          builder: (context, scrollController) {
-            return FutureBuilder<List<Marker>>(
-              future: getNearestMarkers(userPosition, 10,
-                  _customMarkerIcon ?? BitmapDescriptor.defaultMarker),
-              builder: (context, snapshot) {
-                if (snapshot.connectionState == ConnectionState.waiting) {
-                  return Center(child: CircularProgressIndicator());
-                }
 
-                if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                  return Center(child: Text('No restrooms found.'));
-                }
+void _showFindNearestPayToilet() async {
+  LatLng userPosition = _currentP!;
+  String selectedFilter = 'Nearest'; // Default dropdown value for filtering
 
-                final nearestMarkers = snapshot.data!;
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true,
+    shape: const RoundedRectangleBorder(
+      borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+    ),
+    backgroundColor: Colors.transparent,
+    builder: (context) {
+      return StatefulBuilder(
+        // Use StatefulBuilder to allow rebuilding of the dropdown and FutureBuilder
+        builder: (BuildContext context, StateSetter setModalState) {
+          return DraggableScrollableSheet(
+            initialChildSize: 0.4, // Initial height of the sheet
+            minChildSize: 0.2, // Minimum height of the sheet
+            maxChildSize: 0.9, // Maximum height of the sheet
+            builder: (context, scrollController) {
+              return FutureBuilder<List<Marker>>(
+                future: getFilteredMarkers(
+                  userPosition,
+                  20,
+                  selectedFilter,
+                  _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+                ),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const Center(child: CircularProgressIndicator());
+                  }
 
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Color.fromARGB(255, 148, 139, 192),
-                    borderRadius:
-                        BorderRadius.vertical(top: Radius.circular(30)),
-                  ),
-                  child: ListView(
-                    controller: scrollController,
-                    children: nearestMarkers.map((marker) {
-                      return PaidRestroomRecommendationList(
-                        drawRouteToDestination: _drawRouteToDestination,
-                        destination: marker.position,
-                        toggleVisibility: toggleVisibility,
-                      );
-                    }).toList(),
-                  ),
-                );
-              },
-            );
-          },
-        );
-      },
-    );
+                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                    return const Center(child: Text('No restrooms found.'));
+                  }
+
+                  final filteredMarkers = snapshot.data!;
+
+                  return Container(
+                    decoration: const BoxDecoration(
+                      color: Color.fromARGB(255, 148, 139, 192),
+                      borderRadius:
+                          BorderRadius.vertical(top: Radius.circular(30)),
+                    ),
+                    child: Column(
+                      
+                      children: [
+                        
+                        // Dropdown for filtering
+                        Padding(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 70.0, vertical: 10.0),
+                          child: Row(
+                            
+                            children: [
+                              const Text(
+                                "Filter by:",
+                                style: TextStyle(
+                                  fontSize: 16,
+                                  color: Colors.white,
+                                ),
+                              ),
+                              const SizedBox(width: 10),
+                            Expanded(
+  child: DropdownButton<String>(
+
+    value: selectedFilter,
+    onChanged: (String? newValue) {
+      if (newValue != null) {
+        setModalState(() {
+          selectedFilter = newValue;
+        });
+      }
+    },
+    items: <String>[
+      'Nearest',
+      'Rating',
+      'Cost',
+      'Nearby Pay Options' // Dropdown option for filtering by Cost field
+    ].map<DropdownMenuItem<String>>((String value) {
+      return DropdownMenuItem<String>(
+        value: value,
+        child: Text(value),
+      );
+    }).toList(),
+    dropdownColor: Color.fromARGB(255, 148, 139, 192),
+    style: const TextStyle(color: Colors.white),
+    icon: const Icon(
+      Icons.arrow_drop_down,
+      color: Colors.white,
+    ),
+  ),
+),
+                      ])),
+
+                        Expanded(
+                          child: ListView(
+                            controller: scrollController,
+                            children: filteredMarkers.map((marker) {
+                              return PaidRestroomRecommendationList(
+                                drawRouteToDestination: _drawRouteToDestination,
+                                destination: marker.position,
+                                toggleVisibility: toggleVisibility,
+                              );
+                            }).toList(),
+                          ),
+                        ),
+                      ],
+                    ),
+                  );
+                },
+              );
+            },
+          );
+        },
+      );
+    },
+  );
+}
+
+
+Future<List<Marker>> getFilteredMarkers(
+    LatLng position, int limit, String filter, BitmapDescriptor icon) async {
+  Query query = FirebaseFirestore.instance.collection('Tags');
+
+
+// Handle the 'Nearest' filter
+  if (filter == 'Nearest') {
+    final nearestMarkers = await getNearestMarkers(position, limit, icon);
+    return nearestMarkers;
   }
+  // Handle the 'Rating' filter
+  if (filter == 'Rating') {
+    final highRatingMarkers = await getHighRatingMarkers(position, limit, icon);
+    return highRatingMarkers;
+  }
+
+  // Handle the 'Cost' filter
+  if (filter == 'Cost') {
+    final lowToHighCostMarkers = await getLowToHighCostMarkers(position, limit, icon);
+    return lowToHighCostMarkers;
+  }
+
+
+  if (filter == 'Nearby Pay Options') {
+  final nearbyPayOptionMarkers = await getNearestPayOptionMarkers(position, limit, icon);
+  return nearbyPayOptionMarkers;
+}
+
+
+  // Default Firestore query if no specific filter matches
+  final querySnapshot = await query.limit(limit).get();
+
+  // Map Firestore documents to markers
+  return querySnapshot.docs.map((doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    final geoPoint = data['position'] as GeoPoint; // Ensure 'position' is of type GeoPoint
+    return Marker(
+      markerId: MarkerId(doc.id),
+      position: LatLng(geoPoint.latitude, geoPoint.longitude),
+      icon: icon,
+    );
+  }).toList();
+}
+
+Future<List<Marker>> getNearestPayOptionMarkers(
+    LatLng userPosition, int limit, BitmapDescriptor icon) async {
+  // Query Firestore collection
+  Query query = FirebaseFirestore.instance.collection('Tags');
+
+  // Fetch all documents
+  final querySnapshot = await query.get();
+
+  // Filter documents to only include those with pay options
+  final filteredDocs = querySnapshot.docs.where((doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    final cost = data['Cost']?.toString() ?? ''; // Ensure 'Cost' is a string
+    return cost.contains("with pay option"); // Check if the 'Cost' field includes 'with pay option'
+  }).toList();
+
+  // Map filtered documents to markers with distance calculations
+  final List<Marker> markers = filteredDocs.map((doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    final geoPoint = data['position'] as GeoPoint; // Ensure 'position' is a GeoPoint
+    return Marker(
+      markerId: MarkerId(doc.id),
+      position: LatLng(geoPoint.latitude, geoPoint.longitude),
+      icon: icon,
+    );
+  }).toList();
+
+  // Sort markers by distance to the user
+  markers.sort((a, b) {
+    final distanceA = _calculateDistance(userPosition, a.position);
+    final distanceB = _calculateDistance(userPosition, b.position);
+    return distanceA.compareTo(distanceB);
+  });
+
+  // Return the top 'limit' nearest markers
+  return markers.take(limit).toList();
+}
+
+
+
+
+
+Future<List<Marker>> getLowToHighCostMarkers(
+    LatLng userPosition, int limit, BitmapDescriptor icon) async {
+  // Query Firestore collection
+  Query query = FirebaseFirestore.instance.collection('Tags');
+
+  // Fetch all documents
+  final querySnapshot = await query.get();
+
+  // Filter documents with valid costs
+  final filteredDocs = querySnapshot.docs.where((doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    final cost = data['Cost']?.toString()?.replaceAll(RegExp(r'[^\d.]'), ''); // Extract numeric part of 'Cost'
+    return cost != null && cost.isNotEmpty; // Ensure 'Cost' is not null or empty
+  }).toList();
+
+  // Sort documents by cost (ascending)
+  filteredDocs.sort((a, b) {
+    final costA = double.tryParse(
+        (a.data() as Map<String, dynamic>)['Cost']?.toString()?.replaceAll(RegExp(r'[^\d.]'), '') ?? '0') ?? 0.0;
+    final costB = double.tryParse(
+        (b.data() as Map<String, dynamic>)['Cost']?.toString()?.replaceAll(RegExp(r'[^\d.]'), '') ?? '0') ?? 0.0;
+    return costA.compareTo(costB);
+  });
+
+  // Limit results to the specified count
+  final limitedDocs = filteredDocs.take(limit);
+
+  // Map filtered documents to markers
+  return limitedDocs.map((doc) {
+    final data = doc.data() as Map<String, dynamic>;
+    final geoPoint = data['position'] as GeoPoint;
+    return Marker(
+      markerId: MarkerId(doc.id),
+      position: LatLng(geoPoint.latitude, geoPoint.longitude),
+      icon: icon,
+    );
+  }).toList();
+}
+
+
+
+Future<List<Marker>> getHighRatingMarkers(
+    LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
+  // Filter markers by the provided custom icon
+  final List<Marker> markers =
+      _markers.where((marker) => marker.icon == customMarkerIcon).toList();
+
+  // Fetch ratings for all markers
+  final markerRatings = await _fetchRatings(markers);
+
+  // Sort markers by rating (highest first)
+  markers.sort(
+    (a, b) {
+      // Compare the ratings, using the markerRatings map
+      return (markerRatings[b] ?? 0.0).compareTo(markerRatings[a] ?? 0.0);
+    },
+  );
+
+  // Take top 'count' markers by rating (highest first)
+  final highRatedMarkers = markers.take(count).toList();
+
+  return highRatedMarkers;
+}
 
   // Displays a bottom sheet with information about the selected pay toilet
   void _showPayToiletInformation(LatLng destination) {
@@ -652,7 +864,7 @@ double _calculateDistance(LatLng start, LatLng end) {
                     _currentAddress ?? 'Fetching user location...',
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      fontSize: 14.0,
+                      fontSize: 13.0,
                       fontWeight: FontWeight.w500,
                       overflow: TextOverflow.ellipsis,
                       color: Colors.white,
@@ -871,7 +1083,7 @@ double _calculateDistance(LatLng start, LatLng end) {
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
               const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 5, vertical: 60.0),
+                padding: EdgeInsets.symmetric(horizontal: 3, vertical: 60.0),
                 child: SizedBox.shrink(), // Placeholder for an empty child
               ),
               Container(
@@ -895,11 +1107,11 @@ double _calculateDistance(LatLng start, LatLng end) {
                       ),
                       foregroundColor: Color.fromARGB(255, 97, 84, 158),
                       textStyle: const TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                       ),
                     ),
                     label: const Text(
-                      "FIND NEARBY HIGH-RATED PAID TOILETS",
+                      "FIND PAID RESTROOM RECOMMENDATIONS",
                       style: TextStyle(fontWeight: FontWeight.bold),
                     ),
                     icon: const Icon(
