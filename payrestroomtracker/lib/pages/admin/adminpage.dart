@@ -205,7 +205,7 @@ class _AdminPageState extends State<AdminPage> {
                       ),
                     ),
                     SizedBox(
-                        height: 20), // Add some spacing between the buttons
+                        height: 20), 
                     Align(
                       alignment: Alignment.center,
                       child: ElevatedButton.icon(

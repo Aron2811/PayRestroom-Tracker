@@ -14,7 +14,7 @@ class UserLoggedInPage extends StatefulWidget {
 }
 
 class _UserLoggedInPageState extends State<UserLoggedInPage> {
-  // Assume we are using Firebase Auth to get the current user's ID
+  // we r using Firebase Auth to get the current users ID
   User? user = FirebaseAuth.instance.currentUser;
 
   @override
@@ -88,7 +88,7 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
                 false, // Prevent back button from closing the dialog
             child: Dialog(
               backgroundColor: const Color.fromARGB(
-                  255, 132, 119, 197), // Custom background color
+                  255, 132, 119, 197), 
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20), // Rounded corners
               ),
@@ -98,7 +98,7 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     const Icon(
-                      Icons.block, // Block icon to emphasize the banned status
+                      Icons.block, // Block icon
                       color: Colors.redAccent,
                       size: 60,
                     ),
@@ -141,7 +141,7 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
     }
   }
 
-  // Implement the logout logic here
+  
   void _logOutUser() async {
     try {
       await FirebaseAuth.instance.signOut(); // Firebase sign out
@@ -158,7 +158,7 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
         context,
         MaterialPageRoute(
           builder: (context) => const LoadingPage(),
-        ) // Replace with your login page widget
+        ) 
         );
   }
 
@@ -176,7 +176,7 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
             .doc(user!.uid)
             .get();
 
-        // Safely extract fields from Firestore document and set defaults if missing
+        // Safely extract fields from Firestore document and set defaults if missing (the fields cuz it doesnt work if no field is found)
         var data = userDoc.data() as Map<String, dynamic>?;
         bool isHeld = data?['isHeld'] ?? false; // Default to false if missing
         Timestamp? holdTimestamp = data?['holdTimestamp'];

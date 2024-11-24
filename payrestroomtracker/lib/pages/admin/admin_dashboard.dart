@@ -129,17 +129,17 @@ class _AdminDashboardState extends State<AdminDashboard> {
       'holdDuration': 0, // Optionally reset hold duration to 0
       'holdTimestamp': FieldValue.serverTimestamp(),
     }).then((_) {
-      // Rebuild the widget to reflect the change
+      
       setState(() {
         // Update local variables or states that control the UI
       });
-      // Show confirmation snackbar
+      
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('$displayName is no longer on hold'),
         backgroundColor: Colors.red,
       ));
     }).catchError((error) {
-      // Handle errors if the update fails
+      
       print('Failed to remove hold: $error');
     });
   }
@@ -151,13 +151,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
       'holdDuration': hours,
       'holdTimestamp': FieldValue.serverTimestamp(),
     }).then((_) {
-      // Show confirmation snackbar
+      
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('$displayName is now on hold for $hours hours'),
         backgroundColor: Colors.green,
       ));
     }).catchError((error) {
-      // Handle errors if the update fails
+      
       print('Failed to hold user: $error');
     });
   }
@@ -245,7 +245,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
 
           return Row(
             children: [
-              // User List Section (Left)
+              
               Expanded(
                 flex: 1,
                 child: ListView.builder(
@@ -253,7 +253,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                   itemCount: users.length,
                   itemBuilder: (context, index) {
                     String displayName = users[index]
-                        ['displayName']; // Assumes 'displayName' field exists
+                        ['displayName']; 
 
                     // Safely access the data to check if 'isHeld' exists
                     bool isHeld = false;
@@ -262,11 +262,11 @@ class _AdminDashboardState extends State<AdminDashboard> {
                     int holdDuration = 0;
 
                     try {
-                      // Cast data to Map<String, dynamic>
+                      
                       Map<String, dynamic> userData =
                           users[index].data() as Map<String, dynamic>;
 
-                      // Initialize fields safely
+                     
                       isHeld = userData['isHeld'] ?? false;
                       isBanned = userData['isBanned'] ?? false;
                       holdTimestamp = userData['holdTimestamp'];
@@ -307,7 +307,7 @@ class _AdminDashboardState extends State<AdminDashboard> {
                               ),
                             );
 
-                            // Call the dialog function with the three parameters
+                            
                             _showUserDetailsDialog(
                                 displayName, userId, isHeld, isBanned);
                           },
@@ -317,13 +317,13 @@ class _AdminDashboardState extends State<AdminDashboard> {
                                 vertical: 10, horizontal: 15),
                             decoration: BoxDecoration(
                               color: const Color.fromARGB(
-                                  255, 132, 119, 197), // Set background color
+                                  255, 132, 119, 197), 
                               border: Border.all(color: Colors.grey),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Row(
                               children: <Widget>[
-                                // Display user's photo if available, otherwise fall back to a default icon
+                               
                                 users[index]['photoURL'] != null &&
                                         users[index]['photoURL'] != ''
                                     ? CircleAvatar(
