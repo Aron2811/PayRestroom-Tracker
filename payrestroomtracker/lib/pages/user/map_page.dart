@@ -25,6 +25,7 @@ class MapPage extends StatefulWidget {
 
   @override
   State<MapPage> createState() => MapPageState();
+  
 }
 
 class MarkerData {

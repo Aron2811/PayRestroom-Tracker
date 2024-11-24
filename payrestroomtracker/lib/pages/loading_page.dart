@@ -1,19 +1,39 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_button/pages/user/user_loggedin_page.dart';
 import 'package:flutter_button/pages/user/userlogin_page.dart';
 
 class LoadingPage extends StatelessWidget {
   const LoadingPage({super.key});
 
   //check if user is logged in if user is then if user click the user it will direct them to map but if logged out it will direct to userloginpage
-  void _handleUserButton(BuildContext context) {
+  void _handleUserButton(BuildContext context) async {
     User? currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser != null) {
-      // User is logged in, navigate to the map page
-      Navigator.pushNamed(context, '/mappage');
+      // User is logged in; check their status in Firestore
+      try {
+        DocumentSnapshot userDoc = await FirebaseFirestore.instance
+            .collection('users')
+            .doc(currentUser.uid)
+            .get();
+
+        bool isBanned = userDoc['isBanned'] ?? false;
+        bool isHeld = userDoc['isHeld'] ?? false;
+
+        if (isBanned || isHeld) {
+          // User is either banned or held; navigate to the banned page
+          Navigator.push(context, _createRoute(UserLoggedInPage()));
+        } else {
+          // User is neither banned nor held; navigate to the map page
+          Navigator.pushNamed(context, '/mappage');
+        }
+      } catch (e) {
+        print('Error checking user status: $e');
+      }
     } else {
-      // User is not logged in, navigate to the login page
+      // User is not logged in; navigate to the login page
       Navigator.push(context, _createRoute(UserLoginPage()));
     }
   }
