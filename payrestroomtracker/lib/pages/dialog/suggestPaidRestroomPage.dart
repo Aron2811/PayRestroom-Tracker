@@ -18,66 +18,65 @@ class SuggestPaidRestroomPage extends StatefulWidget {
 class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _costController = TextEditingController(); // New controller for cost
-  File? _image; // To store the selected image
+  final TextEditingController _costController = TextEditingController();
+  List<File> _images = []; // To store selected images
   LatLng? _selectedLocation; // To store the selected location (latitude and longitude)
   String _mapStyle = ''; // Variable to store map style
 
-  // Function to pick an image from gallery
-  Future<void> _pickImage() async {
+  // Function to pick multiple images from gallery
+  Future<void> _pickImages() async {
     final ImagePicker _picker = ImagePicker();
-    final pickedFile = await _picker.pickImage(source: ImageSource.gallery);
+    final List<XFile>? pickedFiles = await _picker.pickMultiImage(); // Pick multiple images
 
-    if (pickedFile != null) {
+    if (pickedFiles != null && pickedFiles.isNotEmpty) {
       setState(() {
-        _image = File(pickedFile.path);
+        _images = pickedFiles.map((pickedFile) => File(pickedFile.path)).toList(); // Convert XFile to File and store
       });
     }
   }
 
-  // Function to upload the image to Firebase Storage
-  Future<String?> _uploadImage() async {
-    if (_image == null) return null;
-
+  // Function to upload multiple images to Firebase Storage
+  Future<List<String>> _uploadImages() async {
+    List<String> imageUrls = [];
     try {
-      String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-      firebase_storage.Reference storageRef =
-          firebase_storage.FirebaseStorage.instance.ref('restroom_images/$fileName');
+      for (var image in _images) {
+        String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+        firebase_storage.Reference storageRef =
+            firebase_storage.FirebaseStorage.instance.ref('Tags images/$fileName');
 
-      await storageRef.putFile(_image!);
-      String downloadURL = await storageRef.getDownloadURL();
-      return downloadURL;
+        await storageRef.putFile(image);
+        String downloadURL = await storageRef.getDownloadURL();
+        imageUrls.add(downloadURL); // Add the image URL to the list
+      }
     } catch (e) {
-      print("Error uploading image: $e");
-      return null;
+      print("Error uploading images: $e");
     }
+    return imageUrls;
   }
 
-  // Function to submit the restroom suggestion to Firestore
+  // Function to submit the restroom suggestion with images
   Future<void> _submitSuggestion() async {
     String name = _nameController.text.trim();
     String description = _descriptionController.text.trim();
-    String cost = _costController.text.trim(); // Get cost from the controller
+    String cost = _costController.text.trim();
     String location = _selectedLocation != null
-        ? '${_selectedLocation!.latitude}, ${_selectedLocation!.longitude}' // Store lat/lng as a string
+        ? '${_selectedLocation!.latitude}, ${_selectedLocation!.longitude}'
         : '';
 
-    if (name.isNotEmpty &&
-        description.isNotEmpty &&
-        cost.isNotEmpty &&
-        location.isNotEmpty) {
+    if (name.isNotEmpty && description.isNotEmpty && cost.isNotEmpty && location.isNotEmpty) {
       try {
-        // Upload image and get its URL
-        String? imageUrl = await _uploadImage();
+        // Upload images and get their URLs
+        List<String> imageUrls = await _uploadImages();
 
         await FirebaseFirestore.instance.collection('suggested_restrooms').add({
           'name': name,
-          'description': description,
+          'location': description,
           'cost': cost,
-          'location': location, // Save location in Firestore
+          'position': location,
           'timestamp': FieldValue.serverTimestamp(),
-          'image': imageUrl, // Store the image URL in Firestore
+          'ImageUrls': imageUrls, // Store the image URLs as an array
         });
+
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Restroom suggestion submitted!')));
         Navigator.pop(context); // Close the suggestion page
@@ -143,7 +142,7 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
                 child: Text(
                   _selectedLocation != null
                       ? 'Location Selected: ${_selectedLocation!.latitude.toStringAsFixed(2)}, ${_selectedLocation!.longitude.toStringAsFixed(2)}'
-                      : 'Select Location',
+                      : 'Select Location Of Tag In The Map',
                   style: const TextStyle(fontSize: 16, color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
@@ -155,7 +154,7 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
               TextField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
-                  labelText: 'Description',
+                  labelText: 'Location',
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 4,
@@ -171,25 +170,32 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
               ),
               const SizedBox(height: 20),
               // Image preview
-              if (_image != null) ...[
-                Image.file(
-                  _image!,
-                  height: 150,
-                  width: 150,
-                  fit: BoxFit.cover,
+              if (_images.isNotEmpty) ...[
+                Wrap(
+                  children: _images.map((image) {
+                    return Padding(
+                      padding: const EdgeInsets.only(right: 8.0),
+                      child: Image.file(
+                        image,
+                        height: 150,
+                        width: 150,
+                        fit: BoxFit.cover,
+                      ),
+                    );
+                  }).toList(),
                 ),
                 const SizedBox(height: 10),
               ],
-              // Button to pick an image
+              // Button to pick images
               Center(
                 child: ElevatedButton(
-                  onPressed: _pickImage,
+                  onPressed: _pickImages,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 97, 84, 158),
                     padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                   ),
                   child: const Text(
-                    'Pick Image',
+                    'Pick Images',
                     style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
                   ),
                 ),
