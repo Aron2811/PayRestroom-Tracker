@@ -67,27 +67,27 @@ class UserLoginPage extends StatelessWidget {
 
                   const SizedBox(height: 50),
 
-                    Container(
-                  height: 50,
-                  width: 300,
-                  child: GestureDetector(
-                    child: Text(
-                      'Login as Admin',
-                      textAlign: TextAlign.center,
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Colors.white,
+                  Container(
+                    height: 50,
+                    width: 300,
+                    child: GestureDetector(
+                      child: Text(
+                        'Login as Admin',
+                        textAlign: TextAlign.center,
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Colors.white,
+                        ),
                       ),
+                      onTap: () {
+                        Navigator.push(
+                            context,
+                            _createRoute(AdminLoginPage(
+                              report: "",
+                            )));
+                      },
                     ),
-                    onTap: () {
-                      Navigator.push(
-                          context,
-                          _createRoute(AdminLoginPage(
-                            report: "",
-                          )));
-                    },
                   ),
-                ),
 
                   Center(
                     child: Column(
