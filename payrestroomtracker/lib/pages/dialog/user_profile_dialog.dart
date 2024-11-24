@@ -1,15 +1,16 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'dart:ui'; // For BackdropFilter
 
-class UserProfileDialog extends StatefulWidget {
-  const UserProfileDialog({super.key});
+class UserProfileDrawer extends StatefulWidget {
+  const UserProfileDrawer({super.key});
 
   @override
-  _UserProfileDialogState createState() => _UserProfileDialogState();
+  _UserProfileDrawerState createState() => _UserProfileDrawerState();
 }
 
-class _UserProfileDialogState extends State<UserProfileDialog> {
+class _UserProfileDrawerState extends State<UserProfileDrawer> {
   String? _displayName;
   final TextEditingController _usernameController = TextEditingController();
 
@@ -18,6 +19,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
     super.initState();
     _fetchUserDisplayName();
   }
+
   // Fetch the user display name from Firebase
   Future<void> _fetchUserDisplayName() async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -27,6 +29,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
       });
     }
   }
+
   // Update the user display name
   Future<void> _updateUsername(String newUsername) async {
     User? user = FirebaseAuth.instance.currentUser;
@@ -43,7 +46,8 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
       }
     }
   }
-// Update the username in Firestore
+
+  // Update the username in Firestore
   Future<void> _updateFirestoreUsername(String newUsername) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -56,6 +60,7 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
       }
     }
   }
+
   // Log out the user and navigate to the intro page
   Future<void> _logout(BuildContext context) async {
     try {
@@ -74,28 +79,73 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
 
   @override
   Widget build(BuildContext context) {
-    return AlertDialog(
-      actions: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 10.0),
-          child: TextField(
-            controller: _usernameController,
-            textAlign: TextAlign.center,
-            enabled: false,
-            decoration: InputDecoration(
-              border: InputBorder.none,
-              hintText: '$_displayName',
-              hintStyle: const TextStyle(
-                fontSize: 17,
-                color: Color.fromARGB(255, 115, 99, 183),
+    return Drawer(
+      child: ListView(
+        padding: EdgeInsets.zero,
+        children: [
+          DrawerHeader(
+            decoration: BoxDecoration(
+              color: Colors.transparent,
+              image: DecorationImage(
+                image: FirebaseAuth.instance.currentUser?.photoURL != null
+                    ? NetworkImage(FirebaseAuth.instance.currentUser!.photoURL!)
+                    : AssetImage("assets/default_profile_image.png") as ImageProvider,
+                fit: BoxFit.cover,
               ),
             ),
+            child: Stack(
+              children: [
+                // Applying the blur effect to the background image
+                BackdropFilter(
+                  filter: ImageFilter.blur(sigmaX: 5.0, sigmaY: 5.0),
+                  child: Container(
+                    color: Colors.black.withOpacity(0), // Transparent overlay
+                  ),
+                ),
+                // Content
+                Positioned(
+                  top: 20,
+                  left: 10,
+                  child: CircleAvatar(
+                    radius: 40, // Adjust the size of the circle
+                    backgroundImage: FirebaseAuth.instance.currentUser?.photoURL != null
+                        ? NetworkImage(FirebaseAuth.instance.currentUser!.photoURL!)
+                        : AssetImage("assets/default_profile_image.png") as ImageProvider,
+                    backgroundColor: Colors.transparent,
+                  ),
+                ),
+                Positioned(
+                  top: 20,
+                  left: 150,
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'User Profile',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 24,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      SizedBox(height: 10),
+                      Text(
+                        'Welcome, $_displayName',
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 18,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 50.0),
-          child: TextButton(
-            onPressed: () {
+          ListTile(
+            title: Text('Change Username'),
+            leading: Icon(Icons.edit_rounded),
+            onTap: () {
               showDialog(
                 context: context,
                 builder: (context) => AlertDialog(
@@ -136,56 +186,23 @@ class _UserProfileDialogState extends State<UserProfileDialog> {
                 ),
               );
             },
-            child: const Text(
-              "Change Username",
-              textAlign: TextAlign.center,
-            ),
           ),
-        ),
-        const SizedBox(height: 5),
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 50.0),
-          child: ElevatedButton.icon(
-            style: ElevatedButton.styleFrom(
-              enableFeedback: false,
-              backgroundColor: Colors.white,
-              minimumSize: const Size(150, 40),
-              alignment: Alignment.center,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(30),
-                side: const BorderSide(
-                  color: Color.fromARGB(255, 149, 134, 225),
-                  width: 2.0,
-                ),
-              ),
-              foregroundColor: const Color.fromARGB(255, 135, 125, 186),
-              textStyle: const TextStyle(
-                fontSize: 16,
-              ),
-            ),
-            label: const Text(
-              "Logout",
-              style: TextStyle(fontWeight: FontWeight.bold),
-            ),
-            icon: const Icon(
-              Icons.logout_rounded,
-              color: Color.fromARGB(255, 97, 84, 158),
-            ),
-            onPressed: () {
+          ListTile(
+            title: Text('Suggest a Paid Restroom'),
+            leading: Icon(Icons.add_circle_rounded),
+            onTap: () {
+              Navigator.pushNamed(context, '/suggestPaidRestroomPage');
+            },
+          ),
+          ListTile(
+            title: Text('Logout'),
+            leading: Icon(Icons.logout_rounded),
+            onTap: () {
               _logout(context);
             },
           ),
-        ),
-      ],
-      title: const Text(
-        'User Profile',
-        textAlign: TextAlign.center,
-        style: TextStyle(
-          color: Color.fromARGB(255, 106, 91, 169),
-          fontWeight: FontWeight.bold,
-        ),
+        ],
       ),
-      contentPadding: const EdgeInsets.all(20.0),
     );
   }
 }

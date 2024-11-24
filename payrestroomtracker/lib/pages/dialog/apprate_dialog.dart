@@ -24,9 +24,9 @@ class _AppRateDialogState extends State<AppRateDialog> {
   }
   //fetch username
   Future<void> _fetchUsername() async {
-    if (widget.displayName != null && widget.displayName!.isNotEmpty) {
+    if (widget.displayName.isNotEmpty) {
       setState(() {
-        _userDisplayName = widget.displayName!;
+        _userDisplayName = widget.displayName;
       });
       await _hasUserRated();
     } else {

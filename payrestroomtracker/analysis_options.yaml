@@ -12,11 +12,6 @@ analyzer:
     # Ignore specific warnings
     # Ignore 'avoid_print' warning
     avoid_print: ignore
-<<<<<<< HEAD
-=======
-analyzer:
-  errors:
->>>>>>> b4cdc0ff3426614ef4a6fb00b3f22d8ff49292c8
     unused_element: ignore
 include: package:flutter_lints/flutter.yaml
 
