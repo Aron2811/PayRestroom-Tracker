@@ -50,28 +50,31 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
   void _checkIfUserIsBanned() async {
     try {
       if (user != null) {
+        // Fetch the user document from Firestore
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(user!.uid)
             .get();
 
-        bool isBanned = userDoc['isBanned'] ?? false;
+        // Safely extract fields from Firestore document and set defaults if missing
+        var data = userDoc.data() as Map<String, dynamic>?;
+        bool isBanned =
+            data?['isBanned'] ?? false; // Default to false if missing
 
-        // Update SharedPreferences with the latest value
-        SharedPreferences prefs = await SharedPreferences.getInstance();
-        await prefs.setBool('isBanned', isBanned);
-
-        // Only show the banned dialog if isBanned is true
+        // If the user is banned, show the banned dialog
         if (isBanned) {
-          _showBannedDialog(); // Show banned dialog
-        } else {
-          print('User is not banned. No dialog shown.');
+          _showBannedDialog();
+          return;
         }
+
+        // Navigate to the tutorial dialog if the user is not banned
+        _showTutorialDialog();
       } else {
-        _navigateToLoginPage(); // Handle no user scenario
+        print('No user is currently signed in.');
+        _navigateToLoginPage(); // go to loginpage if no user
       }
     } catch (e) {
-      print('Error checking user ban status: $e');
+      print('Error checking ban status: $e');
     }
   }
 
@@ -87,8 +90,7 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
             onWillPop: () async =>
                 false, // Prevent back button from closing the dialog
             child: Dialog(
-              backgroundColor: const Color.fromARGB(
-                  255, 132, 119, 197), 
+              backgroundColor: const Color.fromARGB(255, 132, 119, 197),
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(20), // Rounded corners
               ),
@@ -141,7 +143,6 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
     }
   }
 
-  
   void _logOutUser() async {
     try {
       await FirebaseAuth.instance.signOut(); // Firebase sign out
@@ -158,8 +159,7 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
         context,
         MaterialPageRoute(
           builder: (context) => const LoadingPage(),
-        ) 
-        );
+        ));
   }
 
   // back button function

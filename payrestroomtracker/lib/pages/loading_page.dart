@@ -12,18 +12,21 @@ class LoadingPage extends StatelessWidget {
     User? currentUser = FirebaseAuth.instance.currentUser;
 
     if (currentUser != null) {
-      // User is logged in check their status in Firestore
+      // User is logged in, check their status in Firestore
       try {
         DocumentSnapshot userDoc = await FirebaseFirestore.instance
             .collection('users')
             .doc(currentUser.uid)
             .get();
 
-        bool isBanned = userDoc['isBanned'] ?? false;
-        bool isHeld = userDoc['isHeld'] ?? false;
+        var data = userDoc.data() as Map<String, dynamic>?;
+
+        // Safely extract 'isBanned' and 'isHeld' fields, if isBanned and isHeld dont exist treat it as false :3
+        bool isBanned = data?['isBanned'] ?? false;
+        bool isHeld = data?['isHeld'] ?? false;
 
         if (isBanned || isHeld) {
-          // User is either banned or held navigate to the userloggedin page
+          // User is either banned or held, navigate to the UserLoggedIn page
           Navigator.push(context, _createRoute(UserLoggedInPage()));
         } else {
           // User is not banned nor held; navigate to the map page
@@ -68,7 +71,6 @@ class LoadingPage extends StatelessWidget {
 
                 const SizedBox(height: 30),
 
-                
                 Container(
                   height: 50,
                   width: 300,
