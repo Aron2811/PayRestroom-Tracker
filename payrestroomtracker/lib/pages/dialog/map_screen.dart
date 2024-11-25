@@ -119,7 +119,23 @@ class _MapScreenState extends State<MapScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Select Location')),
+      appBar: AppBar(
+        title: const Text('Select Location', style: TextStyle(
+              fontSize: 17,
+              color: Colors.white,
+            ),),
+            backgroundColor: const Color.fromARGB(255, 97, 84, 158),
+            actions: [
+    IconButton(
+      icon: const Icon(Icons.check, color: Colors.white),
+      onPressed: () {
+        // Use current location as the selected location if no position is selected
+        final locationToReturn = _selectedPosition ?? _initialPosition;
+        Navigator.pop(context, locationToReturn);
+      },
+    ),
+  ],
+            ),
       body: GoogleMap(
         onMapCreated: _onMapCreated,
         initialCameraPosition: CameraPosition(
@@ -137,14 +153,7 @@ class _MapScreenState extends State<MapScreen> {
             _currentLocationMarker!,
         },
       ),
-      floatingActionButton: FloatingActionButton(
-        onPressed: () {
-          // Use current location as the selected location if no position is selected
-          final locationToReturn = _selectedPosition ?? _initialPosition;
-          Navigator.pop(context, locationToReturn);
-        },
-        child: const Icon(Icons.check),
-      ),
+      
     );
   }
 }

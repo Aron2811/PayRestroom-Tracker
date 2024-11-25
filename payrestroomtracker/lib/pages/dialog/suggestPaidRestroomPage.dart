@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_button/pages/dialog/map_screen.dart';
+import 'package:flutter_button/pages/dialog/pesoformatter.dart';
 
 class SuggestPaidRestroomPage extends StatefulWidget {
   const SuggestPaidRestroomPage({super.key});
@@ -18,19 +19,26 @@ class SuggestPaidRestroomPage extends StatefulWidget {
 class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
-  final TextEditingController _costController = TextEditingController();
-  List<File> _images = []; // To store selected images
-  LatLng? _selectedLocation; // To store the selected location (latitude and longitude)
-  String _mapStyle = ''; // Variable to store map style
+  final TextEditingController _costController =
+      TextEditingController(); // New controller for cost
+  List<File> _images = []; // To store the selected image
+  LatLng?
+      _selectedLocation; // To store the selected location (latitude and longitude)
+  String _mapStyle = '';
+  String dropdownValue = 'Cost';
+  bool showCostField = true; // Variable to store map style
 
   // Function to pick multiple images from gallery
   Future<void> _pickImages() async {
     final ImagePicker _picker = ImagePicker();
-    final List<XFile>? pickedFiles = await _picker.pickMultiImage(); // Pick multiple images
+    final List<XFile>? pickedFiles =
+        await _picker.pickMultiImage(); // Pick multiple images
 
     if (pickedFiles != null && pickedFiles.isNotEmpty) {
       setState(() {
-        _images = pickedFiles.map((pickedFile) => File(pickedFile.path)).toList(); // Convert XFile to File and store
+        _images = pickedFiles
+            .map((pickedFile) => File(pickedFile.path))
+            .toList(); // Convert XFile to File and store
       });
     }
   }
@@ -41,8 +49,9 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
     try {
       for (var image in _images) {
         String fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-        firebase_storage.Reference storageRef =
-            firebase_storage.FirebaseStorage.instance.ref('Tags images/$fileName');
+        firebase_storage.Reference storageRef = firebase_storage
+            .FirebaseStorage.instance
+            .ref('Tags images/$fileName');
 
         await storageRef.putFile(image);
         String downloadURL = await storageRef.getDownloadURL();
@@ -54,16 +63,20 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
     return imageUrls;
   }
 
-  // Function to submit the restroom suggestion with images
   Future<void> _submitSuggestion() async {
     String name = _nameController.text.trim();
     String description = _descriptionController.text.trim();
-    String cost = _costController.text.trim();
     String location = _selectedLocation != null
         ? '${_selectedLocation!.latitude}, ${_selectedLocation!.longitude}'
         : '';
+    String cost = dropdownValue == 'Pay Options'
+        ? 'with pay options' // Store 'Pay Options' directly
+        : '${_costController.text}';
 
-    if (name.isNotEmpty && description.isNotEmpty && cost.isNotEmpty && location.isNotEmpty) {
+    if (name.isNotEmpty &&
+        description.isNotEmpty &&
+        cost.isNotEmpty &&
+        location.isNotEmpty) {
       try {
         // Upload images and get their URLs
         List<String> imageUrls = await _uploadImages();
@@ -77,16 +90,22 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
           'ImageUrls': imageUrls, // Store the image URLs as an array
         });
 
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Restroom suggestion submitted!')));
+        ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+            content: Text('Restroom suggestion submitted!',
+                style: TextStyle(color: Colors.white)),
+            backgroundColor: Color.fromARGB(255, 97, 84, 158)));
         Navigator.pop(context); // Close the suggestion page
       } catch (e) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(content: Text('Error submitting suggestion: $e')));
+        ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+            content: Text('Error submitting suggestion: $e',
+                style: TextStyle(color: Colors.white)),
+            backgroundColor: Colors.red));
       }
     } else {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Please fill in all fields')));
+      ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
+          content: Text('Please fill in all fields',
+              style: TextStyle(color: Colors.white)),
+          backgroundColor: Colors.red));
     }
   }
 
@@ -104,7 +123,8 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
     final LatLng? result = await Navigator.push(
       context,
       MaterialPageRoute(
-        builder: (context) => MapScreen(mapStyle: _mapStyle), // Pass the map style to MapScreen
+        builder: (context) =>
+            MapScreen(mapStyle: _mapStyle), // Pass the map style to MapScreen
       ),
     );
 
@@ -119,7 +139,13 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Suggest a Paid Restroom'),
+        title: const Text(
+          'Suggest a Paid Restroom',
+          style: TextStyle(
+            fontSize: 17,
+            color: Colors.white,
+          ),
+        ),
         backgroundColor: const Color.fromARGB(255, 97, 84, 158),
       ),
       body: Padding(
@@ -131,7 +157,25 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
               TextField(
                 controller: _nameController,
                 decoration: const InputDecoration(
-                  labelText: 'Restroom Name',
+                  labelText: null,
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Paid Restroom Name', // Replace this with the appropriate label
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Color.fromARGB(255, 115, 99, 183),
+                        ),
+                      ),
+                      Text(
+                        '*',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 236, 154, 148),
+                        ),
+                      ),
+                    ],
+                  ),
                   border: OutlineInputBorder(),
                 ),
               ),
@@ -142,34 +186,133 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
                 child: Text(
                   _selectedLocation != null
                       ? 'Location Selected: ${_selectedLocation!.latitude.toStringAsFixed(2)}, ${_selectedLocation!.longitude.toStringAsFixed(2)}'
-                      : 'Select Location Of Tag In The Map',
+                      : 'Select Location',
                   style: const TextStyle(fontSize: 16, color: Colors.white),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 97, 84, 158),
-                  padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                 ),
               ),
               const SizedBox(height: 15),
               TextField(
                 controller: _descriptionController,
                 decoration: const InputDecoration(
-                  labelText: 'Location',
+                  labelText: null,
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Description', // Replace this with the appropriate label
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Color.fromARGB(255, 115, 99, 183),
+                        ),
+                      ),
+                      Text(
+                        '*',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 236, 154, 148),
+                        ),
+                      ),
+                    ],
+                  ),
                   border: OutlineInputBorder(),
                 ),
                 maxLines: 4,
               ),
               const SizedBox(height: 15),
-              TextField(
-                controller: _costController,
-                keyboardType: TextInputType.numberWithOptions(decimal: true),
-                decoration: const InputDecoration(
-                  labelText: 'Cost',
-                  border: OutlineInputBorder(),
-                ),
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        '      Choose Options ', // Replace this with the appropriate label
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Color.fromARGB(255, 115, 99, 183),
+                        ),
+                      ),
+                      Text(
+                        '*',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 236, 154, 148),
+                        ),
+                      ),
+                    ],
+                  ),
+                  RadioListTile<String>(
+                    title: const Text(
+                      'Cost',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 115, 99, 183),
+                      ),
+                    ),
+                    value: 'Cost',
+                    groupValue: dropdownValue,
+                    onChanged: (String? value) {
+                      setState(() {
+                        dropdownValue = value!;
+                        showCostField = true;
+                      });
+                    },
+                  ),
+                  if (showCostField)
+                    Padding(
+                      padding: EdgeInsets.symmetric(horizontal: 10.0),
+                      child: TextField(
+                        controller: _costController,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        inputFormatters: [
+                          PesoInputFormatter(),
+                        ],
+                        decoration: InputDecoration(
+                          labelText: null,
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Enter the Cost ', // Replace this with the appropriate label
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: Color.fromARGB(255, 115, 99, 183),
+                                ),
+                              ),
+                              Text(
+                                '*',
+                                style: TextStyle(
+                                  color: Color.fromARGB(255, 236, 154, 148),
+                                ),
+                              ),
+                            ],
+                          ),
+                          border: OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  RadioListTile<String>(
+                    title: const Text(
+                      'Pay Options',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 115, 99, 183),
+                      ),
+                    ),
+                    value: 'Pay Options',
+                    groupValue: dropdownValue,
+                    onChanged: (String? value) {
+                      setState(() {
+                        dropdownValue = value!;
+                        showCostField = false;
+                      });
+                    },
+                  ),
+                ],
               ),
               const SizedBox(height: 20),
-              // Image preview
               if (_images.isNotEmpty) ...[
                 Wrap(
                   children: _images.map((image) {
@@ -186,17 +329,21 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
                 ),
                 const SizedBox(height: 10),
               ],
-              // Button to pick images
+              // Button to pick an image
               Center(
                 child: ElevatedButton(
                   onPressed: _pickImages,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 97, 84, 158),
-                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 30, vertical: 15),
                   ),
                   child: const Text(
-                    'Pick Images',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    'Pick Image',
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                   ),
                 ),
               ),
@@ -206,11 +353,15 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
                   onPressed: _submitSuggestion,
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 97, 84, 158),
-                    padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 30, vertical: 15),
                   ),
                   child: const Text(
                     'Submit Suggestion',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                    style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white),
                   ),
                 ),
               ),
