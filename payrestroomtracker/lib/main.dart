@@ -10,6 +10,7 @@ import 'package:flutter_button/pages/admin/adminlogin_page.dart';
 import 'package:flutter_button/pages/user/user_loggedin_page.dart';
 import 'package:flutter_button/pages/dialog/privacy_dialog.dart';
 import 'package:flutter_button/pages/dialog/user_profile_dialog.dart';
+import 'package:flutter_button/pages/dialog/suggestPaidRestroomPage.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -37,8 +38,9 @@ class Main extends StatelessWidget {
           '/mappage': (context) => const MapPage(),
           '/adminmappage' : (context) => const AdminMap(username: '', report: '',),
           '/privacydialog': (context) => const PrivacyDialog(),
-          '/userprofiledialog': (context) => const UserProfileDialog(),
+          //'/userprofiledialog': (context) => const UserProfileDrawer(),
           '/admin': (context) => const AdminPage(username: '', report: ''),
+          '/suggestPaidRestroomPage': (context) => const SuggestPaidRestroomPage(),
         });
   }
 }

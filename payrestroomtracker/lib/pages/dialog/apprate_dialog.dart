@@ -22,12 +22,11 @@ class _AppRateDialogState extends State<AppRateDialog> {
     _hasUserRated();
     _fetchUsername();
   }
-
   //fetch username
   Future<void> _fetchUsername() async {
-    if (widget.displayName != null && widget.displayName!.isNotEmpty) {
+    if (widget.displayName.isNotEmpty) {
       setState(() {
-        _userDisplayName = widget.displayName!;
+        _userDisplayName = widget.displayName;
       });
       await _hasUserRated();
     } else {
@@ -43,7 +42,6 @@ class _AppRateDialogState extends State<AppRateDialog> {
       }
     }
   }
-
   // Checks if the user has already rated the app
   Future<bool> _hasUserRated() async {
     if (_userDisplayName.isNotEmpty) {
@@ -65,7 +63,6 @@ class _AppRateDialogState extends State<AppRateDialog> {
     }
     return false; // Return false if the user has not rated or an error occurred
   }
-
   // Submits the user rating to Firestore
   Future<void> _submitRating(BuildContext context, double rating) async {
     if (_userDisplayName.isNotEmpty) {

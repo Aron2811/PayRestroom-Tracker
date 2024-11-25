@@ -161,7 +161,7 @@ class _AdminDashboardState extends State<AdminDashboard> with SingleTickerProvid
       
       ScaffoldMessenger.of(context).showSnackBar(SnackBar(
         content: Text('$displayName is no longer on hold'),
-        backgroundColor: Colors.red,
+        backgroundColor: Colors.green,
       ));
     }).catchError((error) {
       

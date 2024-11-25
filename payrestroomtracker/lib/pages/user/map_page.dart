@@ -20,7 +20,6 @@ import 'dart:math';
 import 'package:tutorial_coach_mark/tutorial_coach_mark.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
-
 class MapPage extends StatefulWidget {
   const MapPage({super.key});
 
@@ -58,6 +57,7 @@ class MapPageState extends State<MapPage> {
   String? _displayPaidRestroomName;
   String? estimatedTime;
   String? distanceInMiles;
+  String? _displayName;
 
   bool hasBeenListed = false;
   bool isVisible = false;
@@ -83,6 +83,8 @@ class MapPageState extends State<MapPage> {
   String imagePath = 'assets/paid_CR_Tag.png';
 
   int _backPressCount = 0;
+
+  final TextEditingController _usernameController = TextEditingController();
 
   // Initializes and configures the main tutorial with TutorialCoachMark
   void initMainTutorial() {
@@ -132,9 +134,7 @@ class MapPageState extends State<MapPage> {
       initMainTutorial();
       _showMainTutorial();
     } else {
-      setState(() {
-    
-      });
+      setState(() {});
     }
   }
 
@@ -168,6 +168,37 @@ class MapPageState extends State<MapPage> {
       return AssetImage('assets/car.png');
     } else {
       return AssetImage('assets/jeep.jpg');
+    }
+  }
+
+    // Update the user display name
+  Future<void> _updateUsername(String newUsername) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        await user.updateDisplayName(newUsername);
+        await user.reload();
+        setState(() {
+          _displayName = newUsername;
+        });
+        await _updateFirestoreUsername(newUsername);
+      } catch (e) {
+        print("Error updating username: $e");
+      }
+    }
+  }
+
+  // Update the username in Firestore
+  Future<void> _updateFirestoreUsername(String newUsername) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final userDoc =
+            FirebaseFirestore.instance.collection('users').doc(user.uid);
+        await userDoc.update({'displayName': newUsername});
+      } catch (e) {
+        print("Error updating Firestore username: $e");
+      }
     }
   }
 
@@ -253,7 +284,6 @@ class MapPageState extends State<MapPage> {
     return '';
   }
 
-
   @override
   void initState() {
     rootBundle.loadString('assets/map_style.json').then((string) {
@@ -266,6 +296,33 @@ class MapPageState extends State<MapPage> {
     getLocationUpdates();
     _loadCustomMarkerIcon();
     _loadMarkers();
+    _fetchUserDisplayName();
+  }
+
+   // Fetch the user display name from Firebase
+  Future<void> _fetchUserDisplayName() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        _displayName = user.displayName ?? "Username";
+      });
+    }
+  }
+
+    // Log out the user and navigate to the intro page
+  Future<void> _logout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      Navigator.pushNamedAndRemoveUntil(
+          context, '/userloginpage', (route) => false);
+    } catch (e) {
+      // Handle the error accordingly, e.g., show a dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error logging out: $e'),
+        ),
+      );
+    }
   }
 
   void _onMarkerTap(MarkerId markerId) {
@@ -342,7 +399,7 @@ class MapPageState extends State<MapPage> {
     );
   }
 
-   // Updates the current address based on the current location
+  // Updates the current address based on the current location
   Future<void> updateCurrentAddress() async {
     if (_currentP != null) {
       String? fullAddress =
@@ -372,350 +429,350 @@ class MapPageState extends State<MapPage> {
   }
 
 // Fetches ratings for a list of markers from Firestore
- Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
-  final Map<GeoPoint, Marker> geoPointToMarkerMap = {};
-  final List<GeoPoint> geoPoints = [];
+  Future<Map<Marker, double>> _fetchRatings(List<Marker> markers) async {
+    final Map<GeoPoint, Marker> geoPointToMarkerMap = {};
+    final List<GeoPoint> geoPoints = [];
 
-  // Build mapping of GeoPoints to markers
-  for (final marker in markers) {
-    final geoPoint = GeoPoint(marker.position.latitude, marker.position.longitude);
-    geoPointToMarkerMap[geoPoint] = marker;
-    geoPoints.add(geoPoint);
-  }
+    // Build mapping of GeoPoints to markers
+    for (final marker in markers) {
+      final geoPoint =
+          GeoPoint(marker.position.latitude, marker.position.longitude);
+      geoPointToMarkerMap[geoPoint] = marker;
+      geoPoints.add(geoPoint);
+    }
 
-  final Map<Marker, double> markerRatings = {};
+    final Map<Marker, double> markerRatings = {};
 
-  // Fetch ratings in batches
-  const int batchSize = 30;
-  for (int i = 0; i < geoPoints.length; i += batchSize) {
-    final batchGeoPoints = geoPoints.skip(i).take(batchSize).toList();
-    
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position', whereIn: batchGeoPoints)
-        .get();
+    // Fetch ratings in batches
+    const int batchSize = 30;
+    for (int i = 0; i < geoPoints.length; i += batchSize) {
+      final batchGeoPoints = geoPoints.skip(i).take(batchSize).toList();
 
-    for (final doc in querySnapshot.docs) {
-      final data = doc.data();
-      final geoPoint = GeoPoint(
-        data['position'].latitude,
-        data['position'].longitude,
-      );
-      final marker = geoPointToMarkerMap[geoPoint];
-      if (marker != null) {
-        markerRatings[marker] = data['averageRating'] as double? ?? 0.0;
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .where('position', whereIn: batchGeoPoints)
+          .get();
+
+      for (final doc in querySnapshot.docs) {
+        final data = doc.data();
+        final geoPoint = GeoPoint(
+          data['position'].latitude,
+          data['position'].longitude,
+        );
+        final marker = geoPointToMarkerMap[geoPoint];
+        if (marker != null) {
+          markerRatings[marker] = data['averageRating'] as double? ?? 0.0;
+        }
       }
     }
-  }
 
-  // Assign default rating for markers without data
-  for (final marker in markers) {
-    if (!markerRatings.containsKey(marker)) {
-      markerRatings[marker] = 0.0;
-    }
-  }
-
-  return markerRatings;
-}
-
-Future<List<Marker>> getNearestMarkers(LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
-  final List<Marker> markers = _markers
-      .where((marker) => marker.icon == customMarkerIcon)
-      .toList();
-
-
-  // Calculate distances and sort markers
-  markers.sort((a, b) {
-    final distanceA = _calculateDistance(userPosition, a.position);
-    final distanceB = _calculateDistance(userPosition, b.position);
-    return distanceA.compareTo(distanceB);
-  });
-
-  // Take top 'count' markers by distance
-  final nearestMarkers = markers.take(count).toList();
-
-
-  return nearestMarkers;
-}
-
-// Calculates the Euclidean distance between two LatLng points
-double _calculateDistance(LatLng start, LatLng end) {
-  final latDiff = end.latitude - start.latitude;
-  final lngDiff = end.longitude - start.longitude;
-  return sqrt(latDiff * latDiff + lngDiff * lngDiff);
-}
-
-
-
-void _showFindNearestPayToilet() async {
-  LatLng userPosition = _currentP!;
-  String selectedFilter = 'Nearest'; // Default dropdown value for filtering
-
-  showModalBottomSheet(
-    context: context,
-    isScrollControlled: true,
-    shape: const RoundedRectangleBorder(
-      borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
-    ),
-    backgroundColor: Colors.transparent,
-    builder: (context) {
-      return StatefulBuilder(
-        // Use StatefulBuilder to allow rebuilding of the dropdown and FutureBuilder
-        builder: (BuildContext context, StateSetter setModalState) {
-          return DraggableScrollableSheet(
-            initialChildSize: 0.4, // Initial height of the sheet
-            minChildSize: 0.2, // Minimum height of the sheet
-            maxChildSize: 0.9, // Maximum height of the sheet
-            builder: (context, scrollController) {
-              return FutureBuilder<List<Marker>>(
-                future: getFilteredMarkers(
-                  userPosition,
-                  20,
-                  selectedFilter,
-                  _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
-                ),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: CircularProgressIndicator());
-                  }
-
-                  if (!snapshot.hasData || snapshot.data!.isEmpty) {
-                    return const Center(child: Text('No restrooms found.'));
-                  }
-
-                  final filteredMarkers = snapshot.data!;
-
-                  return Container(
-                    decoration: const BoxDecoration(
-                      color: Color.fromARGB(255, 148, 139, 192),
-                      borderRadius:
-                          BorderRadius.vertical(top: Radius.circular(30)),
-                    ),
-                    child: Column(
-                      
-                      children: [
-                        
-                        // Dropdown for filtering
-                        Padding(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 70.0, vertical: 10.0),
-                          child: Row(
-                            
-                            children: [
-                              const Text(
-                                "Filter by:",
-                                style: TextStyle(
-                                  fontSize: 16,
-                                  color: Colors.white,
-                                ),
-                              ),
-                              const SizedBox(width: 10),
-                            Expanded(
-  child: DropdownButton<String>(
-
-    value: selectedFilter,
-    onChanged: (String? newValue) {
-      if (newValue != null) {
-        setModalState(() {
-          selectedFilter = newValue;
-        });
+    // Assign default rating for markers without data
+    for (final marker in markers) {
+      if (!markerRatings.containsKey(marker)) {
+        markerRatings[marker] = 0.0;
       }
-    },
-    items: <String>[
-      'Nearest',
-      'Rating',
-      'Cost',
-      'Nearby Pay Options' // Dropdown option for filtering by Cost field
-    ].map<DropdownMenuItem<String>>((String value) {
-      return DropdownMenuItem<String>(
-        value: value,
-        child: Text(value),
-      );
-    }).toList(),
-    dropdownColor: Color.fromARGB(255, 148, 139, 192),
-    style: const TextStyle(color: Colors.white),
-    icon: const Icon(
-      Icons.arrow_drop_down,
-      color: Colors.white,
-    ),
-  ),
-),
-                      ])),
+    }
 
-                        Expanded(
-                          child: ListView(
-                            controller: scrollController,
-                            children: filteredMarkers.map((marker) {
-                              return PaidRestroomRecommendationList(
-                                drawRouteToDestination: _drawRouteToDestination,
-                                destination: marker.position,
-                                toggleVisibility: toggleVisibility,
-                              );
-                            }).toList(),
-                          ),
-                        ),
-                      ],
-                    ),
-                  );
-                },
-              );
-            },
-          );
-        },
-      );
-    },
-  );
-}
+    return markerRatings;
+  }
 
+  Future<List<Marker>> getNearestMarkers(
+      LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
+    final List<Marker> markers =
+        _markers.where((marker) => marker.icon == customMarkerIcon).toList();
 
-Future<List<Marker>> getFilteredMarkers(
-    LatLng position, int limit, String filter, BitmapDescriptor icon) async {
-  Query query = FirebaseFirestore.instance.collection('Tags');
+    // Calculate distances and sort markers
+    markers.sort((a, b) {
+      final distanceA = _calculateDistance(userPosition, a.position);
+      final distanceB = _calculateDistance(userPosition, b.position);
+      return distanceA.compareTo(distanceB);
+    });
 
+    // Take top 'count' markers by distance
+    final nearestMarkers = markers.take(count).toList();
 
-// Handle the 'Nearest' filter
-  if (filter == 'Nearest') {
-    final nearestMarkers = await getNearestMarkers(position, limit, icon);
     return nearestMarkers;
   }
-  // Handle the 'Rating' filter
-  if (filter == 'Rating') {
-    final highRatingMarkers = await getHighRatingMarkers(position, limit, icon);
-    return highRatingMarkers;
+
+// Calculates the Euclidean distance between two LatLng points
+  double _calculateDistance(LatLng start, LatLng end) {
+    final latDiff = end.latitude - start.latitude;
+    final lngDiff = end.longitude - start.longitude;
+    return sqrt(latDiff * latDiff + lngDiff * lngDiff);
   }
 
-  // Handle the 'Cost' filter
-  if (filter == 'Cost') {
-    final lowToHighCostMarkers = await getLowToHighCostMarkers(position, limit, icon);
-    return lowToHighCostMarkers;
+  void _showFindNearestPayToilet() async {
+    LatLng userPosition = _currentP!;
+    String selectedFilter = 'Nearest'; // Default dropdown value for filtering
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(30)),
+      ),
+      backgroundColor: Colors.transparent,
+      builder: (context) {
+        return StatefulBuilder(
+          // Use StatefulBuilder to allow rebuilding of the dropdown and FutureBuilder
+          builder: (BuildContext context, StateSetter setModalState) {
+            return DraggableScrollableSheet(
+              initialChildSize: 0.4, // Initial height of the sheet
+              minChildSize: 0.2, // Minimum height of the sheet
+              maxChildSize: 0.9, // Maximum height of the sheet
+              builder: (context, scrollController) {
+                return FutureBuilder<List<Marker>>(
+                  future: getFilteredMarkers(
+                    userPosition,
+                    20,
+                    selectedFilter,
+                    _customMarkerIcon ?? BitmapDescriptor.defaultMarker,
+                  ),
+                  builder: (context, snapshot) {
+                    if (snapshot.connectionState == ConnectionState.waiting) {
+                      return const Center(child: CircularProgressIndicator());
+                    }
+
+                    if (!snapshot.hasData || snapshot.data!.isEmpty) {
+                      return const Center(child: Text('No restrooms found.'));
+                    }
+
+                    final filteredMarkers = snapshot.data!;
+
+                    return Container(
+                      decoration: const BoxDecoration(
+                        color: Color.fromARGB(255, 148, 139, 192),
+                        borderRadius:
+                            BorderRadius.vertical(top: Radius.circular(30)),
+                      ),
+                      child: Column(
+                        children: [
+                          // Dropdown for filtering
+                          Padding(
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 70.0, vertical: 10.0),
+                              child: Row(children: [
+                                const Text(
+                                  "Filter by:",
+                                  style: TextStyle(
+                                    fontSize: 16,
+                                    color: Colors.white,
+                                  ),
+                                ),
+                                const SizedBox(width: 10),
+                                Expanded(
+                                  child: DropdownButton<String>(
+                                    value: selectedFilter,
+                                    onChanged: (String? newValue) {
+                                      if (newValue != null) {
+                                        setModalState(() {
+                                          selectedFilter = newValue;
+                                        });
+                                      }
+                                    },
+                                    items: <String>[
+                                      'Nearest',
+                                      'Rating',
+                                      'Cost',
+                                      'Nearby Pay Options' // Dropdown option for filtering by Cost field
+                                    ].map<DropdownMenuItem<String>>(
+                                        (String value) {
+                                      return DropdownMenuItem<String>(
+                                        value: value,
+                                        child: Text(value),
+                                      );
+                                    }).toList(),
+                                    dropdownColor:
+                                        Color.fromARGB(255, 148, 139, 192),
+                                    style: const TextStyle(color: Colors.white),
+                                    icon: const Icon(
+                                      Icons.arrow_drop_down,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                ),
+                              ])),
+
+                          Expanded(
+                            child: ListView(
+                              controller: scrollController,
+                              children: filteredMarkers.map((marker) {
+                                return PaidRestroomRecommendationList(
+                                  drawRouteToDestination:
+                                      _drawRouteToDestination,
+                                  destination: marker.position,
+                                  toggleVisibility: toggleVisibility,
+                                );
+                              }).toList(),
+                            ),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                );
+              },
+            );
+          },
+        );
+      },
+    );
   }
 
+  Future<List<Marker>> getFilteredMarkers(
+      LatLng position, int limit, String filter, BitmapDescriptor icon) async {
+    Query query = FirebaseFirestore.instance.collection('Tags');
 
-  if (filter == 'Nearby Pay Options') {
-  final nearbyPayOptionMarkers = await getNearestPayOptionMarkers(position, limit, icon);
-  return nearbyPayOptionMarkers;
-}
+// Handle the 'Nearest' filter
+    if (filter == 'Nearest') {
+      final nearestMarkers = await getNearestMarkers(position, limit, icon);
+      return nearestMarkers;
+    }
+    // Handle the 'Rating' filter
+    if (filter == 'Rating') {
+      final highRatingMarkers =
+          await getHighRatingMarkers(position, limit, icon);
+      return highRatingMarkers;
+    }
 
+    // Handle the 'Cost' filter
+    if (filter == 'Cost') {
+      final lowToHighCostMarkers =
+          await getLowToHighCostMarkers(position, limit, icon);
+      return lowToHighCostMarkers;
+    }
 
-  // Default Firestore query if no specific filter matches
-  final querySnapshot = await query.limit(limit).get();
+    if (filter == 'Nearby Pay Options') {
+      final nearbyPayOptionMarkers =
+          await getNearestPayOptionMarkers(position, limit, icon);
+      return nearbyPayOptionMarkers;
+    }
 
-  // Map Firestore documents to markers
-  return querySnapshot.docs.map((doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    final geoPoint = data['position'] as GeoPoint; // Ensure 'position' is of type GeoPoint
-    return Marker(
-      markerId: MarkerId(doc.id),
-      position: LatLng(geoPoint.latitude, geoPoint.longitude),
-      icon: icon,
+    // Default Firestore query if no specific filter matches
+    final querySnapshot = await query.limit(limit).get();
+
+    // Map Firestore documents to markers
+    return querySnapshot.docs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      final geoPoint =
+          data['position'] as GeoPoint; // Ensure 'position' is of type GeoPoint
+      return Marker(
+        markerId: MarkerId(doc.id),
+        position: LatLng(geoPoint.latitude, geoPoint.longitude),
+        icon: icon,
+      );
+    }).toList();
+  }
+
+  Future<List<Marker>> getNearestPayOptionMarkers(
+      LatLng userPosition, int limit, BitmapDescriptor icon) async {
+    // Query Firestore collection
+    Query query = FirebaseFirestore.instance.collection('Tags');
+
+    // Fetch all documents
+    final querySnapshot = await query.get();
+
+    // Filter documents to only include those with pay options
+    final filteredDocs = querySnapshot.docs.where((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      final cost = data['Cost']?.toString() ?? ''; // Ensure 'Cost' is a string
+      return cost.contains(
+          "with pay option"); // Check if the 'Cost' field includes 'with pay option'
+    }).toList();
+
+    // Map filtered documents to markers with distance calculations
+    final List<Marker> markers = filteredDocs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      final geoPoint =
+          data['position'] as GeoPoint; // Ensure 'position' is a GeoPoint
+      return Marker(
+        markerId: MarkerId(doc.id),
+        position: LatLng(geoPoint.latitude, geoPoint.longitude),
+        icon: icon,
+      );
+    }).toList();
+
+    // Sort markers by distance to the user
+    markers.sort((a, b) {
+      final distanceA = _calculateDistance(userPosition, a.position);
+      final distanceB = _calculateDistance(userPosition, b.position);
+      return distanceA.compareTo(distanceB);
+    });
+
+    // Return the top 'limit' nearest markers
+    return markers.take(limit).toList();
+  }
+
+  Future<List<Marker>> getLowToHighCostMarkers(
+      LatLng userPosition, int limit, BitmapDescriptor icon) async {
+    // Query Firestore collection
+    Query query = FirebaseFirestore.instance.collection('Tags');
+
+    // Fetch all documents
+    final querySnapshot = await query.get();
+
+    // Filter documents with valid costs
+    final filteredDocs = querySnapshot.docs.where((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      final cost = data['Cost']
+          ?.toString()
+          .replaceAll(RegExp(r'[^\d.]'), ''); // Extract numeric part of 'Cost'
+      return cost != null &&
+          cost.isNotEmpty; // Ensure 'Cost' is not null or empty
+    }).toList();
+
+    // Sort documents by cost (ascending)
+    filteredDocs.sort((a, b) {
+      final costA = double.tryParse((a.data() as Map<String, dynamic>)['Cost']
+                  ?.toString()
+                  .replaceAll(RegExp(r'[^\d.]'), '') ??
+              '0') ??
+          0.0;
+      final costB = double.tryParse((b.data() as Map<String, dynamic>)['Cost']
+                  ?.toString()
+                  .replaceAll(RegExp(r'[^\d.]'), '') ??
+              '0') ??
+          0.0;
+      return costA.compareTo(costB);
+    });
+
+    // Limit results to the specified count
+    final limitedDocs = filteredDocs.take(limit);
+
+    // Map filtered documents to markers
+    return limitedDocs.map((doc) {
+      final data = doc.data() as Map<String, dynamic>;
+      final geoPoint = data['position'] as GeoPoint;
+      return Marker(
+        markerId: MarkerId(doc.id),
+        position: LatLng(geoPoint.latitude, geoPoint.longitude),
+        icon: icon,
+      );
+    }).toList();
+  }
+
+  Future<List<Marker>> getHighRatingMarkers(
+      LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
+    // Filter markers by the provided custom icon
+    final List<Marker> markers =
+        _markers.where((marker) => marker.icon == customMarkerIcon).toList();
+
+    // Fetch ratings for all markers
+    final markerRatings = await _fetchRatings(markers);
+
+    // Sort markers by rating (highest first)
+    markers.sort(
+      (a, b) {
+        // Compare the ratings, using the markerRatings map
+        return (markerRatings[b] ?? 0.0).compareTo(markerRatings[a] ?? 0.0);
+      },
     );
-  }).toList();
-}
 
-Future<List<Marker>> getNearestPayOptionMarkers(
-    LatLng userPosition, int limit, BitmapDescriptor icon) async {
-  // Query Firestore collection
-  Query query = FirebaseFirestore.instance.collection('Tags');
+    // Take top 'count' markers by rating (highest first)
+    final highRatedMarkers = markers.take(count).toList();
 
-  // Fetch all documents
-  final querySnapshot = await query.get();
-
-  // Filter documents to only include those with pay options
-  final filteredDocs = querySnapshot.docs.where((doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    final cost = data['Cost']?.toString() ?? ''; // Ensure 'Cost' is a string
-    return cost.contains("with pay option"); // Check if the 'Cost' field includes 'with pay option'
-  }).toList();
-
-  // Map filtered documents to markers with distance calculations
-  final List<Marker> markers = filteredDocs.map((doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    final geoPoint = data['position'] as GeoPoint; // Ensure 'position' is a GeoPoint
-    return Marker(
-      markerId: MarkerId(doc.id),
-      position: LatLng(geoPoint.latitude, geoPoint.longitude),
-      icon: icon,
-    );
-  }).toList();
-
-  // Sort markers by distance to the user
-  markers.sort((a, b) {
-    final distanceA = _calculateDistance(userPosition, a.position);
-    final distanceB = _calculateDistance(userPosition, b.position);
-    return distanceA.compareTo(distanceB);
-  });
-
-  // Return the top 'limit' nearest markers
-  return markers.take(limit).toList();
-}
-
-
-
-
-
-Future<List<Marker>> getLowToHighCostMarkers(
-    LatLng userPosition, int limit, BitmapDescriptor icon) async {
-  // Query Firestore collection
-  Query query = FirebaseFirestore.instance.collection('Tags');
-
-  // Fetch all documents
-  final querySnapshot = await query.get();
-
-  // Filter documents with valid costs
-  final filteredDocs = querySnapshot.docs.where((doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    final cost = data['Cost']?.toString()?.replaceAll(RegExp(r'[^\d.]'), ''); // Extract numeric part of 'Cost'
-    return cost != null && cost.isNotEmpty; // Ensure 'Cost' is not null or empty
-  }).toList();
-
-  // Sort documents by cost (ascending)
-  filteredDocs.sort((a, b) {
-    final costA = double.tryParse(
-        (a.data() as Map<String, dynamic>)['Cost']?.toString()?.replaceAll(RegExp(r'[^\d.]'), '') ?? '0') ?? 0.0;
-    final costB = double.tryParse(
-        (b.data() as Map<String, dynamic>)['Cost']?.toString()?.replaceAll(RegExp(r'[^\d.]'), '') ?? '0') ?? 0.0;
-    return costA.compareTo(costB);
-  });
-
-  // Limit results to the specified count
-  final limitedDocs = filteredDocs.take(limit);
-
-  // Map filtered documents to markers
-  return limitedDocs.map((doc) {
-    final data = doc.data() as Map<String, dynamic>;
-    final geoPoint = data['position'] as GeoPoint;
-    return Marker(
-      markerId: MarkerId(doc.id),
-      position: LatLng(geoPoint.latitude, geoPoint.longitude),
-      icon: icon,
-    );
-  }).toList();
-}
-
-
-
-Future<List<Marker>> getHighRatingMarkers(
-    LatLng userPosition, int count, BitmapDescriptor customMarkerIcon) async {
-  // Filter markers by the provided custom icon
-  final List<Marker> markers =
-      _markers.where((marker) => marker.icon == customMarkerIcon).toList();
-
-  // Fetch ratings for all markers
-  final markerRatings = await _fetchRatings(markers);
-
-  // Sort markers by rating (highest first)
-  markers.sort(
-    (a, b) {
-      // Compare the ratings, using the markerRatings map
-      return (markerRatings[b] ?? 0.0).compareTo(markerRatings[a] ?? 0.0);
-    },
-  );
-
-  // Take top 'count' markers by rating (highest first)
-  final highRatedMarkers = markers.take(count).toList();
-
-  return highRatedMarkers;
-}
+    return highRatedMarkers;
+  }
 
   // Displays a bottom sheet with information about the selected pay toilet
   void _showPayToiletInformation(LatLng destination) {
@@ -748,8 +805,17 @@ Future<List<Marker>> getHighRatingMarkers(
     });
   }
 
+   bool _isDrawerOpen = false;
+
+  void _toggleDrawer() {
+    setState(() {
+      _isDrawerOpen = !_isDrawerOpen;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     // Adds a marker for the user's current location if it's available
     if (_currentP != null) {
       print(_currentP);
@@ -757,8 +823,7 @@ Future<List<Marker>> getHighRatingMarkers(
         Marker(
           markerId: const MarkerId('User Location'),
           position: _currentP!,
-          icon: dynamicIcon ??
-              BitmapDescriptor.defaultMarkerWithHue(255.0),
+          icon: dynamicIcon ?? BitmapDescriptor.defaultMarkerWithHue(255.0),
         ),
       );
     }
@@ -781,6 +846,47 @@ Future<List<Marker>> getHighRatingMarkers(
             markers: _markers,
             polylines: _polylines,
           ),
+ Padding(
+            padding: EdgeInsets.only(top: 60, left: 30, right: 10),
+            child: FractionallySizedBox(
+              widthFactor: 0.94, // Adjust the factor for different widths
+
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 149, 134, 225),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: const Color.fromARGB(
+                        111, 255, 255, 255), // Set the border color here
+                    width: 2, // Adjust the border width as needed
+                  ), // Adjust the radius value as needed
+                ),
+                height: 30,
+                width: 300,
+                margin: const EdgeInsets.only(top: 30, left: 0),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    _currentAddress ?? 'Fetching user location...',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13.0,
+                      fontWeight: FontWeight.w500,
+                      overflow: TextOverflow.ellipsis,
+                      color: Colors.white,
+                    ),
+                    maxLines: 2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+         
+        
+      
+    
+  
+
           Visibility(
             visible: isMainTutorialDisplayed,
             child: Positioned(
@@ -831,50 +937,14 @@ Future<List<Marker>> getHighRatingMarkers(
                     backgroundImage: NetworkImage(
                         FirebaseAuth.instance.currentUser?.photoURL ?? ''),
                   ),
-                  onPressed: () {
-                    showDialog(
-                        context: context,
-                        builder: (context) => UserProfileDialog());
-                  },
+                 onPressed: _toggleDrawer,
                 ),
               ],
             ),
           ),
-          Padding(
-            padding: EdgeInsets.only(top: 60, left: 30, right: 10),
-            child: FractionallySizedBox(
-              widthFactor: 0.94, // Adjust the factor for different widths
 
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 149, 134, 225),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: const Color.fromARGB(
-                        111, 255, 255, 255), // Set the border color here
-                    width: 2, // Adjust the border width as needed
-                  ), // Adjust the radius value as needed
-                ),
-                height: 30,
-                width: 300,
-                margin: const EdgeInsets.only(top: 30, left: 0),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    _currentAddress ?? 'Fetching user location...',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13.0,
-                      fontWeight: FontWeight.w500,
-                      overflow: TextOverflow.ellipsis,
-                      color: Colors.white,
-                    ),
-                    maxLines: 2,
-                  ),
-                ),
-              ),
-            ),
-          ),
+         
+         
           Padding(
               padding: EdgeInsets.only(top: 95, left: 10, right: 10),
               child: Visibility(
@@ -965,7 +1035,6 @@ Future<List<Marker>> getHighRatingMarkers(
                                                       _isLoading = false;
                                                       _drawRouteToDestination(
                                                           end!, 'private');
-
                                                     },
                                                   ),
                                                   SizedBox(height: 5),
@@ -1074,11 +1143,12 @@ Future<List<Marker>> getHighRatingMarkers(
                               _hidePath();
                               _polylines.clear();
                               dynamicIcon = null;
-
                             },
                           ),
                         ])),
               )),
+            
+         
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
@@ -1122,11 +1192,136 @@ Future<List<Marker>> getHighRatingMarkers(
                       _showFindNearestPayToilet();
                     },
                   ),
+                  
                 ),
               ),
+
+              
               const SizedBox(height: 30),
             ],
-          )
+          ),
+           if (_isDrawerOpen)
+            GestureDetector(
+              onTap: _toggleDrawer, // Closes the drawer when tapped outside
+              child: Container(
+                color: Colors.black.withOpacity(0.3), // Semi-transparent overlay
+              ),
+            ),
+
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            right: _isDrawerOpen ? 0 : -screenWidth * 0.7,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              width: screenWidth * 0.7,
+              color: Colors.white,
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.only(top: 50, left: 20, right: 10, bottom: 20),
+                    color: Color.fromARGB(
+                          255, 149, 134, 225),
+                    child: Row(
+                      children:  [
+                        CircleAvatar(
+                    radius: 30, // Adjust the size of the circle
+                    backgroundImage: FirebaseAuth.instance.currentUser?.photoURL != null
+                        ? NetworkImage(FirebaseAuth.instance.currentUser!.photoURL!)
+                        : AssetImage("assets/default_profile_image.png") as ImageProvider,
+                    backgroundColor: Colors.transparent,
+                  ),
+                        SizedBox(width: 15),
+                        Column(
+                          
+                          children: [
+                            Text(
+                              'Welcome',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),),
+
+                                                  Text(
+                              '$_displayName',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                              maxLines: 2, // Set the maximum number of lines
+                              overflow: TextOverflow.ellipsis, // This will add "..." if the text overflows
+                            )
+                          ]
+                        )
+                      ],
+                    ),
+                  ),
+                  ListTile(
+            title: Text('Change Username', style: TextStyle( color: Color.fromARGB(255, 97, 84, 158),)),
+            leading: Icon(Icons.edit_rounded , color: Color.fromARGB(255, 97, 84, 158),),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text(
+                    'Change Username',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 97, 84, 158),
+                    ),
+                  ),
+                content: TextField(
+                    textAlign: TextAlign.center,
+                    controller: _usernameController,
+                    decoration: InputDecoration(
+                      hintText: _displayName ?? 'Enter new username', // Use the current username
+                    ),
+                  ),
+                  actions: <Widget>[
+                    TextButton(
+                      child: const Text('Cancel'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    TextButton(
+                      child: const Text('Update'),
+                      onPressed: () {
+                        String newUsername = _usernameController.text.trim();
+                        if (newUsername.isNotEmpty) {
+                          _updateUsername(newUsername);
+                          Navigator.of(context).pop();
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+                ListTile(
+            title: Text('Suggest a Paid Restroom', style: TextStyle(color: Color.fromARGB(255, 97, 84, 158))),
+            leading: Icon(Icons.add_circle_rounded, color: Color.fromARGB(255, 97, 84, 158)),
+            onTap: () {
+              Navigator.pushNamed(context, '/suggestPaidRestroomPage');
+            },
+          ),
+          ListTile(
+            title: Text('Logout', style: TextStyle(color: Color.fromARGB(255, 97, 84, 158))),
+            leading: Icon(Icons.logout_rounded, color: Color.fromARGB(255, 97, 84, 158)),
+            onTap: () {
+              _logout(context);
+            },
+          ),
+                 
+                ],
+              ),
+            ),
+          ),
         ])));
   }
 
@@ -1248,11 +1443,7 @@ Future<List<Marker>> getHighRatingMarkers(
                 TextButton(
                   onPressed: () {
                     Navigator.of(context).pop(true);
-                    Navigator.push(
-                        context,
-                        _createRoute(UserLoggedInPage(
-                          
-                        )));
+                    Navigator.push(context, _createRoute(UserLoggedInPage()));
                   },
                   child: const Text("Yes"),
                 ),
@@ -1337,9 +1528,8 @@ Future<List<Marker>> getHighRatingMarkers(
         // Show a snackbar to inform the user
         ScaffoldMessenger.of(context).showSnackBar(
           SnackBar(
-            content: Text('The paid restroom is in the EXPRESSWAY')
-            ,
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+            content: Text('The paid restroom is in the EXPRESSWAY'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
             duration: Duration(seconds: 3), // Adjust as needed
           ),
         );

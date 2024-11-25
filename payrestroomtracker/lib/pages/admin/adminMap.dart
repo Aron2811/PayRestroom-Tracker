@@ -8,6 +8,7 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_button/pages/dialog/admin_add_info.dart';
+import 'package:badges/badges.dart';
 
 class AdminMap extends StatefulWidget {
   const AdminMap({Key? key, required this.username, required this.report})
@@ -62,6 +63,228 @@ class AdminMapState extends State<AdminMap> {
       'assets/person_Tag.png',
     );
   }
+
+  Future<void> _showSuggestedRestrooms(BuildContext context) async {
+  final restrooms = await FirebaseFirestore.instance
+      .collection('suggested_restrooms') // Replace with your collection name
+      .get();
+
+  final restroomList = restrooms.docs.map((doc) => doc).toList();
+
+  showModalBottomSheet(
+    context: context,
+    builder: (context) {
+      return Container(
+        padding: const EdgeInsets.all(16.0),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            const Text(
+              'Suggested Restrooms',
+              style: TextStyle(
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+            const SizedBox(height: 10),
+            Expanded(
+              child: ListView.builder(
+                itemCount: restroomList.length,
+                itemBuilder: (context, index) {
+                  final doc = restroomList[index];
+                  final data = doc.data() as Map<String, dynamic>;
+
+                  return ListTile(
+                    title: Text(data['name'] ?? 'Unnamed Restroom'),
+                    subtitle: Text(data['location'] ?? 'No description provided.'),
+                    trailing: const Icon(Icons.arrow_forward),
+                    onTap: () {
+                      Navigator.pop(context); // Close the bottom sheet
+  showRestroomDetails(context, doc.id, data); // Show details dialog
+                    },
+                  );
+                },
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+}
+
+ Future<void> showRestroomDetails(
+    BuildContext context, String docId, Map<String, dynamic> data) {
+  return showDialog(
+    context: context,
+    builder: (context) {
+      // Check if 'images' is a list and display them accordingly
+      var images = data['ImageUrls'];
+      List<Widget> imageWidgets = [];
+
+      // If the images are in an array
+      if (images is List) {
+        for (var imageUrl in images) {
+          imageWidgets.add(
+            ClipRRect(
+              borderRadius: BorderRadius.circular(8.0),
+              child: Image.network(
+                imageUrl,
+                height: 150,
+                width: double.infinity,
+                fit: BoxFit.cover,
+              ),
+            ),
+          );
+          imageWidgets.add(const SizedBox(height: 10));
+        }
+      } else if (images != null) {
+        // If only one image exists
+        imageWidgets.add(
+          ClipRRect(
+            borderRadius: BorderRadius.circular(8.0),
+            child: Image.network(
+              images,
+              height: 150,
+              width: double.infinity,
+              fit: BoxFit.cover,
+            ),
+          ),
+        );
+        imageWidgets.add(const SizedBox(height: 10));
+      }
+
+      return AlertDialog(
+        title: Text(data['name'] ?? 'Unnamed Restroom'),
+        content: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // Display images
+            if (imageWidgets.isNotEmpty) ...imageWidgets,
+            Text('Cost: ${data['cost'] ?? 'N/A'}'),
+            const SizedBox(height: 5),
+            Text('Location: ${data['location'] ?? 'No description provided.'}'),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () {
+              Navigator.pop(context);
+            },
+            child: const Text('Close'),
+          ),
+          TextButton(
+            onPressed: () {
+              acceptRestroom(context, data);
+            
+              Navigator.pop(context);
+            },f
+            child: const Text('Accept'),
+          ),
+          TextButton(
+            onPressed: () {
+              rejectRestroom(docId);
+              Navigator.pop(context);
+            },
+            child: const Text('Reject', style: TextStyle(color: Colors.red)),
+          ),
+        ],
+      );
+    },
+  );
+}
+
+Future<void> rejectRestroom(String docId) async {
+  await FirebaseFirestore.instance
+      .collection('suggested_restrooms')
+      .doc(docId)
+      .delete();
+}
+
+Future<void> acceptRestroom(BuildContext context, Map<String, dynamic> data) async {
+  final markerId = MarkerId('marker_${DateTime.now().millisecondsSinceEpoch}');
+
+  try {
+    DocumentReference tagRef = FirebaseFirestore.instance
+        .collection('Tags')
+        .doc(markerId.value);
+
+    DocumentSnapshot tagSnapshot = await tagRef.get();
+    Map<String, dynamic>? tagData = tagSnapshot.data() as Map<String, dynamic>?;
+
+    // Fetch existing images from the Tags collection, or initialize an empty list
+    List<dynamic> existingImageUrls = tagData?['ImageUrls'] ?? [];
+
+    // If there are images in the current suggestion, merge them with the existing images in Tags
+    List<String> updatedImageUrls = [
+      ...existingImageUrls,
+      ...(data['ImageUrls'] is List ? List<String>.from(data['ImageUrls']) : [data['ImageUrls']]), // Add suggested images
+    ];
+
+    // Handle cost
+    String costValue = data['cost'] ?? 'Free';
+
+    // Handle position: Split the position string into latitude and longitude
+    String? position = data['position']; // This should be the 'position' field
+    double? latitude;
+    double? longitude;
+
+    if (position != null) {
+      List<String> coords = position.split(',');
+      if (coords.length == 2) {
+        latitude = double.tryParse(coords[0].trim());
+        longitude = double.tryParse(coords[1].trim());
+      }
+    }
+
+    if (latitude == null || longitude == null) {
+      throw Exception('Position data (latitude or longitude) is invalid.');
+    }
+
+    // Create GeoPoint from latitude and longitude
+    GeoPoint geoPoint = GeoPoint(latitude, longitude);
+    LatLng latLng = LatLng(geoPoint.latitude, geoPoint.longitude);
+    addMarker(latLng, markerId);
+
+    // Save the data to Firestore with GeoPoint and the updated image URLs
+    await tagRef.set(
+      {
+        'TagId': markerId.value,
+        'ImageUrls': updatedImageUrls,  // Transfer the images to the Tags collection
+        'Name': data['name'],
+        'Location': data['location'] ?? 'Unknown location',
+        'Cost': costValue,
+        'position': geoPoint, // Store as GeoPoint
+      },
+      SetOptions(merge: true), // Merge with existing data to avoid overwriting other fields
+    );
+
+    // Optionally delete from 'suggested_restrooms' after adding it to 'Tags'
+    await FirebaseFirestore.instance
+        .collection('suggested_restrooms')
+        .doc(markerId.value)
+        .delete();
+
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Restroom information added successfully with position and images.'),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
+      );
+    }
+  } catch (e) {
+    if (context.mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to save restroom information: $e'),
+          backgroundColor: Color.fromARGB(255, 240, 148, 142),
+        ),
+      );
+    }
+  }
+}
 
   // Loads markers from Firestore and converts them into a set of Marker objects for the map.
   Future<Set<Marker>> loadMarkersFromPrefs() async {
@@ -166,7 +389,7 @@ class AdminMapState extends State<AdminMap> {
                             ).then((confirmed) {
                               print(confirmed);
                               if (confirmed == true) {
-                                _addMarker(_currentP!, markerId_);
+                                addMarker(_currentP!, markerId_);
                               }
                             });
                           },
@@ -193,6 +416,12 @@ class AdminMapState extends State<AdminMap> {
           ),
           backgroundColor: const Color.fromARGB(255, 97, 84, 158),
           centerTitle: true,
+            actions: [
+            IconButton(
+              icon: const Icon(Icons.assignment_outlined, color: Colors.white),
+              onPressed: () => _showSuggestedRestrooms(context),
+            ),
+          ],
         ),
         body: Stack(
           children: [
@@ -230,7 +459,7 @@ class AdminMapState extends State<AdminMap> {
                                 ).then((confirmed) {
                                   print(confirmed);
                                   if (confirmed == true) {
-                                    _addMarker(latLng, markerId_);
+                                    addMarker(latLng, markerId_);
                                   }
                                 });
                               },
@@ -343,8 +572,8 @@ class AdminMapState extends State<AdminMap> {
     }
   }
 
-  // Adds a marker to the map, updates the markers list, and saves it to Firestore and SharedPreferences.
-  void _addMarker(LatLng latLng, MarkerId markerId_) {
+   // Adds a marker to the map, updates the markers list, and saves it to Firestore and SharedPreferences.
+  void addMarker(LatLng latLng, MarkerId markerId_) {
     Marker newMarker = Marker(
       markerId: markerId_,
       position: latLng,
@@ -373,7 +602,6 @@ class AdminMapState extends State<AdminMap> {
       'position': GeoPoint(latLng.latitude, latLng.longitude),
     });
   }
-
   // Creates a custom route with a slide transition from the bottom to the top.
   Route _createRoute(Widget child) {
     return PageRouteBuilder(
