@@ -5,11 +5,13 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:flutter_button/pages/dialog/pesoformatter.dart';
 
 class SuggestEditPage extends StatefulWidget {
   final LatLng destination;
 
-  const SuggestEditPage({required this.destination, Key? key}) : super(key: key);
+  const SuggestEditPage({required this.destination, Key? key})
+      : super(key: key);
 
   @override
   _SuggestEditPageState createState() => _SuggestEditPageState();
@@ -20,9 +22,15 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
   final TextEditingController _costController = TextEditingController();
   final TextEditingController _locationController = TextEditingController();
 
-  final TextEditingController _suggestedNameController = TextEditingController();
-  final TextEditingController _suggestedCostController = TextEditingController();
-  final TextEditingController _suggestedLocationController = TextEditingController();
+  final TextEditingController _suggestedNameController =
+      TextEditingController();
+  final TextEditingController _suggestedCostController =
+      TextEditingController();
+  final TextEditingController _suggestedLocationController =
+      TextEditingController();
+
+  String dropdownValue = 'Cost';
+  bool showCostField = true;
 
   List<String> _imageUrls = [];
   List<File> _newImages = [];
@@ -37,7 +45,9 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
     try {
       final querySnapshot = await FirebaseFirestore.instance
           .collection('Tags')
-          .where('position', isEqualTo: GeoPoint(widget.destination.latitude, widget.destination.longitude))
+          .where('position',
+              isEqualTo: GeoPoint(
+                  widget.destination.latitude, widget.destination.longitude))
           .get();
 
       if (querySnapshot.docs.isNotEmpty) {
@@ -65,58 +75,69 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
     }
   }
 
-  Future<void> _submitEdit() async {
-  final suggestedData = {
-    'SuggestedName': _suggestedNameController.text,
-    'SuggestedCost': _suggestedCostController.text,
-    'SuggestedLocation': _suggestedLocationController.text,
-    'ImageUrls': _imageUrls, // List of image URLs
-    'Position': GeoPoint(widget.destination.latitude, widget.destination.longitude), // Geopoint for the restroom's location
-  };
 
-  // Check if new images are uploaded and add them to Firestore
-  if (_newImages.isNotEmpty) {
-    for (var image in _newImages) {
-      await _uploadImageToStorage(image); // Upload the new images to Firebase Storage
+  Future<void> _submitEdit() async {
+      String costValue = dropdownValue == 'Pay Options'
+            ? 'with pay options' // Store 'Pay Options' directly
+            : '${_suggestedCostController.text}';
+
+    final suggestedData = {
+      'SuggestedName': _suggestedNameController.text,
+      'SuggestedCost': costValue,
+      'SuggestedLocation': _suggestedLocationController.text,
+      'ImageUrls': _imageUrls, // List of image URLs
+      'Position': GeoPoint(widget.destination.latitude,
+          widget.destination.longitude), // Geopoint for the restroom's location
+    };
+
+    // Check if new images are uploaded and add them to Firestore
+    if (_newImages.isNotEmpty) {
+      for (var image in _newImages) {
+        await _uploadImageToStorage(
+            image); // Upload the new images to Firebase Storage
+      }
+    }
+
+    try {
+      // Add suggested data to Firestore
+      await FirebaseFirestore.instance
+          .collection('restroom_edit_suggestions')
+          .add(suggestedData);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Edit suggestion submitted successfully!')),
+      );
+
+      // Optionally, clear the form fields after submission
+      _suggestedNameController.clear();
+      _suggestedCostController.clear();
+      _suggestedLocationController.clear();
+      setState(() {
+        _imageUrls.clear();
+        _newImages.clear();
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error submitting suggestion: $e')),
+      );
     }
   }
 
-  try {
-    // Add suggested data to Firestore
-    await FirebaseFirestore.instance.collection('restroom_edit_suggestions').add(suggestedData);
-
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit suggestion submitted successfully!')),
-    );
-
-    // Optionally, clear the form fields after submission
-    _suggestedNameController.clear();
-    _suggestedCostController.clear();
-    _suggestedLocationController.clear();
-    setState(() {
-      _imageUrls.clear();
-      _newImages.clear();
-    });
-
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error submitting suggestion: $e')),
-    );
-  }
-}
-
   Future<void> _pickImage() async {
     final picker = ImagePicker();
-    final pickedImages = await picker.pickMultiImage(); // Allow multiple image selection
+    final pickedImages =
+        await picker.pickMultiImage(); // Allow multiple image selection
 
     for (var pickedFile in pickedImages) {
       _uploadImageToStorage(File(pickedFile.path));
     }
-    }
+  }
 
   Future<void> _uploadImageToStorage(File image) async {
     final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final storageRef = FirebaseStorage.instance.ref().child('suggested_images/$fileName');
+    final storageRef =
+        FirebaseStorage.instance.ref().child('suggested_images/$fileName');
 
     try {
       await storageRef.putFile(image);
@@ -182,13 +203,111 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
                 existingValue: _nameController.text,
                 suggestionController: _suggestedNameController,
               ),
-              const SizedBox(height: 20),
-              _buildFieldWithSuggestion(
-                label: 'Cost (₱)',
-                existingValue: _costController.text,
-                suggestionController: _suggestedCostController,
-                keyboardType: TextInputType.number,
+
+              Text('Cost (₱) (Existing):',
+                  style: const TextStyle(fontWeight: FontWeight.bold)),
+              const SizedBox(height: 5),
+              TextField(
+                controller: TextEditingController(text: _costController.text),
+                decoration: const InputDecoration(
+                  border: OutlineInputBorder(),
+                  filled: true,
+                  fillColor: Colors.grey,
+                ),
+                enabled: false,
               ),
+              const SizedBox(height: 20),
+
+              Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Choose Options', // Replace this with the appropriate label
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Color.fromARGB(255, 115, 99, 183),
+                        ),
+                      ),
+                      Text(
+                        '*',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 236, 154, 148),
+                        ),
+                      ),
+                    ],
+                  ),
+                  RadioListTile<String>(
+                    title: const Text(
+                      'Cost',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 115, 99, 183),
+                      ),
+                    ),
+                    value: 'Cost',
+                    groupValue: dropdownValue,
+                    onChanged: (String? value) {
+                      setState(() {
+                        dropdownValue = value!;
+                        showCostField = true;
+                      });
+                    },
+                  ),
+                  if (showCostField)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 10.0),
+                      child: TextField(
+                        controller: _suggestedCostController,
+                        keyboardType: TextInputType.number,
+                        textAlign: TextAlign.center,
+                        inputFormatters: [
+                          PesoInputFormatter(),
+                        ],
+                        decoration: InputDecoration(
+                          labelText: null,
+                          label: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Text(
+                                'Enter the Cost', // Replace this with the appropriate label
+                                style: TextStyle(
+                                  fontSize: 15,
+                                  color: Color.fromARGB(255, 115, 99, 183),
+                                ),
+                              ),
+                              Text(
+                                '*',
+                                style: TextStyle(
+                                  color: Color.fromARGB(255, 236, 154, 148),
+                                ),
+                              ),
+                            ],
+                          ),
+                          border: const OutlineInputBorder(),
+                        ),
+                      ),
+                    ),
+                  RadioListTile<String>(
+                    title: const Text(
+                      'Pay Options',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 115, 99, 183),
+                      ),
+                    ),
+                    value: 'Pay Options',
+                    groupValue: dropdownValue,
+                    onChanged: (String? value) {
+                      setState(() {
+                        dropdownValue = value!;
+                        showCostField = false;
+                      });
+                    },
+                  ),
+                ],
+              ),
+
               const SizedBox(height: 20),
               _buildFieldWithSuggestion(
                 label: 'Location',
@@ -218,14 +337,16 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text('Existing Images:', style: TextStyle(fontWeight: FontWeight.bold)),
+        const Text('Existing Images:',
+            style: TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 10),
         Wrap(
           spacing: 10,
           runSpacing: 10,
           children: [
             ..._imageUrls.map((url) => _buildImageWithDeleteIcon(url, false)),
-            ..._newImages.map((file) => _buildImageWithDeleteIcon(file.path, true)),
+            ..._newImages
+                .map((file) => _buildImageWithDeleteIcon(file.path, true)),
           ],
         ),
       ],
@@ -254,7 +375,9 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
           child: IconButton(
             icon: const Icon(Icons.delete, color: Colors.red),
             onPressed: () => _deleteImage(
-              isNewImage ? _newImages.indexWhere((f) => f.path == imagePath) : _imageUrls.indexOf(imagePath),
+              isNewImage
+                  ? _newImages.indexWhere((f) => f.path == imagePath)
+                  : _imageUrls.indexOf(imagePath),
               isNewImage: isNewImage,
             ),
           ),
@@ -272,7 +395,8 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('$label (Existing):', style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text('$label (Existing):',
+            style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 5),
         TextField(
           controller: TextEditingController(text: existingValue),
@@ -284,7 +408,8 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
           enabled: false,
         ),
         const SizedBox(height: 10),
-        Text('$label (Your Suggestion):', style: const TextStyle(fontWeight: FontWeight.bold)),
+        Text('$label (Your Suggestion):',
+            style: const TextStyle(fontWeight: FontWeight.bold)),
         const SizedBox(height: 5),
         TextField(
           controller: suggestionController,
