@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/admin/adminMap.dart';
 import 'package:flutter_button/pages/admin/admin_allreviewpage.dart';
+import 'package:flutter_button/pages/admin/admin_dashboard.dart';
 import 'package:flutter_button/pages/admin/admin_report.dart';
 import 'package:flutter_button/pages/user/userlogin_page.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
@@ -34,7 +35,7 @@ class Badge extends StatelessWidget {
                 minWidth: 20,
                 minHeight: 20,
               ),
-              child: Center(
+                child: Center(
                 child: Text(
                   '$badgeCount', //display badge count
                   style: TextStyle(
@@ -43,6 +44,7 @@ class Badge extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                
               ),
             ),
           ),
@@ -203,7 +205,51 @@ class _AdminPageState extends State<AdminPage> {
                         letterSpacing: 2,
                       ),
                     ),
-                    SizedBox(height: 40),
+                    SizedBox(
+                        height: 20), 
+                    Align(
+                      alignment: Alignment.center,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          enableFeedback: false,
+                          backgroundColor: Colors.white,
+                          minimumSize: const Size(170, 40),
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.only(
+                              topLeft: Radius.circular(10),
+                              topRight: Radius.circular(10),
+                              bottomLeft: Radius.circular(10),
+                              bottomRight: Radius.circular(10),
+                            ),
+                          ),
+                          foregroundColor: Color.fromARGB(255, 97, 84, 158),
+                          textStyle: const TextStyle(
+                            fontSize: 18,
+                          ),
+                        ),
+                        label: const Text(
+                          "Dashboard",
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                            color: Color.fromARGB(255, 132, 119, 197),
+                          ),
+                        ),
+                        icon: const Icon(
+                          Icons.dashboard_rounded,
+                          color: Color.fromARGB(255, 132, 119, 197),
+                          size: 20,
+                        ),
+                        onPressed: () {
+                          Navigator.push(
+                            context,
+                            _createRoute(AdminDashboard()),
+                          );
+                        },
+                      ),
+                    ),
+                    SizedBox(height: 8),
                     Align(
                       alignment: Alignment.center,
                       child: ElevatedButton.icon(

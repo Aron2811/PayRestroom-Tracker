@@ -38,7 +38,7 @@ class Main extends StatelessWidget {
           '/mappage': (context) => const MapPage(),
           '/adminmappage' : (context) => const AdminMap(username: '', report: '',),
           '/privacydialog': (context) => const PrivacyDialog(),
-          '/userprofiledialog': (context) => const UserProfileDrawer(),
+          //'/userprofiledialog': (context) => const UserProfileDrawer(),
           '/admin': (context) => const AdminPage(username: '', report: ''),
           '/suggestPaidRestroomPage': (context) => const SuggestPaidRestroomPage(),
         });

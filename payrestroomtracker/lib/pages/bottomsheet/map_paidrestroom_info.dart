@@ -13,6 +13,7 @@ import 'package:flutter_button/pages/user/street_view.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:flutter_button/pages/dialog/suggest_edit_page.dart';
+import 'package:flutter_button/pages/dialog/suggest_delete_page.dart';
 
 class MapPaidRestroomInfo extends StatefulWidget {
   final Function(LatLng, String) drawRouteToDestination;
@@ -487,7 +488,6 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
                             context,
                             MaterialPageRoute(
                               builder: (context) => FullScreenImageGallery(
-                                
                                 imageUrls:
                                     snapshot.data!, // Pass the list of URLs
                                 initialIndex: snapshot.data!
@@ -517,175 +517,176 @@ class _MapPaidRestroomInfoState extends State<MapPaidRestroomInfo> {
           ),
           const SizedBox(height: 30),
           Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                const SizedBox(width: 20),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    enableFeedback: false,
-                    backgroundColor: const Color.fromARGB(255, 148, 139, 192),
-                    minimumSize: const Size(250, 45),
-                    shape: RoundedRectangleBorder(
-                      side: const BorderSide(
-                        color: Color.fromARGB(255, 115, 99, 183),
-                        width: 2.0,
-                      ),
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              const SizedBox(width: 20),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  enableFeedback: false,
+                  backgroundColor: const Color.fromARGB(255, 148, 139, 192),
+                  minimumSize: const Size(250, 45),
+                  shape: RoundedRectangleBorder(
+                    side: const BorderSide(
+                      color: Color.fromARGB(255, 115, 99, 183),
+                      width: 2.0,
                     ),
-                  ),
-                  onPressed: () {
-                    Navigator.push(
-                      context,
-                      _createRoute(
-                          AddReviewPage(destination: widget.destination)),
-                    );
-                  },
-                  label: const Text(
-                    'Add a Review',
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: Colors.white,
-                      letterSpacing: 3,
-                    ),
-                  ),
-                  icon: const Icon(
-                    Icons.person_2_rounded,
-                    color: Color.fromARGB(255, 97, 84, 158),
                   ),
                 ),
-                const SizedBox(height: 20),
-                GestureDetector(
-                  child: const Text(
-                    "View All Reviews",
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: Color.fromARGB(255, 97, 84, 158),
-                      fontWeight: FontWeight.bold,
-                      letterSpacing: 2,
-                    ),
-                  ),
-                  onTap: () {
-                    Navigator.push(
-                      context,
-                      _createRoute(ReviewsPage(destination: widget.destination)),
-                    );
-                  },
-                ),
-                const SizedBox(height: 20),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 148, 139, 192),
-                    minimumSize: const Size(250, 45),
-                    shape: RoundedRectangleBorder(
-                      side: const BorderSide(
-                        color: Color.fromARGB(255, 115, 99, 183),
-                        width: 2.0,
-                      ),
-                    ),
-                  ),
-                  onPressed: () {
-                   Navigator.push(
-    context,
-    MaterialPageRoute(
-      builder: (context) => SuggestEditPage(destination: widget.destination),
-    ),
-  );
-                  },
-                  label: const Text(
-                    'Suggest an Edit',
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: Colors.white,
-                      letterSpacing: 3,
-                    ),
-                  ),
-                  icon: const Icon(
-                    Icons.edit,
-                    color: Color.fromARGB(255, 97, 84, 158),
-                  ),
-                ),
-                const SizedBox(height: 10),
-                ElevatedButton.icon(
-                  style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color.fromARGB(255, 148, 139, 192),
-                    minimumSize: const Size(250, 45),
-                    shape: RoundedRectangleBorder(
-                      side: const BorderSide(
-                        color: Color.fromARGB(255, 115, 99, 183),
-                        width: 2.0,
-                      ),
-                    ),
-                  ),
-                  onPressed: () {
-                    // Navigator.push(
-                    //   context,
-                    //   _createRoute(SuggestDeletePage(destination: widget.destination)),
-                    // );
-                  },
-                  label: const Text(
-                    'Suggest for Delete',
-                    style: TextStyle(
-                      fontSize: 17,
-                      color: Colors.white,
-                      letterSpacing: 3,
-                    ),
-                  ),
-                  icon: const Icon(
-                    Icons.delete_outline,
-                    color: Color.fromARGB(255, 97, 84, 158),
-                  ),
-                ),
-                const SizedBox(height: 20),
-                const Text(
-                  "Share your experience to help others",
-                  textAlign: TextAlign.start,
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    _createRoute(
+                        AddReviewPage(destination: widget.destination)),
+                  );
+                },
+                label: const Text(
+                  'Add a Review',
                   style: TextStyle(
-                    fontSize: 15,
+                    fontSize: 17,
                     color: Colors.white,
+                    letterSpacing: 3,
                   ),
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    const SizedBox(width: 15),
-                    CircleAvatar(
-                      radius: 20,
-                      backgroundImage: NetworkImage(
-                        FirebaseAuth.instance.currentUser?.photoURL ?? '',
-                      ),
-                    ),
-                    const SizedBox(width: 10),
-                    FutureBuilder<double>(
-                      future: _userRatingFuture,
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState == ConnectionState.waiting) {
-                          return CircularProgressIndicator();
-                        } else if (snapshot.hasError) {
-                          return Text(
-                              'Error loading user rating: ${snapshot.error}');
-                        } else {
-                          double userRating = snapshot.data ?? 0.0;
-                          return custom_rating_bar.RatingBar(
-                            size: 30,
-                            alignment: Alignment.center,
-                            filledIcon: Icons.star,
-                            emptyIcon: Icons.star_border,
-                            emptyColor: Colors.white24,
-                            filledColor: const Color.fromARGB(255, 97, 84, 158),
-                            halfFilledColor:
-                                const Color.fromARGB(255, 186, 176, 228),
-                            onRatingChanged: _updateRating,
-                            initialRating: userRating,
-                            maxRating: 5,
-                          );
-                        }
-                      },
-                    ),
-                  ],
+                icon: const Icon(
+                  Icons.person_2_rounded,
+                  color: Color.fromARGB(255, 97, 84, 158),
                 ),
-                SizedBox(height: 20),
-              ],
-            )
+              ),
+              const SizedBox(height: 20),
+              GestureDetector(
+                child: const Text(
+                  "View All Reviews",
+                  style: TextStyle(
+                    fontSize: 17,
+                    color: Color.fromARGB(255, 97, 84, 158),
+                    fontWeight: FontWeight.bold,
+                    letterSpacing: 2,
+                  ),
+                ),
+                onTap: () {
+                  Navigator.push(
+                    context,
+                    _createRoute(ReviewsPage(destination: widget.destination)),
+                  );
+                },
+              ),
+              const SizedBox(height: 20),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 148, 139, 192),
+                  minimumSize: const Size(250, 45),
+                  shape: RoundedRectangleBorder(
+                    side: const BorderSide(
+                      color: Color.fromARGB(255, 115, 99, 183),
+                      width: 2.0,
+                    ),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) =>
+                          SuggestEditPage(destination: widget.destination),
+                    ),
+                  );
+                },
+                label: const Text(
+                  'Suggest an Edit',
+                  style: TextStyle(
+                    fontSize: 17,
+                    color: Colors.white,
+                    letterSpacing: 3,
+                  ),
+                ),
+                icon: const Icon(
+                  Icons.edit,
+                  color: Color.fromARGB(255, 97, 84, 158),
+                ),
+              ),
+              const SizedBox(height: 10),
+              ElevatedButton.icon(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color.fromARGB(255, 148, 139, 192),
+                  minimumSize: const Size(250, 45),
+                  shape: RoundedRectangleBorder(
+                    side: const BorderSide(
+                      color: Color.fromARGB(255, 115, 99, 183),
+                      width: 2.0,
+                    ),
+                  ),
+                ),
+                onPressed: () {
+                  Navigator.push(
+                    context,
+                    _createRoute(SuggestDeletePage(destination: widget.destination)),
+                  );
+                },
+                label: const Text(
+                  'Suggest for Delete',
+                  style: TextStyle(
+                    fontSize: 17,
+                    color: Colors.white,
+                    letterSpacing: 3,
+                  ),
+                ),
+                icon: const Icon(
+                  Icons.delete_outline,
+                  color: Color.fromARGB(255, 97, 84, 158),
+                ),
+              ),
+              const SizedBox(height: 20),
+              const Text(
+                "Share your experience to help others",
+                textAlign: TextAlign.start,
+                style: TextStyle(
+                  fontSize: 15,
+                  color: Colors.white,
+                ),
+              ),
+              const SizedBox(height: 10),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  const SizedBox(width: 15),
+                  CircleAvatar(
+                    radius: 20,
+                    backgroundImage: NetworkImage(
+                      FirebaseAuth.instance.currentUser?.photoURL ?? '',
+                    ),
+                  ),
+                  const SizedBox(width: 10),
+                  FutureBuilder<double>(
+                    future: _userRatingFuture,
+                    builder: (context, snapshot) {
+                      if (snapshot.connectionState == ConnectionState.waiting) {
+                        return CircularProgressIndicator();
+                      } else if (snapshot.hasError) {
+                        return Text(
+                            'Error loading user rating: ${snapshot.error}');
+                      } else {
+                        double userRating = snapshot.data ?? 0.0;
+                        return custom_rating_bar.RatingBar(
+                          size: 30,
+                          alignment: Alignment.center,
+                          filledIcon: Icons.star,
+                          emptyIcon: Icons.star_border,
+                          emptyColor: Colors.white24,
+                          filledColor: const Color.fromARGB(255, 97, 84, 158),
+                          halfFilledColor:
+                              const Color.fromARGB(255, 186, 176, 228),
+                          onRatingChanged: _updateRating,
+                          initialRating: userRating,
+                          maxRating: 5,
+                        );
+                      }
+                    },
+                  ),
+                ],
+              ),
+              SizedBox(height: 20),
+            ],
+          )
         ],
       ),
     );

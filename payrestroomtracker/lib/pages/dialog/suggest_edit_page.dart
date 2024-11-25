@@ -76,97 +76,104 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
   }
 
 
-  Future<void> _submitEdit() async {
-      String costValue = dropdownValue == 'Pay Options'
-            ? 'with pay options' // Store 'Pay Options' directly
-            : '${_suggestedCostController.text}';
+Future<void> _submitEdit() async {
+  String costValue = dropdownValue == 'Pay Options'
+      ? 'with pay options' // Store 'Pay Options' directly
+      : (_suggestedCostController.text.isEmpty
+          ? _costController.text // If suggested cost is empty, use existing cost
+          : _suggestedCostController.text);
 
-    final suggestedData = {
-      'SuggestedName': _suggestedNameController.text,
-      'SuggestedCost': costValue,
-      'SuggestedLocation': _suggestedLocationController.text,
-      'ImageUrls': _imageUrls, // List of image URLs
-      'Position': GeoPoint(widget.destination.latitude,
-          widget.destination.longitude), // Geopoint for the restroom's location
-    };
+  final suggestedData = {
+    'SuggestedName': _suggestedNameController.text.isEmpty
+        ? _nameController.text // If suggested name is empty, use existing name
+        : _suggestedNameController.text,
+    'SuggestedCost': costValue,
+    'SuggestedLocation': _suggestedLocationController.text.isEmpty
+        ? _locationController.text // If suggested location is empty, use existing location
+        : _suggestedLocationController.text,
+    'ImageUrls': _imageUrls.isEmpty ? [] : _imageUrls, // Use existing image URLs if new images are empty
+    'Position': GeoPoint(widget.destination.latitude, widget.destination.longitude),
+  };
 
-    // Check if new images are uploaded and add them to Firestore
-    if (_newImages.isNotEmpty) {
-      for (var image in _newImages) {
-        await _uploadImageToStorage(
-            image); // Upload the new images to Firebase Storage
-      }
-    }
-
-    try {
-      // Add suggested data to Firestore
-      await FirebaseFirestore.instance
-          .collection('restroom_edit_suggestions')
-          .add(suggestedData);
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-            content: Text('Edit suggestion submitted successfully!')),
-      );
-
-      // Optionally, clear the form fields after submission
-      _suggestedNameController.clear();
-      _suggestedCostController.clear();
-      _suggestedLocationController.clear();
-      setState(() {
-        _imageUrls.clear();
-        _newImages.clear();
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error submitting suggestion: $e')),
-      );
+  // Check if new images are uploaded and add them to Firestore
+  if (_newImages.isNotEmpty) {
+    for (var image in _newImages) {
+      await _uploadImageToStorage(image); // Upload the new images to Firebase Storage
     }
   }
 
-  Future<void> _pickImage() async {
-    final picker = ImagePicker();
-    final pickedImages =
-        await picker.pickMultiImage(); // Allow multiple image selection
+  try {
+    // Add suggested data to Firestore
+    await FirebaseFirestore.instance.collection('restroom_edit_suggestions').add(suggestedData);
 
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('Edit suggestion submitted successfully!')),
+    );
+
+    // Optionally, clear the form fields after submission
+    _suggestedNameController.clear();
+    _suggestedCostController.clear();
+    _suggestedLocationController.clear();
+    setState(() {
+      _imageUrls.clear();
+      _newImages.clear();
+    });
+
+    // Close the current page and return to the previous one
+    Navigator.pop(context);
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error submitting suggestion: $e')),
+    );
+  }
+}
+
+
+
+Future<void> _pickImage() async {
+  final picker = ImagePicker();
+  final pickedImages = await picker.pickMultiImage(); // Allow multiple image selection
+
+  if (pickedImages.isNotEmpty) {
     for (var pickedFile in pickedImages) {
       _uploadImageToStorage(File(pickedFile.path));
     }
   }
+}
 
-  Future<void> _uploadImageToStorage(File image) async {
-    final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-    final storageRef =
-        FirebaseStorage.instance.ref().child('suggested_images/$fileName');
+Future<void> _uploadImageToStorage(File image) async {
+  final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+  final storageRef = FirebaseStorage.instance.ref().child('suggested_images/$fileName');
 
-    try {
-      await storageRef.putFile(image);
-      final imageUrl = await storageRef.getDownloadURL();
+  try {
+    await storageRef.putFile(image);
+    final imageUrl = await storageRef.getDownloadURL();
 
-      setState(() {
-        _imageUrls.add(imageUrl); // Add uploaded image URL to the list
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error uploading image: $e')),
-      );
-    }
+    setState(() {
+      _imageUrls.add(imageUrl); // Add uploaded image URL to the list
+    });
+  } catch (e) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(content: Text('Error uploading image: $e')),
+    );
   }
+}
 
-  Future<void> _deleteImage(int index, {bool isNewImage = false}) async {
-    if (isNewImage) {
-      // Remove new image
-      setState(() {
-        _newImages.removeAt(index);
-      });
-    } else {
-      // Remove existing image (Firestore logic can be added here if needed)
-      setState(() {
-        _imageUrls.removeAt(index);
-      });
-      // Optionally delete from Firebase Storage if linked
-    }
+Future<void> _deleteImage(int index, {bool isNewImage = false}) async {
+  if (isNewImage) {
+    // Remove new image
+    setState(() {
+      _newImages.removeAt(index);
+    });
+  } else {
+    // Remove existing image (Firestore logic can be added here if needed)
+    setState(() {
+      _imageUrls.removeAt(index);
+    });
+    // Optionally delete from Firebase Storage if linked
   }
+}
+
 
   @override
   Widget build(BuildContext context) {
@@ -321,6 +328,7 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
                   minimumSize: const Size(double.infinity, 50),
                 ),
                 onPressed: _submitEdit,
+                
                 child: const Text(
                   'Submit Edit Suggestion',
                   style: TextStyle(fontSize: 16, color: Colors.white),

@@ -57,6 +57,7 @@ class MapPageState extends State<MapPage> {
   String? _displayPaidRestroomName;
   String? estimatedTime;
   String? distanceInMiles;
+  String? _displayName;
 
   bool hasBeenListed = false;
   bool isVisible = false;
@@ -82,6 +83,8 @@ class MapPageState extends State<MapPage> {
   String imagePath = 'assets/paid_CR_Tag.png';
 
   int _backPressCount = 0;
+
+  final TextEditingController _usernameController = TextEditingController();
 
   // Initializes and configures the main tutorial with TutorialCoachMark
   void initMainTutorial() {
@@ -165,6 +168,37 @@ class MapPageState extends State<MapPage> {
       return AssetImage('assets/car.png');
     } else {
       return AssetImage('assets/jeep.jpg');
+    }
+  }
+
+    // Update the user display name
+  Future<void> _updateUsername(String newUsername) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        await user.updateDisplayName(newUsername);
+        await user.reload();
+        setState(() {
+          _displayName = newUsername;
+        });
+        await _updateFirestoreUsername(newUsername);
+      } catch (e) {
+        print("Error updating username: $e");
+      }
+    }
+  }
+
+  // Update the username in Firestore
+  Future<void> _updateFirestoreUsername(String newUsername) async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      try {
+        final userDoc =
+            FirebaseFirestore.instance.collection('users').doc(user.uid);
+        await userDoc.update({'displayName': newUsername});
+      } catch (e) {
+        print("Error updating Firestore username: $e");
+      }
     }
   }
 
@@ -262,6 +296,33 @@ class MapPageState extends State<MapPage> {
     getLocationUpdates();
     _loadCustomMarkerIcon();
     _loadMarkers();
+    _fetchUserDisplayName();
+  }
+
+   // Fetch the user display name from Firebase
+  Future<void> _fetchUserDisplayName() async {
+    User? user = FirebaseAuth.instance.currentUser;
+    if (user != null) {
+      setState(() {
+        _displayName = user.displayName ?? "Username";
+      });
+    }
+  }
+
+    // Log out the user and navigate to the intro page
+  Future<void> _logout(BuildContext context) async {
+    try {
+      await FirebaseAuth.instance.signOut();
+      Navigator.pushNamedAndRemoveUntil(
+          context, '/userloginpage', (route) => false);
+    } catch (e) {
+      // Handle the error accordingly, e.g., show a dialog
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error logging out: $e'),
+        ),
+      );
+    }
   }
 
   void _onMarkerTap(MarkerId markerId) {
@@ -744,10 +805,17 @@ class MapPageState extends State<MapPage> {
     });
   }
 
-  
+   bool _isDrawerOpen = false;
+
+  void _toggleDrawer() {
+    setState(() {
+      _isDrawerOpen = !_isDrawerOpen;
+    });
+  }
 
   @override
   Widget build(BuildContext context) {
+    final screenWidth = MediaQuery.of(context).size.width;
     // Adds a marker for the user's current location if it's available
     if (_currentP != null) {
       print(_currentP);
@@ -778,6 +846,47 @@ class MapPageState extends State<MapPage> {
             markers: _markers,
             polylines: _polylines,
           ),
+ Padding(
+            padding: EdgeInsets.only(top: 60, left: 30, right: 10),
+            child: FractionallySizedBox(
+              widthFactor: 0.94, // Adjust the factor for different widths
+
+              child: Container(
+                decoration: BoxDecoration(
+                  color: Color.fromARGB(255, 149, 134, 225),
+                  borderRadius: BorderRadius.circular(30),
+                  border: Border.all(
+                    color: const Color.fromARGB(
+                        111, 255, 255, 255), // Set the border color here
+                    width: 2, // Adjust the border width as needed
+                  ), // Adjust the radius value as needed
+                ),
+                height: 30,
+                width: 300,
+                margin: const EdgeInsets.only(top: 30, left: 0),
+                child: Align(
+                  alignment: Alignment.center,
+                  child: Text(
+                    _currentAddress ?? 'Fetching user location...',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 13.0,
+                      fontWeight: FontWeight.w500,
+                      overflow: TextOverflow.ellipsis,
+                      color: Colors.white,
+                    ),
+                    maxLines: 2,
+                  ),
+                ),
+              ),
+            ),
+          ),
+         
+        
+      
+    
+  
+
           Visibility(
             visible: isMainTutorialDisplayed,
             child: Positioned(
@@ -828,50 +937,14 @@ class MapPageState extends State<MapPage> {
                     backgroundImage: NetworkImage(
                         FirebaseAuth.instance.currentUser?.photoURL ?? ''),
                   ),
-                 onPressed: () {
-                    showDialog(
-                        context: context,
-                        builder: (context) => UserProfileDrawer());
-                  },
+                 onPressed: _toggleDrawer,
                 ),
               ],
             ),
           ),
-          Padding(
-            padding: EdgeInsets.only(top: 60, left: 30, right: 10),
-            child: FractionallySizedBox(
-              widthFactor: 0.94, // Adjust the factor for different widths
 
-              child: Container(
-                decoration: BoxDecoration(
-                  color: Color.fromARGB(255, 149, 134, 225),
-                  borderRadius: BorderRadius.circular(30),
-                  border: Border.all(
-                    color: const Color.fromARGB(
-                        111, 255, 255, 255), // Set the border color here
-                    width: 2, // Adjust the border width as needed
-                  ), // Adjust the radius value as needed
-                ),
-                height: 30,
-                width: 300,
-                margin: const EdgeInsets.only(top: 30, left: 0),
-                child: Align(
-                  alignment: Alignment.center,
-                  child: Text(
-                    _currentAddress ?? 'Fetching user location...',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 13.0,
-                      fontWeight: FontWeight.w500,
-                      overflow: TextOverflow.ellipsis,
-                      color: Colors.white,
-                    ),
-                    maxLines: 2,
-                  ),
-                ),
-              ),
-            ),
-          ),
+         
+         
           Padding(
               padding: EdgeInsets.only(top: 95, left: 10, right: 10),
               child: Visibility(
@@ -1074,6 +1147,8 @@ class MapPageState extends State<MapPage> {
                           ),
                         ])),
               )),
+            
+         
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
@@ -1117,11 +1192,136 @@ class MapPageState extends State<MapPage> {
                       _showFindNearestPayToilet();
                     },
                   ),
+                  
                 ),
               ),
+
+              
               const SizedBox(height: 30),
             ],
-          )
+          ),
+           if (_isDrawerOpen)
+            GestureDetector(
+              onTap: _toggleDrawer, // Closes the drawer when tapped outside
+              child: Container(
+                color: Colors.black.withOpacity(0.3), // Semi-transparent overlay
+              ),
+            ),
+
+          AnimatedPositioned(
+            duration: const Duration(milliseconds: 300),
+            curve: Curves.easeInOut,
+            right: _isDrawerOpen ? 0 : -screenWidth * 0.7,
+            top: 0,
+            bottom: 0,
+            child: Container(
+              width: screenWidth * 0.7,
+              color: Colors.white,
+              child: Column(
+                children: [
+                  Container(
+                    padding: const EdgeInsets.only(top: 50, left: 20, right: 10, bottom: 20),
+                    color: Color.fromARGB(
+                          255, 149, 134, 225),
+                    child: Row(
+                      children:  [
+                        CircleAvatar(
+                    radius: 30, // Adjust the size of the circle
+                    backgroundImage: FirebaseAuth.instance.currentUser?.photoURL != null
+                        ? NetworkImage(FirebaseAuth.instance.currentUser!.photoURL!)
+                        : AssetImage("assets/default_profile_image.png") as ImageProvider,
+                    backgroundColor: Colors.transparent,
+                  ),
+                        SizedBox(width: 15),
+                        Column(
+                          
+                          children: [
+                            Text(
+                              'Welcome',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 20,
+                                fontWeight: FontWeight.bold,
+                              ),),
+
+                                                  Text(
+                              '$_displayName',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 16,
+                              ),
+                              maxLines: 2, // Set the maximum number of lines
+                              overflow: TextOverflow.ellipsis, // This will add "..." if the text overflows
+                            )
+                          ]
+                        )
+                      ],
+                    ),
+                  ),
+                  ListTile(
+            title: Text('Change Username', style: TextStyle( color: Color.fromARGB(255, 97, 84, 158),)),
+            leading: Icon(Icons.edit_rounded , color: Color.fromARGB(255, 97, 84, 158),),
+            onTap: () {
+              showDialog(
+                context: context,
+                builder: (context) => AlertDialog(
+                  title: const Text(
+                    'Change Username',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(
+                      fontSize: 17,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 97, 84, 158),
+                    ),
+                  ),
+                content: TextField(
+                    textAlign: TextAlign.center,
+                    controller: _usernameController,
+                    decoration: InputDecoration(
+                      hintText: _displayName ?? 'Enter new username', // Use the current username
+                    ),
+                  ),
+                  actions: <Widget>[
+                    TextButton(
+                      child: const Text('Cancel'),
+                      onPressed: () {
+                        Navigator.of(context).pop();
+                      },
+                    ),
+                    TextButton(
+                      child: const Text('Update'),
+                      onPressed: () {
+                        String newUsername = _usernameController.text.trim();
+                        if (newUsername.isNotEmpty) {
+                          _updateUsername(newUsername);
+                          Navigator.of(context).pop();
+                        }
+                      },
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+                ListTile(
+            title: Text('Suggest a Paid Restroom', style: TextStyle(color: Color.fromARGB(255, 97, 84, 158))),
+            leading: Icon(Icons.add_circle_rounded, color: Color.fromARGB(255, 97, 84, 158)),
+            onTap: () {
+              Navigator.pushNamed(context, '/suggestPaidRestroomPage');
+            },
+          ),
+          ListTile(
+            title: Text('Logout', style: TextStyle(color: Color.fromARGB(255, 97, 84, 158))),
+            leading: Icon(Icons.logout_rounded, color: Color.fromARGB(255, 97, 84, 158)),
+            onTap: () {
+              _logout(context);
+            },
+          ),
+                 
+                ],
+              ),
+            ),
+          ),
         ])));
   }
 
