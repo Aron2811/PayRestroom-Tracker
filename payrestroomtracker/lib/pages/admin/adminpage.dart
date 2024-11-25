@@ -35,7 +35,7 @@ class Badge extends StatelessWidget {
                 minWidth: 20,
                 minHeight: 20,
               ),
-              child: Center(
+                child: Center(
                 child: Text(
                   '$badgeCount', //display badge count
                   style: TextStyle(
@@ -44,6 +44,7 @@ class Badge extends StatelessWidget {
                     fontWeight: FontWeight.bold,
                   ),
                 ),
+                
               ),
             ),
           ),

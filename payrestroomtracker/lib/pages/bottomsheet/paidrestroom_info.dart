@@ -14,10 +14,6 @@ import 'package:flutter_rating_bar/flutter_rating_bar.dart';
 import 'package:flutter_button/pages/user/street_view.dart';
 
 class PaidRestroomInfo extends StatefulWidget {
-  final Function(LatLng, String) drawRouteToDestination;
-  final LatLng destination;
-  final Function toggleVisibility;
-
   const PaidRestroomInfo({
     Key? key,
     required this.drawRouteToDestination,
@@ -25,15 +21,19 @@ class PaidRestroomInfo extends StatefulWidget {
     required this.toggleVisibility,
   }) : super(key: key);
 
+  final LatLng destination;
+  final Function(LatLng, String) drawRouteToDestination;
+  final Function toggleVisibility;
+
   @override
   _PaidRestroomInfoState createState() => _PaidRestroomInfoState();
 }
 
 class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
-  late Future<double> _userRatingFuture;
-  String _name = "Paid Restroom Name";
-  String _location = "Location";
   String _cost = "Cost";
+  String _location = "Location";
+  String _name = "Paid Restroom Name";
+  late Future<double> _userRatingFuture;
 
   @override
   void initState() {
@@ -55,176 +55,6 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
 
     // Calculate average rating
     return totalRating / ratings.length;
-  }
-
-  // Updates or adds a rating for a location and calculates the average rating.
-  void _updateRating(double newRating) async {
-    try {
-      final user = FirebaseAuth.instance.currentUser;
-      if (user == null) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text('You need to be logged in to rate'),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          ),
-        );
-        return;
-      }
-
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('Tags')
-          .where('position',
-              isEqualTo: GeoPoint(
-                  widget.destination.latitude, widget.destination.longitude))
-          .get();
-
-      if (querySnapshot.docs.isNotEmpty) {
-        final doc = querySnapshot.docs.first;
-        final ratings = doc.data().containsKey('ratings')
-            ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
-            : [];
-
-        // Check if the user has already rated this location
-        final userRatingIndex =
-            ratings.indexWhere((rating) => rating['userId'] == user.uid);
-
-        if (userRatingIndex != -1) {
-          // Update existing rating
-          ratings[userRatingIndex]['rating'] = newRating;
-          ratings[userRatingIndex]['timestamp'] = Timestamp.now();
-        } else {
-          // Add new rating
-          ratings.add({
-            'userId': user.uid,
-            'rating': newRating,
-            'timestamp': Timestamp.now(),
-          });
-        }
-
-        // Calculate average rating
-        double averageRatingValue = calculateAverageRating(ratings);
-
-        await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
-          'ratings': ratings,
-          'averageRating': averageRatingValue,
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Rating updated successfully"),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          ),
-        );
-      } else {
-        // Create a new marker document with the rating
-        await FirebaseFirestore.instance.collection('Tags').add({
-          'position': GeoPoint(
-              widget.destination.latitude, widget.destination.longitude),
-          'ratings': [
-            {
-              'userId': user.uid,
-              'rating': newRating,
-              'timestamp': Timestamp.now(),
-            }
-          ],
-          'averageRating': newRating, // Initial average rating
-          'Rating': newRating.toString(), // Store the rating as a string
-        });
-
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text("Rating added successfully"),
-            backgroundColor: Color.fromARGB(255, 115, 99, 183),
-          ),
-        );
-      }
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Failed to update rating: $e'),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),
-        ),
-      );
-    }
-  }
-
-  //gets the restroom name from the database
-  Future<void> _fetchPaidRestroomName() async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position',
-            isEqualTo: GeoPoint(
-                widget.destination.latitude, widget.destination.longitude))
-        .get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final data = doc.data();
-      final fetchedName = data['Name'] as String? ?? "Paid Restroom Name";
-
-      setState(() {
-        _name = fetchedName;
-      });
-    }
-  }
-
-  //gets the restroom location from the database
-  Future<void> _fetchPaidRestroomLocation() async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position',
-            isEqualTo: GeoPoint(
-                widget.destination.latitude, widget.destination.longitude))
-        .get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final data = doc.data();
-      final fetchedLocation = data['Location'] as String? ?? "Location";
-
-      setState(() {
-        _location = fetchedLocation;
-      });
-    }
-  }
-
-  //gets the restroom cost from the database
-  Future<void> _fetchPaidRestroomCost() async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position',
-            isEqualTo: GeoPoint(
-                widget.destination.latitude, widget.destination.longitude))
-        .get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final data = doc.data();
-      final fetchedCost = data['Cost'] as String? ?? "Cost";
-
-      setState(() {
-        _cost = fetchedCost;
-      });
-    }
-  }
-
-  //gets the image of the restroom from the database
-  Future<List<String>> _fetchImageUrls() async {
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags')
-        .where('position',
-            isEqualTo: GeoPoint(
-                widget.destination.latitude, widget.destination.longitude))
-        .get();
-
-    if (querySnapshot.docs.isNotEmpty) {
-      final doc = querySnapshot.docs.first;
-      final data = doc.data();
-      final imageUrls = data['ImageUrls'] as List<dynamic>? ?? [];
-      return List<String>.from(imageUrls);
-    } else {
-      return [];
-    }
   }
 
   //gets the user rating in the restroom if there is any from the data base
@@ -459,7 +289,8 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
             ),
           ),
           const SizedBox(height: 30),
-         FutureBuilder<List<String>>(
+        
+        FutureBuilder<List<String>>(
             // Displays a carousel of images fetched from a future with loading and error handling.
             future: _fetchImageUrls(),
             builder: (context, snapshot) {
@@ -479,19 +310,19 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                     radius: const Radius.circular(10),
                     images: snapshot.data!.map((url) {
                       return GestureDetector(
-                        onTap: () {
-                          // Open the image in full screen with zoom functionality when tapped
-                          Navigator.push(
-                            context,
-                            MaterialPageRoute(
-                              builder: (context) => FullScreenImageGallery(
-                                
-                                imageUrls:
-                                    snapshot.data!, // Pass the list of URLs
-                                initialIndex: snapshot.data!
-                                    .indexOf(url), // Set the initial index
-                              ),
-                            ),
+                            onTap: () {
+                              // Open the image in full screen with zoom functionality when tapped
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => FullScreenImageGallery(
+                                    
+                                    imageUrls:
+                                        snapshot.data!, // Pass the list of URLs
+                                    initialIndex: snapshot.data!
+                                        .indexOf(url), // Set the initial index
+                                  ),
+                                ),
                           );
                         },
                         child: ClipRRect(
@@ -621,6 +452,176 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
       ),
     );
   }
+
+  // Updates or adds a rating for a location and calculates the average rating.
+  void _updateRating(double newRating) async {
+    try {
+      final user = FirebaseAuth.instance.currentUser;
+      if (user == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('You need to be logged in to rate'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+        return;
+      }
+
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Tags')
+          .where('position',
+              isEqualTo: GeoPoint(
+                  widget.destination.latitude, widget.destination.longitude))
+          .get();
+
+      if (querySnapshot.docs.isNotEmpty) {
+        final doc = querySnapshot.docs.first;
+        final ratings = doc.data().containsKey('ratings')
+            ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
+            : [];
+
+        // Check if the user has already rated this location
+        final userRatingIndex =
+            ratings.indexWhere((rating) => rating['userId'] == user.uid);
+
+        if (userRatingIndex != -1) {
+          // Update existing rating
+          ratings[userRatingIndex]['rating'] = newRating;
+          ratings[userRatingIndex]['timestamp'] = Timestamp.now();
+        } else {
+          // Add new rating
+          ratings.add({
+            'userId': user.uid,
+            'rating': newRating,
+            'timestamp': Timestamp.now(),
+          });
+        }
+
+        // Calculate average rating
+        double averageRatingValue = calculateAverageRating(ratings);
+
+        await FirebaseFirestore.instance.collection('Tags').doc(doc.id).update({
+          'ratings': ratings,
+          'averageRating': averageRatingValue,
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Rating updated successfully"),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+      } else {
+        // Create a new marker document with the rating
+        await FirebaseFirestore.instance.collection('Tags').add({
+          'position': GeoPoint(
+              widget.destination.latitude, widget.destination.longitude),
+          'ratings': [
+            {
+              'userId': user.uid,
+              'rating': newRating,
+              'timestamp': Timestamp.now(),
+            }
+          ],
+          'averageRating': newRating, // Initial average rating
+          'Rating': newRating.toString(), // Store the rating as a string
+        });
+
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text("Rating added successfully"),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
+        );
+      }
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Failed to update rating: $e'),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
+      );
+    }
+  }
+
+  //gets the restroom name from the database
+  Future<void> _fetchPaidRestroomName() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedName = data['Name'] as String? ?? "Paid Restroom Name";
+
+      setState(() {
+        _name = fetchedName;
+      });
+    }
+  }
+
+  //gets the restroom location from the database
+  Future<void> _fetchPaidRestroomLocation() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedLocation = data['Location'] as String? ?? "Location";
+
+      setState(() {
+        _location = fetchedLocation;
+      });
+    }
+  }
+
+  //gets the restroom cost from the database
+  Future<void> _fetchPaidRestroomCost() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final fetchedCost = data['Cost'] as String? ?? "Cost";
+
+      setState(() {
+        _cost = fetchedCost;
+      });
+    }
+  }
+
+  //gets the image of the restroom from the database
+  Future<List<String>> _fetchImageUrls() async {
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags')
+        .where('position',
+            isEqualTo: GeoPoint(
+                widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    if (querySnapshot.docs.isNotEmpty) {
+      final doc = querySnapshot.docs.first;
+      final data = doc.data();
+      final imageUrls = data['ImageUrls'] as List<dynamic>? ?? [];
+      return List<String>.from(imageUrls);
+    } else {
+      return [];
+    }
+  }
 }
 
 // Creates a slide transition route from the bottom of the screen to the center.
@@ -645,14 +646,14 @@ Route _createRoute(Widget child) {
 }
 
 class FullScreenImageGallery extends StatelessWidget {
-  final List<String> imageUrls;
-  final int initialIndex;
-
   const FullScreenImageGallery({
     Key? key,
     required this.imageUrls,
     required this.initialIndex,
   }) : super(key: key);
+
+  final List<String> imageUrls;
+  final int initialIndex;
 
   @override
   Widget build(BuildContext context) {

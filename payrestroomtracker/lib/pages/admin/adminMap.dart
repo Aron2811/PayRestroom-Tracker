@@ -8,7 +8,6 @@ import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_button/pages/dialog/admin_add_info.dart';
-import 'package:badges/badges.dart';
 
 class AdminMap extends StatefulWidget {
   const AdminMap({Key? key, required this.username, required this.report})
@@ -18,6 +17,52 @@ class AdminMap extends StatefulWidget {
 
   @override
   State<AdminMap> createState() => AdminMapState();
+}
+
+
+// Custom Badge Widget
+class Badge extends StatelessWidget {
+  final Widget child;
+  final int badgeCount;
+
+  Badge({required this.child, required this.badgeCount});
+
+  @override
+  Widget build(BuildContext context) {
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        child,
+        if (badgeCount > 0)
+          Positioned(
+            right: 0,
+            top: -5,
+            child: Container(
+              padding: EdgeInsets.all(4),
+              decoration: BoxDecoration(
+                color: const Color.fromARGB(255, 226, 99, 90),
+                shape: BoxShape.circle,
+              ),
+              constraints: BoxConstraints(
+                minWidth: 20,
+                minHeight: 20,
+              ),
+                child: Center(
+                child: Text(
+                  '$badgeCount', //display badge count
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 12,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }
 
 class AdminMapState extends State<AdminMap> {
@@ -64,56 +109,18 @@ class AdminMapState extends State<AdminMap> {
     );
   }
 
-  Future<void> _showSuggestedRestrooms(BuildContext context) async {
-  final restrooms = await FirebaseFirestore.instance
-      .collection('suggested_restrooms') // Replace with your collection name
-      .get();
+  void _navigateToRestroom(QueryDocumentSnapshot restroom) {
+    final GeoPoint position = restroom['position'];
+    final LatLng target = LatLng(position.latitude, position.longitude);
 
-  final restroomList = restrooms.docs.map((doc) => doc).toList();
+    mapController.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(target: target, zoom: 16),
+      ),
+    );
+  }
 
-  showModalBottomSheet(
-    context: context,
-    builder: (context) {
-      return Container(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Text(
-              'Suggested Restrooms',
-              style: TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.bold,
-              ),
-            ),
-            const SizedBox(height: 10),
-            Expanded(
-              child: ListView.builder(
-                itemCount: restroomList.length,
-                itemBuilder: (context, index) {
-                  final doc = restroomList[index];
-                  final data = doc.data() as Map<String, dynamic>;
-
-                  return ListTile(
-                    title: Text(data['name'] ?? 'Unnamed Restroom'),
-                    subtitle: Text(data['location'] ?? 'No description provided.'),
-                    trailing: const Icon(Icons.arrow_forward),
-                    onTap: () {
-                      Navigator.pop(context); // Close the bottom sheet
-  showRestroomDetails(context, doc.id, data); // Show details dialog
-                    },
-                  );
-                },
-              ),
-            ),
-          ],
-        ),
-      );
-    },
-  );
-}
-
- Future<void> showRestroomDetails(
+  Future<void> showRestroomDetails(
     BuildContext context, String docId, Map<String, dynamic> data) {
   return showDialog(
     context: context,
@@ -177,7 +184,7 @@ class AdminMapState extends State<AdminMap> {
           TextButton(
             onPressed: () {
               acceptRestroom(context, data);
-            
+              rejectRestroom(docId);
               Navigator.pop(context);
             },
             child: const Text('Accept'),
@@ -194,6 +201,8 @@ class AdminMapState extends State<AdminMap> {
     },
   );
 }
+
+
 
 Future<void> rejectRestroom(String docId) async {
   await FirebaseFirestore.instance
@@ -285,6 +294,117 @@ Future<void> acceptRestroom(BuildContext context, Map<String, dynamic> data) asy
     }
   }
 }
+
+
+
+Future<void> _showSuggestedRestrooms(BuildContext context) async {
+  final restrooms = await FirebaseFirestore.instance
+      .collection('suggested_restrooms') // Replace with your collection name
+      .get();
+
+  final restroomList = restrooms.docs.map((doc) => doc).toList();
+
+  showModalBottomSheet(
+    context: context,
+    isScrollControlled: true, 
+   // Allow the bottom sheet to take up more height
+    builder: (context) {
+      return DefaultTabController(
+        length: 3, // Two tabs: Suggested Restrooms and Suggested Details
+        child: Container(
+          padding: const EdgeInsets.all(16.0),
+          color: Color.fromARGB(255, 115, 99, 183), // Set the background color to purple
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.center, // Center content horizontally
+            children: [
+              const SizedBox(height: 10),
+              const Padding(
+                padding: EdgeInsets.only(top: 30),
+                child: Text(
+                'User Suggestions and Removals',
+                style: TextStyle(
+                  fontSize: 20,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.white, // Text color is white
+                ),
+                textAlign: TextAlign.center, // Center the title
+              )),
+              const SizedBox(height: 20),
+              // TabBar for switching between Suggested Restrooms and Suggested Details
+              const TabBar(
+                tabs: [
+                  Tab(
+                    child: Text(
+                      'Restroom\nSuggestion',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Tab(
+                    child: Text(
+                      'Restroom\nEdit Requests',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  Tab(
+                    child: Text(
+                      'Restroom\nRemoval',
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                ],
+                indicatorColor: Colors.white,
+                labelColor: Colors.white,
+                unselectedLabelColor: Colors.white54,
+              ),
+              const SizedBox(height: 10),
+              Expanded(
+                child: TabBarView(
+                  children: [
+                    // Suggested Restrooms Tab
+                    ListView.builder(
+                      itemCount: restroomList.length,
+                      itemBuilder: (context, index) {
+                        final doc = restroomList[index];
+                        final data = doc.data() as Map<String, dynamic>;
+
+                        return ListTile(
+                          title: Text(data['name'] ?? 'Unnamed Restroom', style: TextStyle(color: Colors.white)),
+                          subtitle: Text(data['location'] ?? 'No description provided.', style: TextStyle(color: Colors.white)),
+                          trailing: const Icon(Icons.arrow_forward, color: Colors.white),
+                          onTap: () {
+                            Navigator.pop(context); // Close the bottom sheet
+                            showRestroomDetails(context, doc.id, data); // Show details dialog
+                          },
+                        );
+                      },
+                    ),
+                    // Suggested Details Tab - You can modify this as per your needs
+                    Center(
+                      child: Text(
+                        'Suggested Details content here.',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+
+                    //Removal
+                    Center(
+                      child: Text(
+                        'Removal List here.',
+                        style: TextStyle(color: Colors.white),
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+    },
+  );
+}
+
+
 
   // Loads markers from Firestore and converts them into a set of Marker objects for the map.
   Future<Set<Marker>> loadMarkersFromPrefs() async {
@@ -416,11 +536,45 @@ Future<void> acceptRestroom(BuildContext context, Map<String, dynamic> data) asy
           ),
           backgroundColor: const Color.fromARGB(255, 97, 84, 158),
           centerTitle: true,
-            actions: [
-            IconButton(
-              icon: const Icon(Icons.assignment_outlined, color: Colors.white),
-              onPressed: () => _showSuggestedRestrooms(context),
+          actions: [
+          Align(
+              alignment: Alignment.center,
+              child: StreamBuilder<QuerySnapshot>(
+                stream: FirebaseFirestore.instance
+                    .collection('suggested_restrooms')
+                    .snapshots(),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator(); // Loading indicator
+                  }
+
+                  if (snapshot.hasError) {
+                    return const Icon(Icons.error_outline, color: Colors.red); // Error indicator
+                  }
+
+                  if (snapshot.hasData) {
+                    int count = snapshot.data!.docs.length; // Total document count
+                    return Padding(
+                        padding: const EdgeInsets.only(right: 10.0), // Right padding
+                        child:Badge(
+                      badgeCount: count, // Pass the badge count to the custom Badge widget
+                      child: IconButton(
+                        icon: const Icon(Icons.assignment_outlined, color: Colors.white),
+                        onPressed: () {
+                          _showSuggestedRestrooms(context);
+                        },
+                      ),
+                    ));
+                  }
+
+                  // Fallback for no data
+                  return const Icon(Icons.assignment_outlined, color: Colors.grey);
+                },
+              ),
             ),
+
+
+
           ],
         ),
         body: Stack(
@@ -572,7 +726,7 @@ Future<void> acceptRestroom(BuildContext context, Map<String, dynamic> data) asy
     }
   }
 
-   // Adds a marker to the map, updates the markers list, and saves it to Firestore and SharedPreferences.
+  // Adds a marker to the map, updates the markers list, and saves it to Firestore and SharedPreferences.
   void addMarker(LatLng latLng, MarkerId markerId_) {
     Marker newMarker = Marker(
       markerId: markerId_,
@@ -602,6 +756,7 @@ Future<void> acceptRestroom(BuildContext context, Map<String, dynamic> data) asy
       'position': GeoPoint(latLng.latitude, latLng.longitude),
     });
   }
+
   // Creates a custom route with a slide transition from the bottom to the top.
   Route _createRoute(Widget child) {
     return PageRouteBuilder(
