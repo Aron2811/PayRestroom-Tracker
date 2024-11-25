@@ -179,7 +179,7 @@ class AdminMapState extends State<AdminMap> {
               acceptRestroom(context, data);
             
               Navigator.pop(context);
-            },f
+            },
             child: const Text('Accept'),
           ),
           TextButton(
