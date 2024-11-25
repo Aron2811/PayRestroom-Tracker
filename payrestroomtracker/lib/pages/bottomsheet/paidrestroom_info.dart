@@ -13,6 +13,7 @@ import 'package:flutter_button/pages/user/street_view.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:flutter_button/pages/dialog/suggest_edit_page.dart';
+import 'package:flutter_button/pages/dialog/suggest_delete_page.dart';
 
 class PaidRestroomInfo extends StatefulWidget {
   final Function(LatLng, String) drawRouteToDestination;
@@ -27,10 +28,10 @@ class PaidRestroomInfo extends StatefulWidget {
   }) : super(key: key);
 
   @override
-  _MapPaidRestroomInfoState createState() => _MapPaidRestroomInfoState();
+  _PaidRestroomInfoState  createState() => _PaidRestroomInfoState();
 }
 
-class _MapPaidRestroomInfoState extends State<PaidRestroomInfo> {
+class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
   late Future<double> _userRatingFuture;
   String _name = "Paid Restroom Name";
   String _location = "Location";
@@ -616,10 +617,10 @@ class _MapPaidRestroomInfoState extends State<PaidRestroomInfo> {
                   ),
                 ),
                 onPressed: () {
-                  // Navigator.push(
-                  //   context,
-                  //   _createRoute(SuggestDeletePage(destination: widget.destination)),
-                  // );
+                  Navigator.push(
+                    context,
+                    _createRoute(SuggestDeletePage(destination: widget.destination)),
+                  );
                 },
                 label: const Text(
                   'Suggest for Delete',
