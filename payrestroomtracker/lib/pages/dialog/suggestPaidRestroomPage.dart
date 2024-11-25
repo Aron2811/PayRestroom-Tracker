@@ -144,7 +144,7 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Paid Restroom Name', // Replace this with the appropriate label
+                        'Paid Restroom Name ', // Replace this with the appropriate label
                         style: TextStyle(
                           fontSize: 15,
                           color: Color.fromARGB(255, 115, 99, 183),
@@ -163,13 +163,24 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
               ),
               const SizedBox(height: 15),
               // Button to select location
-              ElevatedButton(
+            ElevatedButton(
                 onPressed: _openMap,
-                child: Text(
-                  _selectedLocation != null
-                      ? 'Location Selected: ${_selectedLocation!.latitude.toStringAsFixed(2)}, ${_selectedLocation!.longitude.toStringAsFixed(2)}'
-                      : 'Select Location',
-                  style: const TextStyle(fontSize: 16, color: Colors.white),
+                child: RichText(
+                  text: TextSpan(
+                    children: [
+                      TextSpan(
+                        text: _selectedLocation != null
+                            ? 'Location Selected: ${_selectedLocation!.latitude.toStringAsFixed(2)}, ${_selectedLocation!.longitude.toStringAsFixed(2)}'
+                            : 'Select Location ', // Normal text
+                        style: const TextStyle(fontSize: 15, color: Colors.white),
+                      ),
+                      if (_selectedLocation == null) // Add asterisk only if location is not selected
+                        TextSpan(
+                          text: ' *', // Asterisk text
+                          style: TextStyle(fontSize: 16, color: Color.fromARGB(255, 236, 154, 148),), // Set the asterisk color here
+                        ),
+                    ],
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: const Color.fromARGB(255, 97, 84, 158),
@@ -185,7 +196,7 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Description', // Replace this with the appropriate label
+                        'Description ', // Replace this with the appropriate label
                         style: TextStyle(
                           fontSize: 15,
                           color: Color.fromARGB(255, 115, 99, 183),
@@ -294,7 +305,7 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
               ],
             ),
               const SizedBox(height: 20),
-             if (_images.isNotEmpty) ...[
+            if (_images.isNotEmpty) ...[
                 Wrap(
                   children: _images.map((image) {
                     return Padding(
@@ -317,10 +328,24 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
                     backgroundColor: const Color.fromARGB(255, 97, 84, 158),
                     padding: const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                   ),
-                  child: const Text(
-                    'Pick Image',
-                    style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
-                  ),
+                  child:  Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(
+                      'Pick Images ', // Replace this with the appropriate label
+                      style: TextStyle(
+                        fontSize: 15,
+                        color: Colors.white
+                      ),
+                    ),
+                    Text(
+                      '*',
+                      style: TextStyle(
+                        color: Color.fromARGB(255, 236, 154, 148),
+                      ),
+                    ),
+                  ],
+                ),
                 ),
               ),
               const SizedBox(height: 20),

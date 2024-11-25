@@ -11,7 +11,6 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 import 'dart:async';
 import 'package:flutter/services.dart';
-import 'package:flutter_button/pages/dialog/user_profile_dialog.dart';
 import 'package:flutter_button/pages/bottomsheet/recommendation_list.dart';
 import 'package:flutter_button/algo/Astar.dart';
 import 'package:flutter_button/pages/admin/adminMap.dart';
