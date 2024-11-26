@@ -12,8 +12,8 @@ analyzer:
     # Ignore specific warnings
     # Ignore 'avoid_print' warning
     avoid_print: ignore
-analyzer:
-  errors:
+
+
     unused_element: ignore
 include: package:flutter_lints/flutter.yaml
 
