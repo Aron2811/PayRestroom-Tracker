@@ -245,7 +245,7 @@ class _AdminDashboardState extends State<AdminDashboard>
   @override
   Widget build(BuildContext context) {
     return DefaultTabController(
-      length: 3,
+      length: 4,
       child: Scaffold(
         appBar: AppBar(
           title: const Text(
@@ -264,8 +264,9 @@ class _AdminDashboardState extends State<AdminDashboard>
                 Tab(
                   text: "All Users",
                 ),
-                Tab(text: "Banned Users"),
-                Tab(text: "Hold Users"),
+                Tab(text: "Banned\nUsers"),
+                Tab(text: "Hold\nUsers"),
+                Tab(text: "Hold\nUsers"),
               ]),
           backgroundColor: const Color.fromARGB(255, 97, 84, 158),
         ),

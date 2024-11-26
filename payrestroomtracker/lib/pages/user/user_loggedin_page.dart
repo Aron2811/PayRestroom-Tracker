@@ -160,15 +160,7 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
         ));
   }
 
-  void _navigateToReportUser() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) =>
-            const ReportUser(), // Navigate to your ReportUser class
-      ),
-    );
-  }
+ 
 
   // back button function
   Future<bool> onBackButtonPressed() async {
@@ -361,37 +353,6 @@ class _UserLoggedInPageState extends State<UserLoggedInPage> {
 
                     const SizedBox(
                       height: 10,
-                    ),
-
-                    // Report a User Button
-                    ElevatedButton.icon(
-                      style: ElevatedButton.styleFrom(
-                        enableFeedback: false,
-                        backgroundColor:
-                            const Color.fromARGB(255, 226, 223, 229),
-                        minimumSize: const Size(200, 50),
-                        shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(50),
-                        ),
-                        side: const BorderSide(
-                          color: Color.fromARGB(255, 115, 99, 183),
-                          width: 4.0,
-                        ),
-                        textStyle: const TextStyle(
-                          fontSize: 20,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                      onPressed: _navigateToReportUser,
-                      label: const Text("Report a User"),
-                      icon: const Icon(
-                        Icons.report_problem,
-                        color: Color.fromARGB(255, 97, 84, 158),
-                      ),
-                    ),
-
-                    const SizedBox(
-                      height: 50,
                     ),
 
                     // for showing the tutorial dialog

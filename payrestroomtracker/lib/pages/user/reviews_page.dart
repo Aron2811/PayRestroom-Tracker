@@ -1,5 +1,6 @@
 import 'package:custom_rating_bar/custom_rating_bar.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_button/pages/user/report_user.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:readmore/readmore.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -19,6 +20,7 @@ class ReviewsPage extends StatefulWidget {
 
 class _ReviewsPageState extends State<ReviewsPage> {
   List<Map<String, dynamic>> reviews = []; // List to store reviews
+  String restroomName = '';
 
   @override
   void initState() {
@@ -37,11 +39,14 @@ class _ReviewsPageState extends State<ReviewsPage> {
 
     if (querySnapshot.docs.isNotEmpty) {
       final doc = querySnapshot.docs.first;
+
       final ratings = doc.data().containsKey('ratings')
           ? List<Map<String, dynamic>>.from(doc['ratings'] as List<dynamic>)
           : [];
 
       setState(() {
+        restroomName = doc['Name'] ??
+            'Unknown Restroom'; // Update class-level restroomName
         reviews = List<Map<String, dynamic>>.from(doc.data()['comments'] ?? []);
 
         reviews.forEach((review) {
@@ -53,6 +58,8 @@ class _ReviewsPageState extends State<ReviewsPage> {
 
           review['rating'] = userRating['rating'];
         });
+        // pass restroomName when navigating
+        this.restroomName = restroomName;
       });
     } else {
       setState(() {
@@ -67,12 +74,26 @@ class _ReviewsPageState extends State<ReviewsPage> {
     return DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);
   }
 
+  // Navigate to the ReportUser page with username and restroom name
+  void _navigateToReportUser(
+      String userName, String location, String restroomName) {
+    Navigator.push(
+      context,
+      MaterialPageRoute(
+        builder: (context) => ReportUser(
+          userName: userName, // Pass the username
+          location: location, // Pass the location
+          restroomName: restroomName, // Pass the restroom name (Location)
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      home: 
-      Scaffold(
+      home: Scaffold(
         appBar: AppBar(
           title: const Text(
             'Reviews',
@@ -97,10 +118,10 @@ class _ReviewsPageState extends State<ReviewsPage> {
                         final review = reviews[index];
                         double rating = review['rating'] ??
                             0.0; // Use user's rating if available
-      
+
                         // Print the value of rating before displaying it
                         print('Rating for review ${index + 1}: $rating');
-      
+
                         return Padding(
                           padding: const EdgeInsets.all(20.0),
                           child: Column(
@@ -123,6 +144,22 @@ class _ReviewsPageState extends State<ReviewsPage> {
                                       color: Color.fromARGB(255, 97, 84, 158),
                                     ),
                                   ),
+                                  const SizedBox(width: 160),
+                                  IconButton(
+                                    icon: Icon(
+                                      Icons.report_problem_outlined,
+                                      color: Color.fromARGB(255, 97, 84, 158),
+                                    ),
+                                    onPressed: () {
+                                      _navigateToReportUser(
+                                        review['userName'] ??
+                                            'Anonymous', // Pass the userName
+                                        review['Location'] ??
+                                            'Unknown Location', // Pass the location
+                                        restroomName, // Pass restroomName
+                                      );
+                                    },
+                                  ),
                                 ],
                               ),
                               const SizedBox(height: 10),
@@ -136,8 +173,8 @@ class _ReviewsPageState extends State<ReviewsPage> {
                                     emptyColor: Colors.grey,
                                     filledColor:
                                         const Color.fromARGB(255, 97, 84, 158),
-                                    halfFilledColor:
-                                        const Color.fromARGB(255, 186, 176, 228),
+                                    halfFilledColor: const Color.fromARGB(
+                                        255, 186, 176, 228),
                                     initialRating:
                                         rating, // Display user's rating if available
                                     maxRating: 5,
@@ -148,7 +185,8 @@ class _ReviewsPageState extends State<ReviewsPage> {
                                         ? _formatTimestamp(
                                             review['timestamp'] as Timestamp)
                                         : '',
-                                    style: Theme.of(context).textTheme.bodyMedium,
+                                    style:
+                                        Theme.of(context).textTheme.bodyMedium,
                                   ),
                                 ],
                               ),
