@@ -68,7 +68,7 @@ class _ReviewsPageState extends State<ReviewsPage> {
     }
   }
 
-  //formats the timestamp to dd, MM, yyyy, hh:mm, a
+  
   String _formatTimestamp(Timestamp timestamp) {
     DateTime dateTime = timestamp.toDate();
     return DateFormat('dd MMM yyyy, hh:mm a').format(dateTime);

@@ -242,7 +242,7 @@ class _AdminDashboardState extends State<AdminDashboard>
     );
   }
 
-  // Method to show a blank dialog for now
+  
   void _showBlankUserDialog(String displayName, String userId) async {
     // Get the user's document from Firestore
     DocumentSnapshot userDoc =
@@ -258,12 +258,12 @@ class _AdminDashboardState extends State<AdminDashboard>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.white, // White background for the content
+          backgroundColor: Colors.white, 
           shape: RoundedRectangleBorder(
             borderRadius:
-                BorderRadius.circular(16.0), // Rounded corners for the dialog
+                BorderRadius.circular(16.0), 
           ),
-          elevation: 10, // Shadow effect to make the dialog stand out
+          elevation: 10, 
           title: Padding(
             padding: const EdgeInsets.only(bottom: 10.0),
             child: Text(
@@ -271,7 +271,7 @@ class _AdminDashboardState extends State<AdminDashboard>
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.deepPurple, // Bold deep purple title
+                color: Colors.deepPurple, 
               ),
             ),
           ),

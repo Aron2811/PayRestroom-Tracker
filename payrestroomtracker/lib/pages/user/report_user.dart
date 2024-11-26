@@ -230,7 +230,7 @@ class _ReportUserState extends State<ReportUser> {
   Future<Map<String, dynamic>?> _fetchUserDetails(String userId) async {
     try {
       final userDoc = await FirebaseFirestore.instance
-          .collection('users') // Ensure this is the correct collection
+          .collection('users') 
           .doc(userId) // Use the userId as document ID
           .get();
 
@@ -245,7 +245,7 @@ class _ReportUserState extends State<ReportUser> {
     return null;
   }
 
-  // Create a button for each reason with deep purple default and green clicked state
+ 
   Widget _buildReasonButton(String reason) {
     return ElevatedButton(
       onPressed: () {
