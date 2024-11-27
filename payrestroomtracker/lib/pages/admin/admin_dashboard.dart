@@ -190,7 +190,7 @@ class _AdminDashboardState extends State<AdminDashboard>
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Color.fromARGB(255, 132, 119, 197),
-          title: const Text('Set Hold Duration'),
+          title: const Text('Set Hold Duration',style: TextStyle(color: Colors.white,), textAlign: TextAlign.center,),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
