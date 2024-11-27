@@ -26,7 +26,7 @@ class _SuggestDeletePageState extends State<SuggestDeletePage> {
     _fetchRestroomName();
   }
 
-    Future<void> _pickImage() async {
+  Future<void> _pickImage() async {
     final picker = ImagePicker();
     final pickedFile = await picker.pickImage(source: ImageSource.gallery);
 
@@ -37,91 +37,95 @@ class _SuggestDeletePageState extends State<SuggestDeletePage> {
     }
   }
 
- Future<void> _fetchRestroomName() async {
-  try {
-    // Query the Firestore collection for the restroom using the GeoPoint
-    final querySnapshot = await FirebaseFirestore.instance
-        .collection('Tags') // Assuming 'Tags' contains restroom data
-        .where('position',
-            isEqualTo: GeoPoint(
-                widget.destination.latitude, widget.destination.longitude))
-        .get();
+  Future<void> _fetchRestroomName() async {
+    try {
+      // Query the Firestore collection for the restroom using the GeoPoint
+      final querySnapshot = await FirebaseFirestore.instance
+          .collection('Tags') // Assuming 'Tags' contains restroom data
+          .where('position',
+              isEqualTo: GeoPoint(
+                  widget.destination.latitude, widget.destination.longitude))
+          .get();
 
-    // Check if the query returned any documents
-    if (querySnapshot.docs.isNotEmpty) {
-      // Fetch the 'name' field from the first document
+      // Check if the query returned any documents
+      if (querySnapshot.docs.isNotEmpty) {
+        // Fetch the 'name' field from the first document
+        setState(() {
+          _restroomName = querySnapshot.docs.first['Name'];
+        });
+      } else {
+        // Handle case where no matching restroom is found
+        setState(() {
+          _restroomName = 'Restroom not found';
+        });
+      }
+    } catch (e) {
+      // Handle any errors that occur during the query
       setState(() {
-        _restroomName = querySnapshot.docs.first['Name'];
+        _restroomName = 'Error fetching restroom name';
       });
-    } else {
-      // Handle case where no matching restroom is found
-      setState(() {
-        _restroomName = 'Restroom not found';
-      });
+      print('Error fetching restroom name: $e');
     }
-  } catch (e) {
-    // Handle any errors that occur during the query
-    setState(() {
-      _restroomName = 'Error fetching restroom name';
-    });
-    print('Error fetching restroom name: $e');
-  }
-}
-
-
-Future<void> _submitSuggestion() async {
-  if (_reasonController.text.isEmpty || _selectedImage == null) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Please provide a reason and upload an image.'),
-      ),
-    );
-    return;
   }
 
-  try {
-    // Generate a unique identifier based on the current timestamp
-    String uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
-    String imagePath = 'business_permits/$uniqueId.jpg';
+  Future<void> _submitSuggestion() async {
+    if (_reasonController.text.isEmpty || _selectedImage == null) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Please provide a reason and upload an image.'),
+          backgroundColor: Colors.red,
+        ),
+      );
+      return;
+    }
 
-    // Upload image to Firebase Storage
-    TaskSnapshot uploadTask = await FirebaseStorage.instance
-        .ref(imagePath)
-        .putFile(_selectedImage!);
-    String imageUrl = await uploadTask.ref.getDownloadURL();
+    try {
+      // Generate a unique identifier based on the current timestamp
+      String uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
+      String imagePath = 'business_permits/$uniqueId.jpg';
 
-    // Save suggestion data to Firestore
-    await FirebaseFirestore.instance.collection('restroom_delete_suggestions').add({
-      'reason': _reasonController.text,
-      'image': imageUrl,
-      'destination': GeoPoint(widget.destination.latitude, widget.destination.longitude),
-      'restroomName': _restroomName,
-      'timestamp': FieldValue.serverTimestamp(),
-    });
+      // Upload image to Firebase Storage
+      TaskSnapshot uploadTask = await FirebaseStorage.instance
+          .ref(imagePath)
+          .putFile(_selectedImage!);
+      String imageUrl = await uploadTask.ref.getDownloadURL();
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Suggestion submitted successfully!'),
-      ),
-    );
+      // Save suggestion data to Firestore
+      await FirebaseFirestore.instance
+          .collection('restroom_delete_suggestions')
+          .add({
+        'reason': _reasonController.text,
+        'image': imageUrl,
+        'destination':
+            GeoPoint(widget.destination.latitude, widget.destination.longitude),
+        'restroomName': _restroomName,
+        'timestamp': FieldValue.serverTimestamp(),
+      });
 
-    Navigator.pop(context);
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Error submitting suggestion: $e'),
-      ),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Suggestion submitted successfully!'),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+        ),
+      );
+
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Error submitting suggestion: $e'),
+          backgroundColor:Colors.red,
+        ),
+      );
+    }
   }
-}
-
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Removal Request'),
+        title: const Text('Removal Request',
+            style: TextStyle(color: Colors.white)),
         backgroundColor: const Color.fromARGB(255, 97, 84, 158),
       ),
       body: Padding(
@@ -138,12 +142,28 @@ Future<void> _submitSuggestion() async {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Reason for Deletion',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                children: [
+                  const Text(
+                    'Reason for Deletion',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 5,
+                  ),
+                  Text(
+                    '*',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 236, 154,
+                          148), // Makes the asterisk red for visibility
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               TextField(
@@ -157,12 +177,28 @@ Future<void> _submitSuggestion() async {
                 ),
               ),
               const SizedBox(height: 20),
-              const Text(
-                'Upload Business Permit Image',
-                style: TextStyle(
-                  fontSize: 16,
-                  fontWeight: FontWeight.bold,
-                ),
+              Row(
+                children: [
+                  const Text(
+                    'Upload Business Permit Image',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                  SizedBox(
+                    width: 5,
+                  ),
+                  Text(
+                    '*',
+                    style: TextStyle(
+                      fontSize: 16,
+                      fontWeight: FontWeight.bold,
+                      color: Color.fromARGB(255, 236, 154,
+                          148), // Makes the asterisk red for visibility
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               GestureDetector(
@@ -182,7 +218,7 @@ Future<void> _submitSuggestion() async {
                         child: const Icon(
                           Icons.add_photo_alternate,
                           size: 50,
-                          color: Colors.grey,
+                          color: Color.fromARGB(255, 156, 144, 207),
                         ),
                       )
                     : Container(
@@ -221,7 +257,7 @@ Future<void> _submitSuggestion() async {
               ),
               const SizedBox(height: 20),
               const Text(
-                'Only the owner of the paid restroom can delete the restroom. Please upload a valid image of your business permit for verification.',
+                'Note: Only the owner of the paid restroom can delete the restroom. Please upload a valid image of your business permit for verification.',
                 style: TextStyle(
                   fontSize: 14,
                   color: Colors.grey,

@@ -193,6 +193,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                 const EdgeInsets.symmetric(horizontal: 25.0),
                             child: TextField(
                               controller: _usernameController,
+                              style: const TextStyle(color: Colors.white),
                               decoration: InputDecoration(
                                 prefixIcon: const Icon(Icons.person_2_rounded,
                                     color: Color.fromARGB(255, 211, 203, 252)),
@@ -231,6 +232,7 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                 const EdgeInsets.symmetric(horizontal: 25.0),
                             child: TextField(
                               controller: _passwordController,
+                              style: const TextStyle(color: Colors.white),
                               obscureText: _isObscured,
                               decoration: InputDecoration(
                                 prefixIcon: const Icon(
@@ -238,8 +240,8 @@ class _AdminLoginPageState extends State<AdminLoginPage> {
                                     color: Color.fromARGB(255, 211, 203, 252)),
                                 suffixIcon: IconButton(
                                   icon: _isObscured
-                                      ? const Icon(Icons.visibility_off_rounded)
-                                      : const Icon(Icons.visibility),
+                                      ? const Icon(Icons.visibility_off_rounded, color: Colors.white,)
+                                      : const Icon(Icons.visibility, color: Colors.white,),
                                   onPressed: () {
                                     setState(() {
                                       _isObscured = !_isObscured;

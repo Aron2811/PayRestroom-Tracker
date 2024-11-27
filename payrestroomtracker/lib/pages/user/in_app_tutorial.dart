@@ -61,7 +61,7 @@ List<TargetFocus> components({
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: <Widget>[
                         Text(
-                          "You can click this to view the nearest paid restroom.",
+                          "You can click this to view the paid restroom recommendations.",
                           textAlign: TextAlign.center,
                           style: TextStyle(fontSize: 20, color: Colors.white),
                         ),

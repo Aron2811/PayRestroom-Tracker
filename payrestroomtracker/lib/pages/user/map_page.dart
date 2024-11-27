@@ -171,7 +171,7 @@ class MapPageState extends State<MapPage> {
     }
   }
 
-    // Update the user display name
+  // Update the user display name
   Future<void> _updateUsername(String newUsername) async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -299,7 +299,7 @@ class MapPageState extends State<MapPage> {
     _fetchUserDisplayName();
   }
 
-   // Fetch the user display name from Firebase
+  // Fetch the user display name from Firebase
   Future<void> _fetchUserDisplayName() async {
     User? user = FirebaseAuth.instance.currentUser;
     if (user != null) {
@@ -309,7 +309,7 @@ class MapPageState extends State<MapPage> {
     }
   }
 
-    // Log out the user and navigate to the intro page
+  // Log out the user and navigate to the intro page
   Future<void> _logout(BuildContext context) async {
     try {
       await FirebaseAuth.instance.signOut();
@@ -805,7 +805,7 @@ class MapPageState extends State<MapPage> {
     });
   }
 
-   bool _isDrawerOpen = false;
+  bool _isDrawerOpen = false;
 
   void _toggleDrawer() {
     setState(() {
@@ -846,7 +846,7 @@ class MapPageState extends State<MapPage> {
             markers: _markers,
             polylines: _polylines,
           ),
- Padding(
+          Padding(
             padding: EdgeInsets.only(top: 60, left: 30, right: 10),
             child: FractionallySizedBox(
               widthFactor: 0.94, // Adjust the factor for different widths
@@ -881,12 +881,6 @@ class MapPageState extends State<MapPage> {
               ),
             ),
           ),
-         
-        
-      
-    
-  
-
           Visibility(
             visible: isMainTutorialDisplayed,
             child: Positioned(
@@ -937,14 +931,11 @@ class MapPageState extends State<MapPage> {
                     backgroundImage: NetworkImage(
                         FirebaseAuth.instance.currentUser?.photoURL ?? ''),
                   ),
-                 onPressed: _toggleDrawer,
+                  onPressed: _toggleDrawer,
                 ),
               ],
             ),
           ),
-
-         
-         
           Padding(
               padding: EdgeInsets.only(top: 95, left: 10, right: 10),
               child: Visibility(
@@ -1147,8 +1138,6 @@ class MapPageState extends State<MapPage> {
                           ),
                         ])),
               )),
-            
-         
           Row(
             mainAxisAlignment: MainAxisAlignment.center,
             children: <Widget>[
@@ -1192,22 +1181,19 @@ class MapPageState extends State<MapPage> {
                       _showFindNearestPayToilet();
                     },
                   ),
-                  
                 ),
               ),
-
-              
               const SizedBox(height: 30),
             ],
           ),
-           if (_isDrawerOpen)
+          if (_isDrawerOpen)
             GestureDetector(
               onTap: _toggleDrawer, // Closes the drawer when tapped outside
               child: Container(
-                color: Colors.black.withOpacity(0.3), // Semi-transparent overlay
+                color:
+                    Colors.black.withOpacity(0.3), // Semi-transparent overlay
               ),
             ),
-
           AnimatedPositioned(
             duration: const Duration(milliseconds: 300),
             curve: Curves.easeInOut,
@@ -1220,104 +1206,149 @@ class MapPageState extends State<MapPage> {
               child: Column(
                 children: [
                   Container(
-                    padding: const EdgeInsets.only(top: 50, left: 20, right: 10, bottom: 20),
-                    color: Color.fromARGB(
-                          255, 149, 134, 225),
+                    padding: const EdgeInsets.only(
+                        top: 50, left: 20, right: 10, bottom: 20),
+                    color: Color.fromARGB(255, 149, 134, 225),
                     child: Row(
-                      children:  [
+                      children: [
                         CircleAvatar(
-                    radius: 30, // Adjust the size of the circle
-                    backgroundImage: FirebaseAuth.instance.currentUser?.photoURL != null
-                        ? NetworkImage(FirebaseAuth.instance.currentUser!.photoURL!)
-                        : AssetImage("assets/default_profile_image.png") as ImageProvider,
-                    backgroundColor: Colors.transparent,
-                  ),
+                          radius: 30, // Adjust the size of the circle
+                          backgroundImage: FirebaseAuth
+                                      .instance.currentUser?.photoURL !=
+                                  null
+                              ? NetworkImage(
+                                  FirebaseAuth.instance.currentUser!.photoURL!)
+                              : AssetImage("assets/default_profile_image.png")
+                                  as ImageProvider,
+                          backgroundColor: Colors.transparent,
+                        ),
                         SizedBox(width: 15),
-                        Column(
-                          
-                          children: [
-                            Text(
-                              'Welcome',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 20,
-                                fontWeight: FontWeight.bold,
-                              ),),
-
-                                                  Text(
-                              '$_displayName',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 16,
-                              ),
-                              maxLines: 2, // Set the maximum number of lines
-                              overflow: TextOverflow.ellipsis, // This will add "..." if the text overflows
-                            )
-                          ]
-                        )
+                        Column(children: [
+                          Text(
+                            'Welcome',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 20,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                          Text(
+                            '$_displayName',
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontSize: 16,
+                            ),
+                            maxLines: 2, // Set the maximum number of lines
+                            overflow: TextOverflow
+                                .ellipsis, // This will add "..." if the text overflows
+                          )
+                        ])
                       ],
                     ),
                   ),
                   ListTile(
-            title: Text('Change Username', style: TextStyle( color: Color.fromARGB(255, 97, 84, 158),)),
-            leading: Icon(Icons.edit_rounded , color: Color.fromARGB(255, 97, 84, 158),),
-            onTap: () {
-              showDialog(
-                context: context,
-                builder: (context) => AlertDialog(
-                  title: const Text(
-                    'Change Username',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.bold,
+                    minTileHeight: 60,
+                    title: Text('Change Username',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 97, 84, 158),
+                        )),
+                    leading: Icon(
+                      Icons.edit_rounded,
                       color: Color.fromARGB(255, 97, 84, 158),
                     ),
+                    onTap: () {
+                      showDialog(
+                        context: context,
+                        builder: (context) => AlertDialog(
+                          title: const Text(
+                            'Change Username',
+                            textAlign: TextAlign.center,
+                            style: TextStyle(
+                              fontSize: 17,
+                              fontWeight: FontWeight.bold,
+                              color: Color.fromARGB(255, 97, 84, 158),
+                            ),
+                          ),
+                          content: TextField(
+                            textAlign: TextAlign.center,
+                            controller: _usernameController,
+                            decoration: InputDecoration(
+                              hintText: _displayName ??
+                                  'Enter new username', // Use the current username
+                            ),
+                          ),
+                          actions: <Widget>[
+                            TextButton(
+                              child: const Text('Cancel'),
+                              onPressed: () {
+                                Navigator.of(context).pop();
+                              },
+                            ),
+                            TextButton(
+                              child: const Text('Update'),
+                              onPressed: () {
+                                String newUsername =
+                                    _usernameController.text.trim();
+                                if (newUsername.isNotEmpty) {
+                                  _updateUsername(newUsername);
+                                  Navigator.of(context).pop();
+                                }
+                              },
+                            ),
+                          ],
+                        ),
+                      );
+                    },
                   ),
-                content: TextField(
-                    textAlign: TextAlign.center,
-                    controller: _usernameController,
-                    decoration: InputDecoration(
-                      hintText: _displayName ?? 'Enter new username', // Use the current username
-                    ),
+                  Divider(
+                    color: Colors.grey.shade300,
+                    endIndent: 10,
+                    indent: 10,
                   ),
-                  actions: <Widget>[
-                    TextButton(
-                      child: const Text('Cancel'),
-                      onPressed: () {
-                        Navigator.of(context).pop();
-                      },
+                  ListTile(
+                    title: Text('Suggest a Paid Restroom',
+                        style:
+                            TextStyle(color: Color.fromARGB(255, 97, 84, 158))),
+                    leading: Icon(Icons.add_circle_rounded,
+                        color: Color.fromARGB(255, 97, 84, 158)),
+                    onTap: () {
+                      Navigator.pushNamed(context, '/suggestPaidRestroomPage');
+                    },
+                  ),
+                    Divider(
+                    color: Colors.grey.shade300,
+                    endIndent: 10,
+                    indent: 10,
+                  ),
+                  ListTile(
+                    title: Text(
+                      'Add Your Paid Restroom Business',
+                      style: TextStyle(color: Color.fromARGB(255, 97, 84, 158)),
                     ),
-                    TextButton(
-                      child: const Text('Update'),
-                      onPressed: () {
-                        String newUsername = _usernameController.text.trim();
-                        if (newUsername.isNotEmpty) {
-                          _updateUsername(newUsername);
-                          Navigator.of(context).pop();
-                        }
-                      },
+                    leading: Icon(
+                      Icons.business_rounded,
+                      color: Color.fromARGB(255, 97, 84, 158),
                     ),
-                  ],
-                ),
-              );
-            },
-          ),
-                ListTile(
-            title: Text('Suggest a Paid Restroom', style: TextStyle(color: Color.fromARGB(255, 97, 84, 158))),
-            leading: Icon(Icons.add_circle_rounded, color: Color.fromARGB(255, 97, 84, 158)),
-            onTap: () {
-              Navigator.pushNamed(context, '/suggestPaidRestroomPage');
-            },
-          ),
-          ListTile(
-            title: Text('Logout', style: TextStyle(color: Color.fromARGB(255, 97, 84, 158))),
-            leading: Icon(Icons.logout_rounded, color: Color.fromARGB(255, 97, 84, 158)),
-            onTap: () {
-              _logout(context);
-            },
-          ),
-                 
+                    onTap: () {
+                      Navigator.pushNamed(context, '/terms&pol');
+                    },
+                  ),
+                    Divider(
+                    color: Colors.grey.shade300,
+                    endIndent: 10,
+                    indent: 10,
+                  ),
+                  ListTile(
+                    title: Text('Logout',
+                        style:
+                            TextStyle(color: Color.fromARGB(255, 97, 84, 158))),
+                    leading: Icon(Icons.logout_rounded,
+                        color: Color.fromARGB(255, 97, 84, 158)),
+                    onTap: () {
+                      _logout(context);
+                    },
+                  ),
+                  
                 ],
               ),
             ),

@@ -65,122 +65,139 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
         });
       } else {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Restroom not found!')),
+          const SnackBar(content: Text('Restroom not found!'),
+          backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
         );
       }
     } catch (e) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error fetching data: $e')),
+        SnackBar(content: Text('Error fetching data: $e'),
+        backgroundColor: Colors.red,),
+        
       );
     }
   }
 
+  Future<void> _submitEdit() async {
+    String costValue = dropdownValue == 'Pay Options'
+        ? 'with pay options' // Store 'Pay Options' directly
+        : (_suggestedCostController.text.isEmpty
+            ? _costController
+                .text // If suggested cost is empty, use existing cost
+            : _suggestedCostController.text);
 
-Future<void> _submitEdit() async {
-  String costValue = dropdownValue == 'Pay Options'
-      ? 'with pay options' // Store 'Pay Options' directly
-      : (_suggestedCostController.text.isEmpty
-          ? _costController.text // If suggested cost is empty, use existing cost
-          : _suggestedCostController.text);
+    final suggestedData = {
+      'SuggestedName': _suggestedNameController.text.isEmpty
+          ? _nameController
+              .text // If suggested name is empty, use existing name
+          : _suggestedNameController.text,
+      'SuggestedCost': costValue,
+      'SuggestedLocation': _suggestedLocationController.text.isEmpty
+          ? _locationController
+              .text // If suggested location is empty, use existing location
+          : _suggestedLocationController.text,
+      'ImageUrls': _imageUrls.isEmpty
+          ? []
+          : _imageUrls, // Use existing image URLs if new images are empty
+      'Position':
+          GeoPoint(widget.destination.latitude, widget.destination.longitude),
+    };
 
-  final suggestedData = {
-    'SuggestedName': _suggestedNameController.text.isEmpty
-        ? _nameController.text // If suggested name is empty, use existing name
-        : _suggestedNameController.text,
-    'SuggestedCost': costValue,
-    'SuggestedLocation': _suggestedLocationController.text.isEmpty
-        ? _locationController.text // If suggested location is empty, use existing location
-        : _suggestedLocationController.text,
-    'ImageUrls': _imageUrls.isEmpty ? [] : _imageUrls, // Use existing image URLs if new images are empty
-    'Position': GeoPoint(widget.destination.latitude, widget.destination.longitude),
-  };
+    // Check if new images are uploaded and add them to Firestore
+    if (_newImages.isNotEmpty) {
+      for (var image in _newImages) {
+        await _uploadImageToStorage(
+            image); // Upload the new images to Firebase Storage
+      }
+    }
 
-  // Check if new images are uploaded and add them to Firestore
-  if (_newImages.isNotEmpty) {
-    for (var image in _newImages) {
-      await _uploadImageToStorage(image); // Upload the new images to Firebase Storage
+    try {
+      // Add suggested data to Firestore
+      await FirebaseFirestore.instance
+          .collection('restroom_edit_suggestions')
+          .add(suggestedData);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+            content: Text('Edit suggestion submitted successfully!'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+      );
+
+      // Optionally, clear the form fields after submission
+      _suggestedNameController.clear();
+      _suggestedCostController.clear();
+      _suggestedLocationController.clear();
+      setState(() {
+        _imageUrls.clear();
+        _newImages.clear();
+      });
+
+      // Close the current page and return to the previous one
+      Navigator.pop(context);
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error submitting suggestion: $e'),
+        backgroundColor: Colors.red,
+        ),
+      );
     }
   }
 
-  try {
-    // Add suggested data to Firestore
-    await FirebaseFirestore.instance.collection('restroom_edit_suggestions').add(suggestedData);
+  Future<void> _pickImage() async {
+    final picker = ImagePicker();
+    final pickedImages =
+        await picker.pickMultiImage(); // Allow multiple image selection
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Edit suggestion submitted successfully!')),
-    );
-
-    // Optionally, clear the form fields after submission
-    _suggestedNameController.clear();
-    _suggestedCostController.clear();
-    _suggestedLocationController.clear();
-    setState(() {
-      _imageUrls.clear();
-      _newImages.clear();
-    });
-
-    // Close the current page and return to the previous one
-    Navigator.pop(context);
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error submitting suggestion: $e')),
-    );
-  }
-}
-
-
-
-Future<void> _pickImage() async {
-  final picker = ImagePicker();
-  final pickedImages = await picker.pickMultiImage(); // Allow multiple image selection
-
-  if (pickedImages.isNotEmpty) {
-    for (var pickedFile in pickedImages) {
-      _uploadImageToStorage(File(pickedFile.path));
+    if (pickedImages.isNotEmpty) {
+      for (var pickedFile in pickedImages) {
+        _uploadImageToStorage(File(pickedFile.path));
+      }
     }
   }
-}
 
-Future<void> _uploadImageToStorage(File image) async {
-  final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
-  final storageRef = FirebaseStorage.instance.ref().child('suggested_images/$fileName');
+  Future<void> _uploadImageToStorage(File image) async {
+    final fileName = '${DateTime.now().millisecondsSinceEpoch}.jpg';
+    final storageRef =
+        FirebaseStorage.instance.ref().child('suggested_images/$fileName');
 
-  try {
-    await storageRef.putFile(image);
-    final imageUrl = await storageRef.getDownloadURL();
+    try {
+      await storageRef.putFile(image);
+      final imageUrl = await storageRef.getDownloadURL();
 
-    setState(() {
-      _imageUrls.add(imageUrl); // Add uploaded image URL to the list
-    });
-  } catch (e) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text('Error uploading image: $e')),
-    );
+      setState(() {
+        _imageUrls.add(imageUrl); // Add uploaded image URL to the list
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error uploading image: $e'),
+        backgroundColor: Colors.red,),
+      );
+    }
   }
-}
 
-Future<void> _deleteImage(int index, {bool isNewImage = false}) async {
-  if (isNewImage) {
-    // Remove new image
-    setState(() {
-      _newImages.removeAt(index);
-    });
-  } else {
-    // Remove existing image (Firestore logic can be added here if needed)
-    setState(() {
-      _imageUrls.removeAt(index);
-    });
-    // Optionally delete from Firebase Storage if linked
+  Future<void> _deleteImage(int index, {bool isNewImage = false}) async {
+    if (isNewImage) {
+      // Remove new image
+      setState(() {
+        _newImages.removeAt(index);
+      });
+    } else {
+      // Remove existing image (Firestore logic can be added here if needed)
+      setState(() {
+        _imageUrls.removeAt(index);
+      });
+      // Optionally delete from Firebase Storage if linked
+    }
   }
-}
-
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Suggest an Edit'),
-        backgroundColor: const Color.fromARGB(255, 148, 139, 192),
+        title: const Text('Suggest an Edit',
+            style: TextStyle(color: Colors.white)),
+        backgroundColor: const Color.fromARGB(255, 97, 84, 158),
       ),
       body: Padding(
         padding: const EdgeInsets.all(16.0),
@@ -197,11 +214,11 @@ Future<void> _deleteImage(int index, {bool isNewImage = false}) async {
               const SizedBox(height: 20),
               ElevatedButton.icon(
                 onPressed: _pickImage,
-                icon: const Icon(Icons.upload_file),
+                icon: const Icon(Icons.upload_file, color: Colors.white,),
                 label: const Text('Upload Images'),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: Colors.grey[400],
-                  foregroundColor: Colors.black,
+                  backgroundColor: Color.fromARGB(255, 97, 84, 158),
+                  foregroundColor: Colors.white,
                 ),
               ),
               const SizedBox(height: 20),
@@ -210,41 +227,30 @@ Future<void> _deleteImage(int index, {bool isNewImage = false}) async {
                 existingValue: _nameController.text,
                 suggestionController: _suggestedNameController,
               ),
-
+              const SizedBox(height: 20),
               Text('Cost (₱) (Existing):',
                   style: const TextStyle(fontWeight: FontWeight.bold)),
               const SizedBox(height: 5),
               TextField(
+                style: TextStyle(color: Colors.white),
                 controller: TextEditingController(text: _costController.text),
                 decoration: const InputDecoration(
                   border: OutlineInputBorder(),
                   filled: true,
-                  fillColor: Colors.grey,
+                  fillColor: Color.fromARGB(255, 156, 144, 207),
                 ),
                 enabled: false,
               ),
               const SizedBox(height: 20),
-
               Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Text(
-                        'Choose Options', // Replace this with the appropriate label
-                        style: TextStyle(
-                          fontSize: 15,
-                          color: Color.fromARGB(255, 115, 99, 183),
-                        ),
-                      ),
-                      Text(
-                        '*',
-                        style: TextStyle(
-                          color: Color.fromARGB(255, 236, 154, 148),
-                        ),
-                      ),
-                    ],
+                  Text(
+                    'Choose Options', // Replace this with the appropriate label
+                    style: TextStyle(
+                      fontSize: 15,
+                      color: Color.fromARGB(255, 115, 99, 183),
+                    ),
                   ),
                   RadioListTile<String>(
                     title: const Text(
@@ -274,23 +280,12 @@ Future<void> _deleteImage(int index, {bool isNewImage = false}) async {
                         ],
                         decoration: InputDecoration(
                           labelText: null,
-                          label: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Text(
-                                'Enter the Cost', // Replace this with the appropriate label
-                                style: TextStyle(
-                                  fontSize: 15,
-                                  color: Color.fromARGB(255, 115, 99, 183),
-                                ),
-                              ),
-                              Text(
-                                '*',
-                                style: TextStyle(
-                                  color: Color.fromARGB(255, 236, 154, 148),
-                                ),
-                              ),
-                            ],
+                          label: Text(
+                            'Enter the Cost', // Replace this with the appropriate label
+                            style: TextStyle(
+                              fontSize: 15,
+                              color: Color.fromARGB(255, 115, 99, 183),
+                            ),
                           ),
                           border: const OutlineInputBorder(),
                         ),
@@ -314,7 +309,6 @@ Future<void> _deleteImage(int index, {bool isNewImage = false}) async {
                   ),
                 ],
               ),
-
               const SizedBox(height: 20),
               _buildFieldWithSuggestion(
                 label: 'Location',
@@ -324,11 +318,10 @@ Future<void> _deleteImage(int index, {bool isNewImage = false}) async {
               const SizedBox(height: 30),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 148, 139, 192),
+                  backgroundColor: const Color.fromARGB(255, 97, 84, 158),
                   minimumSize: const Size(double.infinity, 50),
                 ),
                 onPressed: _submitEdit,
-                
                 child: const Text(
                   'Submit Edit Suggestion',
                   style: TextStyle(fontSize: 16, color: Colors.white),
@@ -404,14 +397,15 @@ Future<void> _deleteImage(int index, {bool isNewImage = false}) async {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text('$label (Existing):',
-            style: const TextStyle(fontWeight: FontWeight.bold)),
+            style: const TextStyle(fontWeight: FontWeight.bold,)),
         const SizedBox(height: 5),
         TextField(
+          style: TextStyle(color: Colors.white),
           controller: TextEditingController(text: existingValue),
           decoration: const InputDecoration(
             border: OutlineInputBorder(),
             filled: true,
-            fillColor: Colors.grey,
+            fillColor: Color.fromARGB(255, 156, 144, 207),
           ),
           enabled: false,
         ),

@@ -7,16 +7,18 @@ import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_button/pages/dialog/map_screen.dart';
 import 'package:flutter_button/pages/dialog/pesoformatter.dart';
+import 'package:flutter_button/pages/dialog/owners_info.dart';
 
-class SuggestPaidRestroomPage extends StatefulWidget {
-  const SuggestPaidRestroomPage({super.key});
+class OwnersPaidrestroomFillupform extends StatefulWidget {
+  const OwnersPaidrestroomFillupform({super.key});
 
   @override
-  _SuggestPaidRestroomPageState createState() =>
-      _SuggestPaidRestroomPageState();
+  OwnersPaidrestroomFillupformState createState() =>
+      OwnersPaidrestroomFillupformState();
 }
 
-class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
+class OwnersPaidrestroomFillupformState
+    extends State<OwnersPaidrestroomFillupform> {
   final TextEditingController _nameController = TextEditingController();
   final TextEditingController _descriptionController = TextEditingController();
   final TextEditingController _costController =
@@ -27,6 +29,7 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
   String _mapStyle = '';
   String dropdownValue = 'Cost';
   bool showCostField = true; // Variable to store map style
+  String destination = "";
 
   // Function to pick multiple images from gallery
   Future<void> _pickImages() async {
@@ -73,6 +76,8 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
         ? 'with pay options' // Store 'Pay Options' directly
         : '${_costController.text}';
 
+    destination = location;
+
     if (name.isNotEmpty &&
         description.isNotEmpty &&
         cost.isNotEmpty &&
@@ -81,7 +86,7 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
         // Upload images and get their URLs
         List<String> imageUrls = await _uploadImages();
 
-        await FirebaseFirestore.instance.collection('suggested_restrooms').add({
+        await FirebaseFirestore.instance.collection('owners_restrooms').add({
           'name': name,
           'location': description,
           'cost': cost,
@@ -91,13 +96,13 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
         });
 
         ScaffoldMessenger.of(context).showSnackBar(const SnackBar(
-            content: Text('Restroom suggestion submitted!',
+            content: Text('Your Business information Submitted!',
                 style: TextStyle(color: Colors.white)),
             backgroundColor: Color.fromARGB(255, 97, 84, 158)));
         Navigator.pop(context); // Close the suggestion page
       } catch (e) {
         ScaffoldMessenger.of(context).showSnackBar(SnackBar(
-            content: Text('Error submitting suggestion: $e',
+            content: Text('Error submitting business information: $e',
                 style: TextStyle(color: Colors.white)),
             backgroundColor: Colors.red));
       }
@@ -140,7 +145,7 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
     return Scaffold(
       appBar: AppBar(
         title: const Text(
-          'Suggest a Paid Restroom',
+          'Your Business Information',
           style: TextStyle(
             fontSize: 17,
             color: Colors.white,
@@ -162,7 +167,7 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
                     mainAxisSize: MainAxisSize.min,
                     children: [
                       Text(
-                        'Paid Restroom Name ', // Replace this with the appropriate label
+                        'Paid Restroom Name', // Replace this with the appropriate label
                         style: TextStyle(
                           fontSize: 15,
                           color: Color.fromARGB(255, 115, 99, 183),
@@ -212,7 +217,6 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
                       const EdgeInsets.symmetric(horizontal: 30, vertical: 15),
                 ),
               ),
-
               const SizedBox(height: 15),
               TextField(
                 controller: _descriptionController,
@@ -347,7 +351,6 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
                 ),
                 const SizedBox(height: 10),
               ],
-              // Button to pick an image
               Center(
                 child: ElevatedButton(
                   onPressed: _pickImages,
@@ -384,18 +387,26 @@ class _SuggestPaidRestroomPageState extends State<SuggestPaidRestroomPage> {
                   ),
                 ),
               ),
-
               const SizedBox(height: 20),
               Center(
                 child: ElevatedButton(
-                  onPressed: _submitSuggestion,
+                  onPressed: () {
+                    _submitSuggestion();
+                    Navigator.pushReplacement(
+                      context,
+                      MaterialPageRoute(
+                        builder: (context) => OwnersPaidRestroomFillupForm(
+                            destination: destination),
+                      ),
+                    );
+                  },
                   style: ElevatedButton.styleFrom(
                     backgroundColor: const Color.fromARGB(255, 97, 84, 158),
                     padding: const EdgeInsets.symmetric(
                         horizontal: 30, vertical: 15),
                   ),
                   child: const Text(
-                    'Submit Suggestion',
+                    'Submit Your Business',
                     style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.bold,
