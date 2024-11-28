@@ -19,6 +19,8 @@ class _SuggestDeletePageState extends State<SuggestDeletePage> {
   final TextEditingController _reasonController = TextEditingController();
   File? _selectedImage;
   String? _restroomName;
+  String? _tagId;
+
 
   @override
   void initState() {
@@ -37,36 +39,41 @@ class _SuggestDeletePageState extends State<SuggestDeletePage> {
     }
   }
 
-  Future<void> _fetchRestroomName() async {
-    try {
-      // Query the Firestore collection for the restroom using the GeoPoint
-      final querySnapshot = await FirebaseFirestore.instance
-          .collection('Tags') // Assuming 'Tags' contains restroom data
-          .where('position',
-              isEqualTo: GeoPoint(
-                  widget.destination.latitude, widget.destination.longitude))
-          .get();
 
-      // Check if the query returned any documents
-      if (querySnapshot.docs.isNotEmpty) {
-        // Fetch the 'name' field from the first document
-        setState(() {
-          _restroomName = querySnapshot.docs.first['Name'];
-        });
-      } else {
-        // Handle case where no matching restroom is found
-        setState(() {
-          _restroomName = 'Restroom not found';
-        });
-      }
-    } catch (e) {
-      // Handle any errors that occur during the query
+
+
+  Future<void> _fetchRestroomName() async {
+  try {
+    // Query the Firestore collection for the restroom using the GeoPoint
+    final querySnapshot = await FirebaseFirestore.instance
+        .collection('Tags') // Assuming 'Tags' contains restroom data
+        .where('position',
+            isEqualTo: GeoPoint(widget.destination.latitude, widget.destination.longitude))
+        .get();
+
+    // Check if the query returned any documents
+    if (querySnapshot.docs.isNotEmpty) {
+      // Fetch the 'name' and 'TagId' fields from the first document
       setState(() {
-        _restroomName = 'Error fetching restroom name';
+        _restroomName = querySnapshot.docs.first['Name'];
+        _tagId = querySnapshot.docs.first['TagId']; // Assuming 'TagId' exists in the document
       });
-      print('Error fetching restroom name: $e');
+    } else {
+      // Handle case where no matching restroom is found
+      setState(() {
+        _restroomName = 'Restroom not found';
+        _tagId = null; // Clear TagId if no restroom is found
+      });
     }
+  } catch (e) {
+    // Handle any errors that occur during the query
+    setState(() {
+      _restroomName = 'Error fetching restroom name';
+      _tagId = null; // Set TagId to null on error
+    });
+    print('Error fetching restroom name: $e');
   }
+}
 
   Future<void> _submitSuggestion() async {
     if (_reasonController.text.isEmpty || _selectedImage == null) {
@@ -81,8 +88,7 @@ class _SuggestDeletePageState extends State<SuggestDeletePage> {
 
     try {
       // Generate a unique identifier based on the current timestamp
-      String uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
-      String imagePath = 'business_permits/$uniqueId.jpg';
+      String imagePath = 'business_permits/$_tagId.jpg';
 
       // Upload image to Firebase Storage
       TaskSnapshot uploadTask = await FirebaseStorage.instance
@@ -99,6 +105,7 @@ class _SuggestDeletePageState extends State<SuggestDeletePage> {
         'destination':
             GeoPoint(widget.destination.latitude, widget.destination.longitude),
         'restroomName': _restroomName,
+        'TagId': _tagId,
         'timestamp': FieldValue.serverTimestamp(),
       });
 

@@ -1315,7 +1315,7 @@ class MapPageState extends State<MapPage> {
                       Navigator.pushNamed(context, '/suggestPaidRestroomPage');
                     },
                   ),
-                    Divider(
+                  Divider(
                     color: Colors.grey.shade300,
                     endIndent: 10,
                     indent: 10,
@@ -1333,10 +1333,23 @@ class MapPageState extends State<MapPage> {
                       Navigator.pushNamed(context, '/terms&pol');
                     },
                   ),
-                    Divider(
+                  Divider(
                     color: Colors.grey.shade300,
                     endIndent: 10,
                     indent: 10,
+                  ),
+                  ListTile(
+                    title: Text('Your Business',
+                        style:
+                            TextStyle(color: Color.fromARGB(255, 97, 84, 158))),
+                    leading: Icon(
+                      Icons.store_mall_directory, // Changed icon to represent a business
+                      color: Color.fromARGB(255, 97, 84, 158),
+                    ),
+                    onTap: () {
+                      // Navigate to the 'Your Business' page or handle action
+                      Navigator.pushNamed(context, '/ownerListBusiness');
+                    },
                   ),
                   ListTile(
                     title: Text('Logout',
@@ -1348,7 +1361,6 @@ class MapPageState extends State<MapPage> {
                       _logout(context);
                     },
                   ),
-                  
                 ],
               ),
             ),

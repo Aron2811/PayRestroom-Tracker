@@ -73,6 +73,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       Navigator.of(context).pop(false);
     }
   }
+
   //method for uploading an image
   Future<void> _uploadImages() async {
     final pickedFiles = await ImagePicker().pickMultiImage();
@@ -175,6 +176,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       }
     }
   }
+
   //method to fetch image urls in firestore
   Future<void> fetchImageUrls(BuildContext context) async {
     try {
@@ -204,6 +206,7 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       Navigator.of(context).pop(false);
     }
   }
+
   //method for deleting an image
   Future<void> _deleteImage(int index) async {
     try {
@@ -263,16 +266,19 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
       }
     }
   }
+
   //method to update restroom info
   Future<void> _updateRestroomInfo() async {
     if (_validateInputs()) {
       confirmPressed = true; // Set confirmation status
       Navigator.of(context).pop(confirmPressed);
       try {
+        // Reference to the 'Tags' document
         DocumentReference tagRef = FirebaseFirestore.instance
             .collection('Tags')
             .doc(widget.markerId.value);
 
+        // Form the new values
         String newName = nameController.text.isEmpty ? '' : nameController.text;
         String newLocation =
             locationController.text.isEmpty ? '' : locationController.text;
@@ -280,15 +286,31 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
             ? 'with pay options'
             : costController.text;
 
+        // Update the 'Tags' document with new values
         await tagRef.set(
           {
             'Name': newName,
             'Location': newLocation,
             'Cost': newCost,
-            
           },
           SetOptions(merge: true),
         );
+
+        // Reference to the 'accepted_restrooms' document
+        DocumentReference acceptedRestroomRef = FirebaseFirestore.instance
+            .collection('accepted_restrooms')
+            .doc(widget.markerId.value); // Use the same 'TagId' for document ID
+
+        // Update the 'accepted_restrooms' document with new values
+        await acceptedRestroomRef.set(
+          {
+            'name': newName,
+            'location': newLocation,
+            'cost': newCost,
+          },
+          SetOptions(merge: true),
+        );
+
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
@@ -446,6 +468,31 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
         ),
       ),
     );
+  }
+
+  Future<void> _deleteMarker(MarkerId markerId) async {
+    print("Deleting marker with ID: ${markerId.value}");
+
+    try {
+      // Remove the marker from Firestore in the 'Tags' collection
+
+      // Remove the corresponding document in 'restroom_delete_suggestions' where TagId matches markerId.value
+      var querySnapshot = await FirebaseFirestore.instance
+          .collection('restroom_edit_suggestions')
+          .where('TagId', isEqualTo: markerId.value)
+          .get();
+
+      print(
+          "Found ${querySnapshot.docs.length} documents to delete in restroom_delete_suggestions.");
+
+      // Delete each matching document
+      for (var doc in querySnapshot.docs) {
+        print("Deleting document with ID: ${doc.id}");
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      print("Error deleting marker: $e");
+    }
   }
 
   @override
@@ -667,52 +714,51 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
               _buildCarousel(),
               const SizedBox(height: 20),
               Align(
-              alignment: Alignment.center,
-              child: ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  enableFeedback: false,
-                  backgroundColor: Colors.white,
-                  minimumSize: const Size(100, 40),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(50),
-                  ),
-                  side: BorderSide(
-                    color: Color.fromARGB(255, 149, 134, 225),
-                    width: 2.0,
-                  ),
-                  textStyle: const TextStyle(fontSize: 16),
-                ),
-                onPressed: _uploadImages,
-                icon: Icon(Icons.upload_rounded,
-                    color: Color.fromARGB(255, 149, 134, 225)),
-                label: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Text(
-                      'Upload Image ', // Replace this with the appropriate label
-                      style: TextStyle(
-                        fontSize: 15,
-                        color: Color.fromARGB(255, 115, 99, 183),
-                      ),
+                alignment: Alignment.center,
+                child: ElevatedButton.icon(
+                  style: ElevatedButton.styleFrom(
+                    enableFeedback: false,
+                    backgroundColor: Colors.white,
+                    minimumSize: const Size(100, 40),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(50),
                     ),
-                    Text(
-                      '*',
-                      style: TextStyle(
-                        color: Color.fromARGB(255, 236, 154, 148),
-                      ),
+                    side: BorderSide(
+                      color: Color.fromARGB(255, 149, 134, 225),
+                      width: 2.0,
                     ),
-                  ],
+                    textStyle: const TextStyle(fontSize: 16),
+                  ),
+                  onPressed: _uploadImages,
+                  icon: Icon(Icons.upload_rounded,
+                      color: Color.fromARGB(255, 149, 134, 225)),
+                  label: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Text(
+                        'Upload Image ', // Replace this with the appropriate label
+                        style: TextStyle(
+                          fontSize: 15,
+                          color: Color.fromARGB(255, 115, 99, 183),
+                        ),
+                      ),
+                      Text(
+                        '*',
+                        style: TextStyle(
+                          color: Color.fromARGB(255, 236, 154, 148),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
-            ),
-               SizedBox(height: 3),
-          Text(
-                      'Maximum combined image size: 15MB',
-                      style: TextStyle(
-                       
-                        color: Color.fromARGB(255, 115, 99, 183),
-                      ),
-                    ),
+              SizedBox(height: 3),
+              Text(
+                'Maximum combined image size: 15MB',
+                style: TextStyle(
+                  color: Color.fromARGB(255, 115, 99, 183),
+                ),
+              ),
               const SizedBox(height: 15),
               Align(
                 alignment: Alignment.center,
@@ -737,7 +783,13 @@ class _ChangeInfoDialogState extends State<ChangeInfoDialog> {
                     confirmPressed ? 'Please wait' : 'Confirm',
                     style: TextStyle(fontWeight: FontWeight.bold),
                   ),
-                  onPressed: confirmPressed ? null : _updateRestroomInfo,
+                  onPressed: confirmPressed
+                      ? null
+                      : () {
+                          _updateRestroomInfo();
+                          _deleteMarker(
+                              widget.markerId); // Pass the actual MarkerId here
+                        },
                 ),
               ),
               const SizedBox(

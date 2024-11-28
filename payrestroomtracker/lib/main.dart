@@ -13,6 +13,7 @@ import 'package:flutter_button/pages/dialog/user_profile_dialog.dart';
 import 'package:flutter_button/pages/dialog/suggestPaidRestroomPage.dart';
 import 'package:flutter_button/pages/dialog/terms&condition.dart';
 import 'package:flutter_button/pages/dialog/ownersRestroomFillupForm.dart';
+import 'package:flutter_button/pages/dialog/owner_list_business.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -45,6 +46,7 @@ class Main extends StatelessWidget {
           '/suggestPaidRestroomPage': (context) => const SuggestPaidRestroomPage(),
           '/terms&pol': (context) => const TermsAndConditionsPage(),
           '/ownersPaidRestroomInformation': (context) => const OwnersPaidrestroomFillupform(),
+          '/ownerListBusiness': (context) => OwnerListBusiness(),
         });
   }
 }

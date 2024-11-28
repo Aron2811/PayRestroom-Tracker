@@ -3,6 +3,7 @@ import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:firebase_auth/firebase_auth.dart'; // Import FirebaseAuth
 
 class OwnersPaidRestroomFillupForm extends StatefulWidget {
   final String destination;
@@ -39,6 +40,10 @@ class _OwnersPaidRestroomFillupFormState
   Future<void> _submitForm() async {
     if (_formKey.currentState!.validate() && _businessPermit != null) {
       try {
+        // Get current user's email from FirebaseAuth
+        User? user = FirebaseAuth.instance.currentUser;
+        String userEmail = user?.email ?? 'No email'; // Default if not logged in
+
         // Upload business permit image to Firebase Storage
         String uniqueId = DateTime.now().millisecondsSinceEpoch.toString();
         String imagePath = 'business_permits/$uniqueId.jpg';
@@ -60,6 +65,7 @@ class _OwnersPaidRestroomFillupFormState
             'gcash_number': _phoneNumberController.text,
             'business_permit_image': imageUrl,
             'fee': 150.00, // Total cost in pesos
+            'owner_email': userEmail, // Store the user's email
           });
 
           ScaffoldMessenger.of(context).showSnackBar(
@@ -74,6 +80,7 @@ class _OwnersPaidRestroomFillupFormState
             'gcash_number': _phoneNumberController.text,
             'business_permit_image': imageUrl,
             'fee': 150.00, // Total cost in pesos
+            'owner_email': userEmail, // Store the user's email
           });
 
           ScaffoldMessenger.of(context).showSnackBar(

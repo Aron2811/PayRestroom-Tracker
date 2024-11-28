@@ -190,7 +190,13 @@ class _AdminDashboardState extends State<AdminDashboard>
       builder: (BuildContext context) {
         return AlertDialog(
           backgroundColor: Color.fromARGB(255, 132, 119, 197),
-          title: const Text('Set Hold Duration',style: TextStyle(color: Colors.white,), textAlign: TextAlign.center,),
+          title: const Text(
+            'Set Hold Duration',
+            style: TextStyle(
+              color: Colors.white,
+            ),
+            textAlign: TextAlign.center,
+          ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
@@ -242,7 +248,6 @@ class _AdminDashboardState extends State<AdminDashboard>
     );
   }
 
-  
   void _showBlankUserDialog(String displayName, String userId) async {
     // Get the user's document from Firestore
     DocumentSnapshot userDoc =
@@ -258,12 +263,11 @@ class _AdminDashboardState extends State<AdminDashboard>
       context: context,
       builder: (BuildContext context) {
         return AlertDialog(
-          backgroundColor: Colors.white, 
+          backgroundColor: Colors.white,
           shape: RoundedRectangleBorder(
-            borderRadius:
-                BorderRadius.circular(16.0), 
+            borderRadius: BorderRadius.circular(16.0),
           ),
-          elevation: 10, 
+          elevation: 10,
           title: Padding(
             padding: const EdgeInsets.only(bottom: 10.0),
             child: Text(
@@ -271,7 +275,7 @@ class _AdminDashboardState extends State<AdminDashboard>
               style: TextStyle(
                 fontSize: 22,
                 fontWeight: FontWeight.bold,
-                color: Colors.deepPurple, 
+                color: Colors.deepPurple,
               ),
             ),
           ),
@@ -357,8 +361,8 @@ class _AdminDashboardState extends State<AdminDashboard>
                   textStyle: MaterialStateProperty.all<TextStyle>(
                     TextStyle(fontSize: 16),
                   ),
-                  backgroundColor: MaterialStateProperty.all<Color>(Colors
-                      .deepPurple), // Light purple button background
+                  backgroundColor: MaterialStateProperty.all<Color>(
+                      Colors.deepPurple), // Light purple button background
                   foregroundColor: MaterialStateProperty.all<Color>(
                       Colors.white), // White text on button
                   shape: MaterialStateProperty.all<RoundedRectangleBorder>(
@@ -399,7 +403,9 @@ class _AdminDashboardState extends State<AdminDashboard>
                 Tab(
                   text: "All Users",
                 ),
-                Tab(text: "Banned\nUsers",),
+                Tab(
+                  text: "Banned\nUsers",
+                ),
                 Tab(text: "Hold\nUsers"),
                 Tab(text: "Reported\nUsers"),
               ]),

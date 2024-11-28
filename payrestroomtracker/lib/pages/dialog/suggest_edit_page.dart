@@ -28,6 +28,7 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
       TextEditingController();
   final TextEditingController _suggestedLocationController =
       TextEditingController();
+      String? TagId;
 
   String dropdownValue = 'Cost';
   bool showCostField = true;
@@ -49,6 +50,8 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
               isEqualTo: GeoPoint(
                   widget.destination.latitude, widget.destination.longitude))
           .get();
+
+          TagId = querySnapshot.docs.first['TagId'];
 
       if (querySnapshot.docs.isNotEmpty) {
         final doc = querySnapshot.docs.first;
@@ -83,25 +86,26 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
     String costValue = dropdownValue == 'Pay Options'
         ? 'with pay options' // Store 'Pay Options' directly
         : (_suggestedCostController.text.isEmpty
-            ? _costController
-                .text // If suggested cost is empty, use existing cost
+            ? "No Suggestion" // If suggested cost is empty, use existing cost
             : _suggestedCostController.text);
 
     final suggestedData = {
       'SuggestedName': _suggestedNameController.text.isEmpty
-          ? _nameController
-              .text // If suggested name is empty, use existing name
+          ? "No Suggestion" // If suggested name is empty, use existing name
           : _suggestedNameController.text,
+
       'SuggestedCost': costValue,
+      
       'SuggestedLocation': _suggestedLocationController.text.isEmpty
-          ? _locationController
-              .text // If suggested location is empty, use existing location
+          ? "No Suggestion" // If suggested location is empty, use existing location
           : _suggestedLocationController.text,
+
       'ImageUrls': _imageUrls.isEmpty
           ? []
           : _imageUrls, // Use existing image URLs if new images are empty
       'Position':
           GeoPoint(widget.destination.latitude, widget.destination.longitude),
+      'TagId': TagId,
     };
 
     // Check if new images are uploaded and add them to Firestore
