@@ -13,7 +13,6 @@ import 'package:flutter_button/pages/user/street_view.dart';
 import 'package:photo_view/photo_view.dart';
 import 'package:photo_view/photo_view_gallery.dart';
 import 'package:flutter_button/pages/dialog/suggest_edit_page.dart';
-import 'package:flutter_button/pages/dialog/suggest_delete_page.dart';
 
 class PaidRestroomInfo extends StatefulWidget {
   final Function(LatLng, String) drawRouteToDestination;
@@ -605,37 +604,6 @@ class _PaidRestroomInfoState extends State<PaidRestroomInfo> {
                 ),
               ),
               const SizedBox(height: 10),
-              ElevatedButton.icon(
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color.fromARGB(255, 148, 139, 192),
-                  minimumSize: const Size(250, 45),
-                  shape: RoundedRectangleBorder(
-                    side: const BorderSide(
-                      color: Color.fromARGB(255, 115, 99, 183),
-                      width: 2.0,
-                    ),
-                  ),
-                ),
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    _createRoute(SuggestDeletePage(destination: widget.destination)),
-                  );
-                },
-                label: const Text(
-                  'Suggest for Delete',
-                  style: TextStyle(
-                    fontSize: 17,
-                    color: Colors.white,
-                    letterSpacing: 3,
-                  ),
-                ),
-                icon: const Icon(
-                  Icons.delete_outline,
-                  color: Color.fromARGB(255, 97, 84, 158),
-                ),
-              ),
-              const SizedBox(height: 20),
               const Text(
                 "Share your experience to help others",
                 textAlign: TextAlign.start,
