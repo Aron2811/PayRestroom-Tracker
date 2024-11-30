@@ -1,13 +1,20 @@
+import 'dart:io';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_button/pages/admin/adminpage.dart';
 import 'package:flutter_button/pages/dialog/admin_tag_information.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
-import 'package:location/location.dart';
 import 'dart:async';
 import 'package:flutter/services.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:flutter_button/pages/dialog/admin_add_info.dart';
+import 'package:dio/dio.dart';
+import 'package:path_provider/path_provider.dart';
+import 'package:location/location.dart' as location;
+import 'package:permission_handler/permission_handler.dart'
+    as permission_handler;
+import 'package:permission_handler/permission_handler.dart';
+import 'package:photo_manager/photo_manager.dart' as photo_manager;
 
 class AdminMap extends StatefulWidget {
   const AdminMap({Key? key, required this.username, required this.report})
@@ -69,7 +76,7 @@ class AdminMapState extends State<AdminMap> {
   late GoogleMapController mapController;
   LatLng? _currentP;
   Set<Marker> _markers = {};
-  Location _locationController = Location();
+  location.Location _locationController = location.Location();
   BitmapDescriptor? _customMarkerIcon;
   BitmapDescriptor? _personMarkerIcon;
 
@@ -206,6 +213,7 @@ class AdminMapState extends State<AdminMap> {
       context: context,
       builder: (context) {
         return Dialog(
+          insetPadding: EdgeInsets.zero, // Remove padding around the dialog
           child: GestureDetector(
             onTap: () {
               Navigator.of(context).pop(); // Close the dialog when tapped
@@ -213,9 +221,17 @@ class AdminMapState extends State<AdminMap> {
             child: Container(
               color: Colors.black, // Background color
               child: Center(
-                child: Image.network(
-                  imageUrl,
-                  fit: BoxFit.contain, // Fit the image within the dialog
+                child: InteractiveViewer(
+                  boundaryMargin:
+                      const EdgeInsets.all(20.0), // Allow panning near edges
+                  minScale: 1.0, // Minimum zoom scale
+                  maxScale: 5.0, // Maximum zoom scale
+                  child: Image.network(
+                    imageUrl,
+                    fit: BoxFit.contain,
+                    width: MediaQuery.of(context).size.width,
+                    height: MediaQuery.of(context).size.height,
+                  ),
                 ),
               ),
             ),
@@ -278,20 +294,23 @@ class AdminMapState extends State<AdminMap> {
                             final data =
                                 ownerData.data() as Map<String, dynamic>;
 
-                            final ownerName =
-                                ownerData['ownername'] ?? 'Unknown Owner';
+                            // Check if `ownername` exists
+                            if (!data.containsKey('ownername') ||
+                                data['ownername'] == null) {
+                              return const SizedBox.shrink(); // Skip this item
+                            }
+
+                            final ownerName = data['ownername'] as String;
                             final gcashNumber =
-                                ownerData['gcash_number'] ?? 'No GCash Number';
+                                data['gcash_number'] ?? 'No GCash Number';
                             final businessPermitImage =
-                                ownerData['business_permit_image'] ?? '';
+                                data['business_permit_image'] ?? '';
                             final restroomName =
-                                ownerData['name'] ?? 'No Restroom Name';
-                            final location =
-                                ownerData['location'] ?? 'No Location';
-                            final cost =
-                                ownerData['cost'] ?? 'No Cost Available';
+                                data['name'] ?? 'No Restroom Name';
+                            final location = data['location'] ?? 'No Location';
+                            final cost = data['cost'] ?? 'No Cost Available';
                             final imageUrls =
-                                ownerData['ImageUrls'] as List<dynamic>? ?? [];
+                                data['ImageUrls'] as List<dynamic>? ?? [];
 
                             return Card(
                               elevation: 5,
@@ -323,7 +342,6 @@ class AdminMapState extends State<AdminMap> {
                                               : const Icon(Icons.business,
                                                   size: 100),
                                         ),
-
                                         const SizedBox(width: 12),
                                         // Owner Info
                                         Expanded(
@@ -611,12 +629,7 @@ class AdminMapState extends State<AdminMap> {
                           final data = doc.data() as Map<String, dynamic>;
 
                           return ListTile(
-                            title: Text(
-                                data['SuggestedName'] ?? 'Unnamed Restroom',
-                                style: TextStyle(color: Colors.white)),
-                            subtitle: Text(
-                                data['SuggestedLocation'] ??
-                                    'No description provided.',
+                            title: Text(data['name'] ?? 'Unnamed Restroom',
                                 style: TextStyle(color: Colors.white)),
                             trailing: const Icon(Icons.arrow_forward,
                                 color: Colors.white),
@@ -675,14 +688,22 @@ class AdminMapState extends State<AdminMap> {
               Text('Reason: ${data['reason'] ?? 'No reason provided.'}'),
               const SizedBox(height: 10),
               data['image'] != null
-                  ? Container(
-                      height: 200, // Set a max height for the image
-                      width: double
-                          .infinity, // Make the image stretch horizontally
-                      child: Image.network(
-                        data['image'],
-                        fit: BoxFit
-                            .cover, // Ensure the image scales appropriately
+                  ? GestureDetector(
+                      onTap: () {
+                        // Call the _showFullScreenImage function
+                        _showFullScreenImage(context, data['image']);
+                      },
+                      child: Container(
+                        height: 200, // Set a max height for the image
+                        width: double.infinity, // Stretch horizontally
+                        decoration: BoxDecoration(
+                          border: Border.all(color: Colors.grey),
+                        ),
+                        child: Image.network(
+                          data['image'],
+                          fit: BoxFit
+                              .cover, // Ensure the image scales appropriately
+                        ),
                       ),
                     )
                   : const Text('No image provided.'),
@@ -710,7 +731,7 @@ class AdminMapState extends State<AdminMap> {
                 Navigator.of(context)
                     .pop(); // Close the dialog after tagging the location
               },
-              child: Text('Navigate'),
+              child: const Text('Navigate'),
             ),
             TextButton(
               onPressed: () async {
@@ -747,12 +768,11 @@ class AdminMapState extends State<AdminMap> {
 
   void showEditRequestDetails(
       BuildContext context, Map<String, dynamic> data, String docId) {
-    // Show a dialog or another screen with the edit request details
     showDialog(
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text(data['SuggestedName'] ?? 'Unnamed Restroom'),
+          title: Text(data['name'] ?? 'Unnamed Restroom'),
           content: SingleChildScrollView(
             // Allows scrolling if content overflows
             child: Column(
@@ -765,26 +785,41 @@ class AdminMapState extends State<AdminMap> {
                     'Suggested Location: ${data['SuggestedLocation'] ?? 'No location provided.'}'),
                 Text(
                     'Suggested Cost: ${data['SuggestedCost'] ?? 'No cost provided.'}'),
-                SizedBox(height: 10),
-                Text('Images:'),
+                const SizedBox(height: 10),
+                const Text('Images:'),
                 // Display image URLs if available
                 data['ImageUrls'] != null && data['ImageUrls'] is List
                     ? Column(
                         children: (data['ImageUrls'] as List).map((url) {
                           return Padding(
                             padding: const EdgeInsets.symmetric(vertical: 5.0),
-                            child: Image.network(
-                              url,
-                              height: 200, // Set a fixed height for the images
-                              width: double
-                                  .infinity, // Set width to take full available width
-                              fit: BoxFit
-                                  .cover, // Ensures image scales without distortion
+                            child: Stack(
+                              alignment: Alignment.topRight,
+                              children: [
+                                Image.network(
+                                  url,
+                                  height:
+                                      200, // Set a fixed height for the images
+                                  width: double
+                                      .infinity, // Set width to take full available width
+                                  fit: BoxFit
+                                      .cover, // Ensures image scales without distortion
+                                ),
+                                IconButton(
+                                  icon: const Icon(
+                                    Icons.download,
+                                    color: Colors.white,
+                                  ),
+                                  onPressed: () async {
+                                    await _downloadImage(context, url);
+                                  },
+                                ),
+                              ],
                             ),
                           );
                         }).toList(),
                       )
-                    : Text('No images available.'),
+                    : const Text('No images available.'),
               ],
             ),
           ),
@@ -793,7 +828,7 @@ class AdminMapState extends State<AdminMap> {
               onPressed: () {
                 Navigator.of(context).pop(); // Close the dialog
               },
-              child: Text('Close'),
+              child: const Text('Close'),
             ),
             // Option to focus map on the tagged location
             TextButton(
@@ -811,7 +846,7 @@ class AdminMapState extends State<AdminMap> {
                 Navigator.of(context)
                     .pop(); // Close the dialog after tagging the location
               },
-              child: Text('Navigate'),
+              child: const Text('Navigate'),
             ),
             TextButton(
               onPressed: () async {
@@ -844,6 +879,63 @@ class AdminMapState extends State<AdminMap> {
         );
       },
     );
+  }
+
+  Future<void> _downloadImage(BuildContext context, String imageUrl) async {
+    try {
+      // Request storage permission if not granted
+      if (await Permission.storage.request().isGranted) {
+        // Step 1: Get the directory for the gallery (Pictures folder)
+        final directory = await getExternalStorageDirectory();
+        if (directory == null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to access external storage.')),
+          );
+          return;
+        }
+
+        final path = directory.path;
+        final fileName = imageUrl
+            .split('/')
+            .last
+            .split('?')[0]; // Remove any query parameters
+        final filePath = '$path/$fileName';
+
+        // Step 2: Download the image
+        final dio = Dio();
+        await dio.download(imageUrl, filePath);
+
+        // Step 3: Read the file to get its data as Uint8List
+        final file = File(filePath); // Create a File instance
+        final data = await file.readAsBytes(); // Read the file as bytes
+
+        // Step 4: Save the image to the gallery
+        final result = await photo_manager.PhotoManager.editor.saveImage(
+          data,
+          filename: fileName, // Pass the filename (image name)
+        );
+
+        if (result != null) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(content: Text('Image downloaded to gallery')),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(content: Text('Failed to save image to gallery.')),
+          );
+        }
+      } else {
+        // If permission is not granted
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(content: Text('Storage permission is required')),
+        );
+      }
+    } catch (e) {
+      // Show error snackbar
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Failed to download image.')),
+      );
+    }
   }
 
 // Function to focus the map camera based on the position (assuming a map controller is available)
@@ -906,44 +998,45 @@ class AdminMapState extends State<AdminMap> {
   }
 
   // Deletes a marker from the map and Firestore, and updates the saved markers in SharedPreferences.
-Future<void> _deleteMarker(MarkerId markerId) async {
-  setState(() {
-    _markers.removeWhere((marker) => marker.markerId == markerId);
-  });
-  await _saveMarkersToPrefs();
+  Future<void> _deleteMarker(MarkerId markerId) async {
+    setState(() {
+      _markers.removeWhere((marker) => marker.markerId == markerId);
+    });
+    await _saveMarkersToPrefs();
 
-  print("Deleting marker with ID: ${markerId.value}");
+    print("Deleting marker with ID: ${markerId.value}");
 
-  try {
-    // Remove the marker from Firestore in the 'Tags' collection
-    await FirebaseFirestore.instance
-        .collection('Tags')
-        .doc(markerId.value)
-        .delete();
+    try {
+      // Remove the marker from Firestore in the 'Tags' collection
+      await FirebaseFirestore.instance
+          .collection('Tags')
+          .doc(markerId.value)
+          .delete();
 
-    // Remove the marker from Firestore in the 'accepted_restrooms' collection
-    await FirebaseFirestore.instance
-        .collection('accepted_restrooms')
-        .doc(markerId.value)
-        .delete();
-    
-    // Remove the corresponding document in 'restroom_delete_suggestions' where TagId matches markerId.value
-    var querySnapshot = await FirebaseFirestore.instance
-        .collection('restroom_delete_suggestions')
-        .where('TagId', isEqualTo: markerId.value)
-        .get();
+      // Remove the marker from Firestore in the 'accepted_restrooms' collection
+      await FirebaseFirestore.instance
+          .collection('accepted_restrooms')
+          .doc(markerId.value)
+          .delete();
 
-    print("Found ${querySnapshot.docs.length} documents to delete in restroom_delete_suggestions.");
+      // Remove the corresponding document in 'restroom_delete_suggestions' where TagId matches markerId.value
+      var querySnapshot = await FirebaseFirestore.instance
+          .collection('restroom_delete_suggestions')
+          .where('TagId', isEqualTo: markerId.value)
+          .get();
 
-    // Delete each matching document
-    for (var doc in querySnapshot.docs) {
-      print("Deleting document with ID: ${doc.id}");
-      await doc.reference.delete();
+      print(
+          "Found ${querySnapshot.docs.length} documents to delete in restroom_delete_suggestions.");
+
+      // Delete each matching document
+      for (var doc in querySnapshot.docs) {
+        print("Deleting document with ID: ${doc.id}");
+        await doc.reference.delete();
+      }
+    } catch (e) {
+      print("Error deleting marker: $e");
     }
-  } catch (e) {
-    print("Error deleting marker: $e");
   }
-}
 
   @override
   Widget build(BuildContext context) {
@@ -1019,40 +1112,83 @@ Future<void> _deleteMarker(MarkerId markerId) async {
               alignment: Alignment.center,
               child: StreamBuilder<QuerySnapshot>(
                 stream: FirebaseFirestore.instance
-                    .collection('suggested_restrooms')
+                    .collection('restroom_edit_suggestions')
                     .snapshots(),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const CircularProgressIndicator(); // Loading indicator
+                builder: (context, editSnapshot) {
+                  if (editSnapshot.connectionState == ConnectionState.waiting) {
+                    return const CircularProgressIndicator(); // Loading indicator for edit suggestions
                   }
 
-                  if (snapshot.hasError) {
+                  if (editSnapshot.hasError) {
                     return const Icon(Icons.error_outline,
                         color: Colors.red); // Error indicator
                   }
 
-                  if (snapshot.hasData) {
-                    int count =
-                        snapshot.data!.docs.length; // Total document count
-                    return Padding(
-                        padding:
-                            const EdgeInsets.only(right: 10.0), // Right padding
-                        child: Badge(
-                          badgeCount:
-                              count, // Pass the badge count to the custom Badge widget
-                          child: IconButton(
-                            icon: const Icon(Icons.assignment_outlined,
-                                color: Colors.white),
-                            onPressed: () {
-                              _showSuggestedRestrooms(context);
-                            },
-                          ),
-                        ));
-                  }
+                  return StreamBuilder<QuerySnapshot>(
+                    stream: FirebaseFirestore.instance
+                        .collection('restroom_delete_suggestions')
+                        .snapshots(),
+                    builder: (context, deleteSnapshot) {
+                      if (deleteSnapshot.connectionState ==
+                          ConnectionState.waiting) {
+                        return const CircularProgressIndicator(); // Loading indicator for delete suggestions
+                      }
 
-                  // Fallback for no data
-                  return const Icon(Icons.assignment_outlined,
-                      color: Colors.grey);
+                      if (deleteSnapshot.hasError) {
+                        return const Icon(Icons.error_outline,
+                            color: Colors.red); // Error indicator
+                      }
+
+                      return StreamBuilder<QuerySnapshot>(
+                        stream: FirebaseFirestore.instance
+                            .collection('suggested_restrooms')
+                            .snapshots(),
+                        builder: (context, suggestedSnapshot) {
+                          if (suggestedSnapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return const CircularProgressIndicator(); // Loading indicator for suggested restrooms
+                          }
+
+                          if (suggestedSnapshot.hasError) {
+                            return const Icon(Icons.error_outline,
+                                color: Colors.red); // Error indicator
+                          }
+
+                          if (editSnapshot.hasData &&
+                              deleteSnapshot.hasData &&
+                              suggestedSnapshot.hasData) {
+                            // Combine counts from all three collections
+                            int countEdit = editSnapshot.data!.docs.length;
+                            int countDelete = deleteSnapshot.data!.docs.length;
+                            int countSuggested =
+                                suggestedSnapshot.data!.docs.length;
+                            int totalCount =
+                                countEdit + countDelete + countSuggested;
+
+                            return Padding(
+                              padding: const EdgeInsets.only(
+                                  right: 10.0), // Right padding
+                              child: Badge(
+                                badgeCount:
+                                    totalCount, // Pass the combined badge count to the custom Badge widget
+                                child: IconButton(
+                                  icon: const Icon(Icons.assignment_outlined,
+                                      color: Colors.white),
+                                  onPressed: () {
+                                    _showSuggestedRestrooms(context);
+                                  },
+                                ),
+                              ),
+                            );
+                          }
+
+                          // Fallback for no data
+                          return const Icon(Icons.assignment_outlined,
+                              color: Colors.grey);
+                        },
+                      );
+                    },
+                  );
                 },
               ),
             ),
@@ -1065,7 +1201,8 @@ Future<void> _deleteMarker(MarkerId markerId) async {
                   .snapshots(),
               builder: (context, snapshot) {
                 if (snapshot.connectionState == ConnectionState.waiting) {
-                  return const CircularProgressIndicator(); // Loading indicator
+                  return const Icon(Icons.store_mall_directory_outlined,
+                      color: Colors.grey); // Default fallback for loading
                 }
 
                 if (snapshot.hasError) {
@@ -1074,13 +1211,20 @@ Future<void> _deleteMarker(MarkerId markerId) async {
                 }
 
                 if (snapshot.hasData) {
-                  int count =
-                      snapshot.data!.docs.length; // Total document count
+                  // Filter documents with `ownername` field present and not null
+                  final filteredDocs = snapshot.data!.docs.where((doc) {
+                    final data = doc.data() as Map<String, dynamic>;
+                    return data.containsKey('ownername') &&
+                        data['ownername'] != null;
+                  }).toList();
+
+                  int count = filteredDocs.length; // Count filtered documents
+
                   return Padding(
                     padding: const EdgeInsets.only(left: 10.0), // Left padding
                     child: Badge(
                       badgeCount:
-                          count, // Pass the badge count to the custom Badge widget
+                          count, // Pass the filtered badge count to the custom Badge widget
                       child: IconButton(
                         icon: const Icon(Icons.store_mall_directory_outlined,
                             color: Colors.white),
@@ -1179,7 +1323,7 @@ Future<void> _deleteMarker(MarkerId markerId) async {
               Navigator.of(context).pop(true);
               Navigator.push(
                 context,
-                _createRoute(AdminPage(
+                createRoute(AdminPage(
                   username: widget.username,
                   report: widget.report,
                 )),
@@ -1195,7 +1339,8 @@ Future<void> _deleteMarker(MarkerId markerId) async {
   // Requests location permissions and service enablement, then listens for location updates.
   Future<void> getLocationUpdates() async {
     bool _serviceEnabled;
-    PermissionStatus _permissionGranted;
+    location.PermissionStatus
+        _permissionGranted; // Use location's PermissionStatus
 
     _serviceEnabled = await _locationController.serviceEnabled();
     if (!_serviceEnabled) {
@@ -1207,16 +1352,18 @@ Future<void> _deleteMarker(MarkerId markerId) async {
     }
 
     _permissionGranted = await _locationController.hasPermission();
-    if (_permissionGranted == PermissionStatus.denied) {
+    if (_permissionGranted == location.PermissionStatus.denied) {
+      // Reference location.PermissionStatus
       _permissionGranted = await _locationController.requestPermission();
-      if (_permissionGranted != PermissionStatus.granted) {
+      if (_permissionGranted != location.PermissionStatus.granted) {
+        // Reference location.PermissionStatus
         print('Location permission denied.');
         return;
       }
     }
 
     _locationController.onLocationChanged
-        .listen((LocationData currentLocation) {
+        .listen((location.LocationData currentLocation) {
       if (currentLocation.latitude != null &&
           currentLocation.longitude != null) {
         setState(() {
@@ -1280,7 +1427,7 @@ Future<void> _deleteMarker(MarkerId markerId) async {
   }
 
   // Creates a custom route with a slide transition from the bottom to the top.
-  Route _createRoute(Widget child) {
+  Route createRoute(Widget child) {
     return PageRouteBuilder(
       pageBuilder: (BuildContext context, Animation<double> animation,
               Animation<double> secondaryAnimation) =>

@@ -90,6 +90,7 @@ class _SuggestEditPageState extends State<SuggestEditPage> {
             : _suggestedCostController.text);
 
     final suggestedData = {
+      'name': _nameController.text,
       'SuggestedName': _suggestedNameController.text.isEmpty
           ? "No Suggestion" // If suggested name is empty, use existing name
           : _suggestedNameController.text,

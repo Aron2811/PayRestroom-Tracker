@@ -266,7 +266,9 @@ class _OwnerTagInformationnState extends State<OwnerTagInformation> {
                                           context,
                                           _createRoute(SuggestDeletePage(
                                               destination: widget.destination)),
-                                        );
+                                        ).then((_) {
+                                          Navigator.of(context).pop(false);
+                                        });
                                       },
                                       child: const Text("Yes"),
                                     ),

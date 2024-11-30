@@ -105,7 +105,12 @@ class _OwnersPaidRestroomFillupFormState
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text("Paid Restroom Owner Form"),
+        title: const Text(
+          'Paid Restroom Owner Form',
+          style: TextStyle(
+            color: Colors.white, // Set the text color to white
+          ),
+        ),
         backgroundColor: const Color.fromARGB(255, 97, 84, 158),
       ),
       body: Padding(

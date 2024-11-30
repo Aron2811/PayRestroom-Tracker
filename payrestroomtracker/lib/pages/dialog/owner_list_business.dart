@@ -13,33 +13,37 @@ class _OwnerListBusinessState extends State<OwnerListBusiness> {
   final FirebaseAuth _auth = FirebaseAuth.instance;
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;
 
-  // Fetch the restrooms for the current owner
-  Future<List<Map<String, dynamic>>> _fetchOwnerBusinesses() async {
+  // Stream to fetch the restrooms for the current owner
+  Stream<QuerySnapshot> _fetchOwnerBusinessesStream() {
     String? userEmail = _auth.currentUser?.email;
 
     if (userEmail == null) {
       throw Exception("User not logged in.");
     }
 
-    QuerySnapshot snapshot = await _firestore
+    return _firestore
         .collection('accepted_restrooms')
         .where('owner_email', isEqualTo: userEmail)
-        .get();
-
-    return snapshot.docs
-        .map((doc) => doc.data() as Map<String, dynamic>)
-        .toList();
+        .snapshots();
   }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Your Paid Restrooms'),
+        title: const Text(
+          'Your Paid Restrooms',
+          style: TextStyle(
+            color: Colors.white, // Set the text color to white
+          ),
+        ),
         backgroundColor: const Color.fromARGB(255, 97, 84, 158),
+        iconTheme: const IconThemeData(
+            color:
+                Colors.white), // Optional: Change app bar icon color to white
       ),
-      body: FutureBuilder<List<Map<String, dynamic>>>(
-        future: _fetchOwnerBusinesses(),
+      body: StreamBuilder<QuerySnapshot>(
+        stream: _fetchOwnerBusinessesStream(),
         builder: (context, snapshot) {
           if (snapshot.connectionState == ConnectionState.waiting) {
             return const Center(child: CircularProgressIndicator());
@@ -50,17 +54,17 @@ class _OwnerListBusinessState extends State<OwnerListBusiness> {
                 style: const TextStyle(color: Colors.red),
               ),
             );
-          } else if (!snapshot.hasData || snapshot.data!.isEmpty) {
+          } else if (!snapshot.hasData || snapshot.data!.docs.isEmpty) {
             return const Center(
               child: Text('No businesses found for your account.'),
             );
           }
 
-          final businesses = snapshot.data!;
+          final businesses = snapshot.data!.docs;
           return ListView.builder(
             itemCount: businesses.length,
             itemBuilder: (context, index) {
-              final business = businesses[index];
+              final business = businesses[index].data() as Map<String, dynamic>;
               return Card(
                 margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                 child: ListTile(
@@ -91,14 +95,12 @@ class _OwnerListBusinessState extends State<OwnerListBusiness> {
                         LatLng latLng = LatLng(latitude, longitude);
 
                         // Navigate to OwnerTagInformation
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(
-                            builder: (context) => OwnerTagInformation(
-                              markerId: MarkerId(business['TagId'] ??
-                                  'Unknown'), // Handle missing TagId
-                              destination: latLng,
-                            ),
+                        showDialog(
+                          context: context,
+                          builder: (context) => OwnerTagInformation(
+                            markerId: MarkerId(business['TagId'] ??
+                                'Unknown'), // Handle missing TagId
+                            destination: latLng,
                           ),
                         );
                       } catch (e) {
@@ -107,7 +109,7 @@ class _OwnerListBusinessState extends State<OwnerListBusiness> {
                           SnackBar(
                             content: Text('Error: ${e.toString()}'),
                             backgroundColor: Colors.red,
-                            duration: Duration(seconds: 3),
+                            duration: const Duration(seconds: 3),
                           ),
                         );
                       }

@@ -30,8 +30,9 @@ class _ReportUserState extends State<ReportUser> {
     if (_selectedReasons.isEmpty) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-            content: Text('Please select at least one reason for reporting'),
-            backgroundColor: Colors.red,),
+          content: Text('Please select at least one reason for reporting'),
+          backgroundColor: Colors.red,
+        ),
       );
       return;
     }
@@ -42,8 +43,10 @@ class _ReportUserState extends State<ReportUser> {
 
       if (currentUser == null) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('You must be logged in to report'),
-          backgroundColor: Colors.red,),
+          const SnackBar(
+            content: Text('You must be logged in to report'),
+            backgroundColor: Colors.red,
+          ),
         );
         return;
       }
@@ -56,8 +59,10 @@ class _ReportUserState extends State<ReportUser> {
       final reporterDoc = await reporterRef.get();
       if (!reporterDoc.exists) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Error fetching reporter data.'),
-          backgroundColor: Colors.red,),
+          const SnackBar(
+            content: Text('Error fetching reporter data.'),
+            backgroundColor: Colors.red,
+          ),
         );
         return;
       }
@@ -85,8 +90,9 @@ class _ReportUserState extends State<ReportUser> {
           // If the user has already reported this user, show a message
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-                content: Text('You have already reported this user.'),
-                backgroundColor: Colors.red,),
+              content: Text('You have already reported this user.'),
+              backgroundColor: Colors.red,
+            ),
           );
           return;
         }
@@ -121,9 +127,15 @@ class _ReportUserState extends State<ReportUser> {
 
         // Show success message
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Report submitted successfully!'),
-          backgroundColor: Color.fromARGB(255, 115, 99, 183),),
+          const SnackBar(
+            content: Text('Report submitted successfully!'),
+            backgroundColor: Color.fromARGB(255, 115, 99, 183),
+          ),
         );
+
+        // Exit the page after submitting the report
+        Navigator.pop(
+            context); // This will pop the current screen from the stack
       } else {
         // Handle case where user document does not exist
         print('User does not exist');
@@ -131,8 +143,10 @@ class _ReportUserState extends State<ReportUser> {
     } catch (e) {
       // Show error message if something goes wrong
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error submitting report: $e'),
-        backgroundColor: Colors.red,),
+        SnackBar(
+          content: Text('Error submitting report: $e'),
+          backgroundColor: Colors.red,
+        ),
       );
     }
   }
@@ -141,7 +155,10 @@ class _ReportUserState extends State<ReportUser> {
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: const Text('Report User', style: TextStyle(color: Colors.white),),
+        title: const Text(
+          'Report User',
+          style: TextStyle(color: Colors.white),
+        ),
         backgroundColor: _defaultPurple, // Deep purple color for AppBar
       ),
       body: FutureBuilder<Map<String, dynamic>?>(
@@ -236,7 +253,7 @@ class _ReportUserState extends State<ReportUser> {
   Future<Map<String, dynamic>?> _fetchUserDetails(String userId) async {
     try {
       final userDoc = await FirebaseFirestore.instance
-          .collection('users') 
+          .collection('users')
           .doc(userId) // Use the userId as document ID
           .get();
 
@@ -251,7 +268,6 @@ class _ReportUserState extends State<ReportUser> {
     return null;
   }
 
- 
   Widget _buildReasonButton(String reason) {
     return ElevatedButton(
       onPressed: () {
